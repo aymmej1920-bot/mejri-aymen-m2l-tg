@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Vehicle } from "@/types/vehicle"; // Importation de l'interface Vehicle partagée
 
@@ -43,47 +43,45 @@ const formSchema = z.object({
 
 type VehicleFormValues = Vehicle;
 
-interface AddVehicleDialogProps {
-  onAddVehicle: (vehicle: Vehicle) => void;
+interface EditVehicleDialogProps {
+  vehicle: Vehicle;
+  onEditVehicle: (updatedVehicle: Vehicle) => void;
 }
 
-const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => {
+const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle, onEditVehicle }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const form = useForm<Vehicle>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      make: "",
-      model: "",
-      year: "",
-      licensePlate: "",
-    },
+    defaultValues: vehicle,
   });
+
+  React.useEffect(() => {
+    form.reset(vehicle);
+  }, [vehicle, form]);
 
   const onSubmit = (values: Vehicle) => {
     try {
-      onAddVehicle(values);
-      showSuccess("Véhicule ajouté avec succès !");
-      form.reset();
+      onEditVehicle(values);
+      showSuccess("Véhicule modifié avec succès !");
       setIsOpen(false);
     } catch (error) {
-      showError("Erreur lors de l'ajout du véhicule.");
-      console.error("Failed to add vehicle:", error);
+      showError("Erreur lors de la modification du véhicule.");
+      console.error("Failed to edit vehicle:", error);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un véhicule
+        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+          <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un nouveau véhicule</DialogTitle>
+          <DialogTitle>Modifier le véhicule</DialogTitle>
           <DialogDescription>
-            Remplissez les détails du véhicule ci-dessous.
+            Mettez à jour les détails du véhicule ci-dessous.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -95,7 +93,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => 
                 <FormItem>
                   <FormLabel>Marque</FormLabel>
                   <FormControl>
-                    <Input placeholder="Toyota" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -106,9 +104,9 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => 
               name="model"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Modèle</Label>
+                  <FormLabel>Modèle</FormLabel>
                   <FormControl>
-                    <Input placeholder="Corolla" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -121,7 +119,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => 
                 <FormItem>
                   <FormLabel>Année</FormLabel>
                   <FormControl>
-                    <Input placeholder="2020" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,13 +132,13 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => 
                 <FormItem>
                   <FormLabel>Plaque d'immatriculation</FormLabel>
                   <FormControl>
-                    <Input placeholder="AB-123-CD" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4">Ajouter</Button>
+            <Button type="submit" className="w-full mt-4">Enregistrer les modifications</Button>
           </form>
         </Form>
       </DialogContent>
@@ -148,4 +146,4 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => 
   );
 };
 
-export default AddVehicleDialog;
+export default EditVehicleDialog;

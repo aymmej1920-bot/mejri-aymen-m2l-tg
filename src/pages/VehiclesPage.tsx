@@ -3,6 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
+import EditVehicleDialog from "@/components/vehicles/EditVehicleDialog";
 import {
   Table,
   TableBody,
@@ -11,19 +12,47 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface Vehicle {
-  make: string;
-  model: string;
-  year: string;
-  licensePlate: string;
-}
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { showSuccess, showError } from "@/utils/toast";
+import { Vehicle } from "@/types/vehicle"; // Importation de l'interface Vehicle partagée
 
 const VehiclesPage = () => {
   const [vehicles, setVehicles] = React.useState<Vehicle[]>([]);
 
   const handleAddVehicle = (newVehicle: Vehicle) => {
     setVehicles((prevVehicles) => [...prevVehicles, newVehicle]);
+  };
+
+  const handleEditVehicle = (updatedVehicle: Vehicle, originalIndex: number) => {
+    setVehicles((prevVehicles) =>
+      prevVehicles.map((vehicle, index) =>
+        index === originalIndex ? updatedVehicle : vehicle
+      )
+    );
+  };
+
+  const handleDeleteVehicle = (indexToDelete: number) => {
+    try {
+      setVehicles((prevVehicles) =>
+        prevVehicles.filter((_, index) => index !== indexToDelete)
+      );
+      showSuccess("Véhicule supprimé avec succès !");
+    } catch (error) {
+      showError("Erreur lors de la suppression du véhicule.");
+      console.error("Failed to delete vehicle:", error);
+    }
   };
 
   return (
@@ -50,6 +79,7 @@ const VehiclesPage = () => {
                   <TableHead>Modèle</TableHead>
                   <TableHead>Année</TableHead>
                   <TableHead>Plaque d'immatriculation</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -59,6 +89,35 @@ const VehiclesPage = () => {
                     <TableCell>{vehicle.model}</TableCell>
                     <TableCell>{vehicle.year}</TableCell>
                     <TableCell>{vehicle.licensePlate}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <EditVehicleDialog
+                          vehicle={vehicle}
+                          onEditVehicle={(updatedVehicle) => handleEditVehicle(updatedVehicle, index)}
+                        />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action ne peut pas être annulée. Cela supprimera définitivement ce véhicule de votre liste.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteVehicle(index)}>
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
