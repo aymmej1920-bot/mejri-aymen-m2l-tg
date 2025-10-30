@@ -2,7 +2,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFleet } from "@/context/FleetContext";
-import { Car, Users, PlusCircle, Wrench, Fuel } from "lucide-react";
+import { Car, Users, PlusCircle, Wrench, Fuel, Link } from "lucide-react"; // Importez l'icône Link
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
 import AddDriverDialog from "@/components/drivers/AddDriverDialog";
 import { format, isSameMonth, parseISO, getMonth, getYear } from "date-fns";
@@ -21,7 +21,7 @@ import {
 } from "recharts";
 
 const Index = () => {
-  const { vehicles, drivers, fuelEntries, maintenances } = useFleet();
+  const { vehicles, drivers, fuelEntries, maintenances, assignments } = useFleet();
 
   // Calculer le coût total du carburant pour le mois en cours
   const currentMonth = new Date();
@@ -35,6 +35,9 @@ const Index = () => {
 
   // Calculer le nombre de maintenances planifiées (statut "Planifiée")
   const upcomingMaintenancesCount = maintenances.filter(m => m.status === "Planifiée").length;
+
+  // Calculer le nombre d'affectations actives
+  const activeAssignmentsCount = assignments.filter(a => a.status === "Active").length;
 
   // Préparer les données pour le graphique des coûts de carburant par mois
   const fuelCostsByMonth = fuelEntries.reduce((acc, entry) => {
@@ -119,12 +122,12 @@ const Index = () => {
             </Card>
             <Card className="glass rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Coûts Carburant (Mois)</CardTitle>
-                <Fuel className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Affectations Actives</CardTitle>
+                <Link className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalFuelCostThisMonth.toFixed(2)} TND</div>
-                <p className="text-xs text-muted-foreground">ce mois-ci</p>
+                <div className="text-2xl font-bold">{activeAssignmentsCount}</div>
+                <p className="text-xs text-muted-foreground">affectations en cours</p>
               </CardContent>
             </Card>
           </div>

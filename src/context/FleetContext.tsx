@@ -4,7 +4,8 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
 import { Maintenance } from "@/types/maintenance";
-import { FuelEntry } from "@/types/fuel"; // Importez le type FuelEntry
+import { FuelEntry } from "@/types/fuel";
+import { Assignment } from "@/types/assignment"; // Importez le type Assignment
 import { showSuccess, showError } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
 
@@ -21,10 +22,14 @@ interface FleetContextType {
   addMaintenance: (maintenance: Omit<Maintenance, 'id'>) => void;
   editMaintenance: (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => void;
   deleteMaintenance: (maintenanceToDelete: Maintenance) => void;
-  fuelEntries: FuelEntry[]; // Ajoutez l'état des entrées de carburant
-  addFuelEntry: (fuelEntry: Omit<FuelEntry, 'id'>) => void; // Ajoutez la fonction d'ajout
-  editFuelEntry: (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => void; // Ajoutez la fonction de modification
-  deleteFuelEntry: (fuelEntryToDelete: FuelEntry) => void; // Ajoutez la fonction de suppression
+  fuelEntries: FuelEntry[];
+  addFuelEntry: (fuelEntry: Omit<FuelEntry, 'id'>) => void;
+  editFuelEntry: (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => void;
+  deleteFuelEntry: (fuelEntryToDelete: FuelEntry) => void;
+  assignments: Assignment[]; // Ajoutez l'état des affectations
+  addAssignment: (assignment: Omit<Assignment, 'id'>) => void; // Ajoutez la fonction d'ajout
+  editAssignment: (originalAssignment: Assignment, updatedAssignment: Assignment) => void; // Ajoutez la fonction de modification
+  deleteAssignment: (assignmentToDelete: Assignment) => void; // Ajoutez la fonction de suppression
   clearAllData: () => void;
 }
 
@@ -63,6 +68,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
+  const [assignments, setAssignments] = useState<Assignment[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedAssignments = localStorage.getItem("fleet-assignments");
+      return savedAssignments ? JSON.parse(savedAssignments) : [];
+    }
+    return [];
+  });
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
@@ -86,6 +99,12 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.setItem("fleet-fuel-entries", JSON.stringify(fuelEntries));
     }
   }, [fuelEntries]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-assignments", JSON.stringify(assignments));
+    }
+  }, [assignments]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
@@ -157,16 +176,36 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showSuccess("Entrée de carburant supprimée avec succès !");
   };
 
+  const addAssignment = (newAssignment: Omit<Assignment, 'id'>) => {
+    const assignmentWithId = { ...newAssignment, id: uuidv4() };
+    setAssignments((prev) => [...prev, assignmentWithId]);
+    showSuccess("Affectation ajoutée avec succès !");
+  };
+
+  const editAssignment = (originalAssignment: Assignment, updatedAssignment: Assignment) => {
+    setAssignments((prev) =>
+      prev.map((a) => (a.id === originalAssignment.id ? updatedAssignment : a))
+    );
+    showSuccess("Affectation modifiée avec succès !");
+  };
+
+  const deleteAssignment = (assignmentToDelete: Assignment) => {
+    setAssignments((prev) => prev.filter((a) => a.id !== assignmentToDelete.id));
+    showSuccess("Affectation supprimée avec succès !");
+  };
+
   const clearAllData = () => {
     setVehicles([]);
     setDrivers([]);
     setMaintenances([]);
-    setFuelEntries([]); // Effacez aussi les entrées de carburant
+    setFuelEntries([]);
+    setAssignments([]); // Effacez aussi les affectations
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
       localStorage.removeItem("fleet-maintenances");
-      localStorage.removeItem("fleet-fuel-entries"); // Supprimez du localStorage
+      localStorage.removeItem("fleet-fuel-entries");
+      localStorage.removeItem("fleet-assignments"); // Supprimez du localStorage
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -186,10 +225,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addMaintenance,
         editMaintenance,
         deleteMaintenance,
-        fuelEntries, // Exposez les entrées de carburant
-        addFuelEntry, // Exposez les fonctions de carburant
+        fuelEntries,
+        addFuelEntry,
         editFuelEntry,
         deleteFuelEntry,
+        assignments, // Exposez les affectations
+        addAssignment, // Exposez les fonctions d'affectation
+        editAssignment,
+        deleteAssignment,
         clearAllData,
       }}
     >
