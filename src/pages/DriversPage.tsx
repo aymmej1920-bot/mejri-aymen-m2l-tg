@@ -3,6 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddDriverDialog from "@/components/drivers/AddDriverDialog";
+import EditDriverDialog from "@/components/drivers/EditDriverDialog"; // Importez le nouveau composant
 import {
   Table,
   TableBody,
@@ -11,6 +12,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { showSuccess, showError } from "@/utils/toast";
 import { Driver } from "@/types/driver";
 
 const DriversPage = () => {
@@ -18,6 +33,26 @@ const DriversPage = () => {
 
   const handleAddDriver = (newDriver: Driver) => {
     setDrivers((prevDrivers) => [...prevDrivers, newDriver]);
+  };
+
+  const handleEditDriver = (updatedDriver: Driver, originalIndex: number) => {
+    setDrivers((prevDrivers) =>
+      prevDrivers.map((driver, index) =>
+        index === originalIndex ? updatedDriver : driver
+      )
+    );
+  };
+
+  const handleDeleteDriver = (indexToDelete: number) => {
+    try {
+      setDrivers((prevDrivers) =>
+        prevDrivers.filter((_, index) => index !== indexToDelete)
+      );
+      showSuccess("Conducteur supprimé avec succès !");
+    } catch (error) {
+      showError("Erreur lors de la suppression du conducteur.");
+      console.error("Failed to delete driver:", error);
+    }
   };
 
   return (
@@ -55,8 +90,33 @@ const DriversPage = () => {
                     <TableCell>{driver.licenseNumber}</TableCell>
                     <TableCell>{driver.phoneNumber}</TableCell>
                     <TableCell className="text-right">
-                      {/* Les boutons d'action (modifier/supprimer) seront ajoutés ici plus tard */}
-                      <span className="text-muted-foreground text-sm">Actions</span>
+                      <div className="flex justify-end space-x-2">
+                        <EditDriverDialog
+                          driver={driver}
+                          onEditDriver={(updatedDriver) => handleEditDriver(updatedDriver, index)}
+                        />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action ne peut pas être annulée. Cela supprimera définitivement ce conducteur de votre liste.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteDriver(index)}>
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
