@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PlusCircle } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { Vehicle } from "@/types/vehicle"; // Importation de l'interface Vehicle partagée
+import { Vehicle } from "@/types/vehicle";
 
 const formSchema = z.object({
   make: z.string().min(2, {
@@ -106,7 +106,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => 
               name="model"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Modèle</Label>
+                  <FormLabel>Modèle</FormLabel>
                   <FormControl>
                     <Input placeholder="Corolla" {...field} />
                   </FormControl>
