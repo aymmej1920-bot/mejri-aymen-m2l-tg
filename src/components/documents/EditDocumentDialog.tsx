@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil } from "lucide-react";
+import { Pencil, CalendarIcon } from "lucide-react";
 import { useFleet } from "@/context/FleetContext";
 import {
   Select,
@@ -33,10 +33,15 @@ import {
 } from "@/components/ui/select";
 import { Document } from "@/types/document";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   id: z.string(),
   vehicleLicensePlate: z.string().optional(),
+  driverLicenseNumber: z.string().optional(),
   name: z.string().min(2, {
     message: "Le nom du document doit contenir au moins 2 caractères.",
   }),
@@ -47,6 +52,20 @@ const formSchema = z.object({
     message: "L'URL du document n'est pas valide.",
   }),
   uploadDate: z.string(),
+  issueDate: z.string().min(1, {
+    message: "Veuillez sélectionner une date d'émission.",
+  }),
+  expiryDate: z.string().min(1, {
+    message: "Veuillez sélectionner une date d'expiration.",
+  }),
+}).refine((data) => {
+  if (data.issueDate && data.expiryDate) {
+    return new Date(data.expiryDate) >= new Date(data.issueDate);
+  }
+  return true;
+}, {
+  message: "La date d'expiration ne peut pas être antérieure à la date d'émission.",
+  path: ["expiryDate"],
 });
 
 type EditDocumentFormValues = z.infer<typeof formSchema>;
@@ -57,12 +76,13 @@ interface EditDocumentDialogProps {
 
 const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { editDocument, vehicles } = useFleet();
+  const { editDocument, vehicles, drivers } = useFleet();
   const form = useForm<EditDocumentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       ...document,
-      vehicleLicensePlate: document.vehicleLicensePlate || "", // Assurez-vous que c'est une chaîne vide si undefined
+      vehicleLicensePlate: document.vehicleLicensePlate || "",
+      driverLicenseNumber: document.driverLicenseNumber || "",
     },
   });
 
@@ -70,6 +90,7 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
     form.reset({
       ...document,
       vehicleLicensePlate: document.vehicleLicensePlate || "",
+      driverLicenseNumber: document.driverLicenseNumber || "",
     });
   }, [document, form]);
 
@@ -81,7 +102,10 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
         type: values.type,
         url: values.url,
         uploadDate: values.uploadDate,
+        issueDate: values.issueDate,
+        expiryDate: values.expiryDate,
         vehicleLicensePlate: values.vehicleLicensePlate === "" ? undefined : values.vehicleLicensePlate,
+        driverLicenseNumber: values.driverLicenseNumber === "" ? undefined : values.driverLicenseNumber,
       };
       editDocument(document, updatedDocument);
       setIsOpen(false);
@@ -91,6 +115,7 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
   };
 
   const availableLicensePlates = vehicles.map(v => v.licensePlate);
+  const availableDriverLicenses = drivers.map(d => d.licenseNumber);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -114,17 +139,40 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Plaque d'immatriculation du véhicule (optionnel)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}> {/* Utilisez value pour contrôler le Select */}
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Aucun véhicule" /> {/* Placeholder pour l'état vide */}
+                        <SelectValue placeholder="Aucun véhicule" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {/* Pas de SelectItem avec value="" ici */}
                       {availableLicensePlates.map((plate) => (
                         <SelectItem key={plate} value={plate}>
                           {plate}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="driverLicenseNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Numéro de permis du conducteur (optionnel)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Aucun conducteur" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {availableDriverLicenses.map((license) => (
+                        <SelectItem key={license} value={license}>
+                          {license}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -178,6 +226,84 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="issueDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date d'émission</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(new Date(field.value), "PPP", { locale: fr })
+                          ) : (
+                            <span>Sélectionner une date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="expiryDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date d'expiration</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(new Date(field.value), "PPP", { locale: fr })
+                          ) : (
+                            <span>Sélectionner une date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                        initialFocus
+                        locale={fr}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

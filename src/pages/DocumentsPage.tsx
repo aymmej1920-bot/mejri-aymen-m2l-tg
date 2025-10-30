@@ -32,7 +32,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const DocumentsPage = () => {
-  const { documents, deleteDocument, vehicles } = useFleet();
+  const { documents, deleteDocument, vehicles, drivers } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
 
   const getVehicleDetails = (licensePlate: string | undefined) => {
@@ -41,11 +41,18 @@ const DocumentsPage = () => {
     return vehicle ? `${vehicle.make} ${vehicle.model} (${licensePlate})` : licensePlate;
   };
 
+  const getDriverDetails = (licenseNumber: string | undefined) => {
+    if (!licenseNumber) return "N/A";
+    const driver = drivers.find(d => d.licenseNumber === licenseNumber);
+    return driver ? `${driver.firstName} ${driver.lastName} (${licenseNumber})` : licenseNumber;
+  };
+
   const filteredDocuments = documents.filter((doc) =>
     Object.values(doc).some((value) =>
       String(value).toLowerCase().includes(searchTerm.toLowerCase())
     ) ||
-    getVehicleDetails(doc.vehicleLicensePlate).toLowerCase().includes(searchTerm.toLowerCase())
+    getVehicleDetails(doc.vehicleLicensePlate).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    getDriverDetails(doc.driverLicenseNumber).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -84,6 +91,9 @@ const DocumentsPage = () => {
                   <TableHead>Nom</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Véhicule</TableHead>
+                  <TableHead>Conducteur</TableHead>
+                  <TableHead>Date d'émission</TableHead>
+                  <TableHead>Date d'expiration</TableHead>
                   <TableHead>Date d'upload</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -99,6 +109,9 @@ const DocumentsPage = () => {
                     </TableCell>
                     <TableCell>{doc.type}</TableCell>
                     <TableCell>{getVehicleDetails(doc.vehicleLicensePlate)}</TableCell>
+                    <TableCell>{getDriverDetails(doc.driverLicenseNumber)}</TableCell>
+                    <TableCell>{format(new Date(doc.issueDate), "PPP", { locale: fr })}</TableCell>
+                    <TableCell>{format(new Date(doc.expiryDate), "PPP", { locale: fr })}</TableCell>
                     <TableCell>{format(new Date(doc.uploadDate), "PPP", { locale: fr })}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
