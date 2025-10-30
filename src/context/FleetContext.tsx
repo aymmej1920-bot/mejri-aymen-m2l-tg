@@ -7,7 +7,8 @@ import { Maintenance } from "@/types/maintenance";
 import { FuelEntry } from "@/types/fuel";
 import { Assignment } from "@/types/assignment";
 import { MaintenancePlan } from "@/types/maintenancePlan";
-import { Document } from "@/types/document"; // Importez le type Document
+import { Document } from "@/types/document";
+import { Tour } from "@/types/tour"; // Importez le type Tour
 import { showSuccess, showError } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
 import { addMonths, addYears, addDays, parseISO, format } from "date-fns";
@@ -38,10 +39,14 @@ interface FleetContextType {
   editMaintenancePlan: (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => void;
   deleteMaintenancePlan: (planToDelete: MaintenancePlan) => void;
   generateMaintenanceFromPlan: (plan: MaintenancePlan) => void;
-  documents: Document[]; // Ajoutez l'état des documents
-  addDocument: (document: Omit<Document, 'id'>) => void; // Ajoutez la fonction d'ajout de document
-  editDocument: (originalDocument: Document, updatedDocument: Document) => void; // Ajoutez la fonction de modification de document
-  deleteDocument: (documentToDelete: Document) => void; // Ajoutez la fonction de suppression de document
+  documents: Document[];
+  addDocument: (document: Omit<Document, 'id'>) => void;
+  editDocument: (originalDocument: Document, updatedDocument: Document) => void;
+  deleteDocument: (documentToDelete: Document) => void;
+  tours: Tour[]; // Ajoutez l'état des tournées
+  addTour: (tour: Omit<Tour, 'id'>) => void; // Ajoutez la fonction d'ajout de tournée
+  editTour: (originalTour: Tour, updatedTour: Tour) => void; // Ajoutez la fonction de modification de tournée
+  deleteTour: (tourToDelete: Tour) => void; // Ajoutez la fonction de suppression de tournée
   clearAllData: () => void;
 }
 
@@ -104,6 +109,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
+  const [tours, setTours] = useState<Tour[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedTours = localStorage.getItem("fleet-tours");
+      return savedTours ? JSON.parse(savedTours) : [];
+    }
+    return [];
+  });
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
@@ -145,6 +158,12 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.setItem("fleet-documents", JSON.stringify(documents));
     }
   }, [documents]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-tours", JSON.stringify(tours));
+    }
+  }, [tours]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
@@ -315,6 +334,24 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showSuccess("Document supprimé avec succès !");
   };
 
+  const addTour = (newTour: Omit<Tour, 'id'>) => {
+    const tourWithId = { ...newTour, id: uuidv4() };
+    setTours((prev) => [...prev, tourWithId]);
+    showSuccess("Tournée ajoutée avec succès !");
+  };
+
+  const editTour = (originalTour: Tour, updatedTour: Tour) => {
+    setTours((prev) =>
+      prev.map((t) => (t.id === originalTour.id ? updatedTour : t))
+    );
+    showSuccess("Tournée modifiée avec succès !");
+  };
+
+  const deleteTour = (tourToDelete: Tour) => {
+    setTours((prev) => prev.filter((t) => t.id !== tourToDelete.id));
+    showSuccess("Tournée supprimée avec succès !");
+  };
+
   const clearAllData = () => {
     setVehicles([]);
     setDrivers([]);
@@ -322,7 +359,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setFuelEntries([]);
     setAssignments([]);
     setMaintenancePlans([]);
-    setDocuments([]); // Effacez aussi les documents
+    setDocuments([]);
+    setTours([]); // Effacez aussi les tournées
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
@@ -330,7 +368,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.removeItem("fleet-fuel-entries");
       localStorage.removeItem("fleet-assignments");
       localStorage.removeItem("fleet-maintenance-plans");
-      localStorage.removeItem("fleet-documents"); // Supprimez du localStorage
+      localStorage.removeItem("fleet-documents");
+      localStorage.removeItem("fleet-tours"); // Supprimez du localStorage
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -363,10 +402,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         editMaintenancePlan,
         deleteMaintenancePlan,
         generateMaintenanceFromPlan,
-        documents, // Exposez les documents
-        addDocument, // Exposez les fonctions de document
+        documents,
+        addDocument,
         editDocument,
         deleteDocument,
+        tours, // Exposez les tournées
+        addTour, // Exposez les fonctions de tournée
+        editTour,
+        deleteTour,
         clearAllData,
       }}
     >

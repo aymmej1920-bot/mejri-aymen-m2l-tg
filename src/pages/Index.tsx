@@ -2,9 +2,10 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFleet } from "@/context/FleetContext";
-import { Car, Users, PlusCircle, Wrench, Fuel, Link } from "lucide-react"; // Importez l'icône Link
+import { Car, Users, PlusCircle, Wrench, Fuel, Link, Route } from "lucide-react"; // Importez Route
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
 import AddDriverDialog from "@/components/drivers/AddDriverDialog";
+import AddTourDialog from "@/components/tours/AddTourDialog"; // Importez le dialogue d'ajout de tournée
 import { format, isSameMonth, parseISO, getMonth, getYear } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -21,7 +22,7 @@ import {
 } from "recharts";
 
 const Index = () => {
-  const { vehicles, drivers, fuelEntries, maintenances, assignments } = useFleet();
+  const { vehicles, drivers, fuelEntries, maintenances, assignments, tours } = useFleet();
 
   // Calculer le coût total du carburant pour le mois en cours
   const currentMonth = new Date();
@@ -38,6 +39,9 @@ const Index = () => {
 
   // Calculer le nombre d'affectations actives
   const activeAssignmentsCount = assignments.filter(a => a.status === "Active").length;
+
+  // Calculer le nombre de tournées actives
+  const activeToursCount = tours.filter(t => t.status === "En cours").length;
 
   // Préparer les données pour le graphique des coûts de carburant par mois
   const fuelCostsByMonth = fuelEntries.reduce((acc, entry) => {
@@ -122,12 +126,12 @@ const Index = () => {
             </Card>
             <Card className="glass rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Affectations Actives</CardTitle>
-                <Link className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Tournées Actives</CardTitle>
+                <Route className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{activeAssignmentsCount}</div>
-                <p className="text-xs text-muted-foreground">affectations en cours</p>
+                <div className="text-2xl font-bold">{activeToursCount}</div>
+                <p className="text-xs text-muted-foreground">tournées en cours</p>
               </CardContent>
             </Card>
           </div>
@@ -139,6 +143,7 @@ const Index = () => {
             <CardContent className="flex flex-col sm:flex-row gap-4 justify-center">
               <AddVehicleDialog />
               <AddDriverDialog />
+              <AddTourDialog /> {/* Nouveau bouton d'action rapide */}
             </CardContent>
           </Card>
 

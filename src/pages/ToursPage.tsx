@@ -1,0 +1,189 @@
+"use client";
+
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AddTourDialog from "@/components/tours/AddTourDialog";
+import EditTourDialog from "@/components/tours/EditTourDialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Trash2, Route, Car, Users } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { useFleet } from "@/context/FleetContext";
+import { Tour } from "@/types/tour";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+
+const ToursPage = () => {
+  const { tours, deleteTour, vehicles, drivers } = useFleet();
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  const getVehicleDetails = (licensePlate: string) => {
+    const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
+    return vehicle ? `${vehicle.make} ${vehicle.model} (${licensePlate})` : licensePlate;
+  };
+
+  const getDriverDetails = (licenseNumber: string) => {
+    const driver = drivers.find(d => d.licenseNumber === licenseNumber);
+    return driver ? `${driver.firstName} ${driver.lastName} (${licenseNumber})` : licenseNumber;
+  };
+
+  const filteredTours = tours.filter((tour) =>
+    Object.values(tour).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    ) ||
+    getVehicleDetails(tour.vehicleLicensePlate).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    getDriverDetails(tour.driverLicenseNumber).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Calculer les statistiques de résumé
+  const totalTours = tours.length;
+  const activeTours = tours.filter(t => t.status === "En cours").length;
+  const plannedTours = tours.filter(t => t.status === "Planifiée").length;
+
+  return (
+    <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Gestion des Tournées & Missions</h1>
+        <AddTourDialog />
+      </div>
+
+      {/* Nouvelles cartes de résumé */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="glass rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Tournées</CardTitle>
+            <Route className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalTours}</div>
+            <p className="text-xs text-muted-foreground">tournées enregistrées</p>
+          </CardContent>
+        </Card>
+        <Card className="glass rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tournées Actives</CardTitle>
+            <Car className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeTours}</div>
+            <p className="text-xs text-muted-foreground">en cours</p>
+          </CardContent>
+        </Card>
+        <Card className="glass rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tournées Planifiées</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{plannedTours}</div>
+            <p className="text-xs text-muted-foreground">à venir</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des Tournées</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <Input
+              placeholder="Rechercher une tournée..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+          {filteredTours.length === 0 && tours.length > 0 && (
+            <p className="text-muted-foreground">
+              Aucune tournée ne correspond à votre recherche.
+            </p>
+          )}
+          {tours.length === 0 ? (
+            <p className="text-muted-foreground">
+              Aucune tournée enregistrée pour le moment. Cliquez sur "Ajouter une tournée" pour commencer.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Véhicule</TableHead>
+                  <TableHead>Conducteur</TableHead>
+                  <TableHead>Début</TableHead>
+                  <TableHead>Fin</TableHead>
+                  <TableHead>Km Début</TableHead>
+                  <TableHead>Km Fin</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTours.map((tour) => (
+                  <TableRow key={tour.id}>
+                    <TableCell className="font-medium">{tour.name}</TableCell>
+                    <TableCell>{getVehicleDetails(tour.vehicleLicensePlate)}</TableCell>
+                    <TableCell>{getDriverDetails(tour.driverLicenseNumber)}</TableCell>
+                    <TableCell>{format(new Date(tour.startDate), "PPP", { locale: fr })}</TableCell>
+                    <TableCell>{format(new Date(tour.endDate), "PPP", { locale: fr })}</TableCell>
+                    <TableCell>{tour.startOdometer} Km</TableCell>
+                    <TableCell>{tour.endOdometer !== null ? `${tour.endOdometer} Km` : "N/A"}</TableCell>
+                    <TableCell>{tour.status}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <EditTourDialog
+                          tour={tour}
+                        />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action ne peut pas être annulée. Cela supprimera définitivement cette tournée de votre liste.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteTour(tour)}>
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ToursPage;
