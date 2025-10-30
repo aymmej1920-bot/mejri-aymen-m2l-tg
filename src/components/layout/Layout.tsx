@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Sidebar from "@/components/layout/Sidebar";
-import { cn } from "@/lib/utils"; // Importez cn pour combiner les classes
+import Header from "@/components/layout/Header"; // Importez le composant Header
+import { cn } from "@/lib/utils";
 
 const Layout = () => {
   const isMobile = useIsMobile();
@@ -26,11 +27,12 @@ const Layout = () => {
           </SheetContent>
         </Sheet>
       ) : (
-        <div className={cn("w-64 flex-shrink-0", !isMobile && "border-r")}> {/* Appliquer border-r ici */}
+        <div className={cn("w-64 flex-shrink-0", !isMobile && "border-r")}>
           <Sidebar />
         </div>
       )}
       <main className="flex-1 p-6 lg:p-8 overflow-auto">
+        <Header /> {/* Affichez l'en-tête ici */}
         <Outlet />
       </main>
     </div>

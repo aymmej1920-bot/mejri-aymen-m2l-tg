@@ -20,12 +20,12 @@ const App = () => (
         <FleetProvider>
           <Routes>
             <Route path="/" element={<Layout />}>
-              <Route index element={<Index />} />
+              <Route index element={<Index />} handle={{ title: "Accueil" }} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="/vehicles" element={<VehiclesPage />} />
-              <Route path="/drivers" element={<DriversPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="/vehicles" element={<VehiclesPage />} handle={{ title: "Gestion des Véhicules" }} />
+              <Route path="/drivers" element={<DriversPage />} handle={{ title: "Gestion des Conducteurs" }} />
+              <Route path="/settings" element={<SettingsPage />} handle={{ title: "Paramètres" }} />
+              <Route path="*" element={<NotFound />} handle={{ title: "Page Introuvable" }} />
             </Route>
           </Routes>
         </FleetProvider>
