@@ -89,7 +89,7 @@ const Index = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
-      <Card className="w-full max-w-4xl text-center glass rounded-2xl">
+      <Card className="w-full max-w-4xl text-center glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle className="text-3xl font-bold">Bienvenue dans Fleet Manager Pro !</CardTitle>
         </CardHeader>

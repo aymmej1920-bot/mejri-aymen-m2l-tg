@@ -15,7 +15,7 @@ const Header = () => {
   const title = handle?.title || "Bienvenue"; // Default title if not specified
 
   return (
-    <header className="mb-6 flex justify-between items-center"> {/* Ajout de flex et justify-between */}
+    <header className="mb-6 flex justify-between items-center animate-fadeIn"> {/* Ajout de flex et justify-between */}
       <h1 className="text-3xl font-bold text-foreground">{title}</h1>
       <NotificationCenter /> {/* Affichez le NotificationCenter ici */}
     </header>
