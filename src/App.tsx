@@ -98,7 +98,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner />
-      <SessionContextProvider> {/* Enveloppez l'application avec le SessionContextProvider */}
+      <SessionContextProvider>
         <FleetProvider>
           <RouterProvider router={router} />
         </FleetProvider>
