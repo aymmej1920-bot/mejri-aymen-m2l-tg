@@ -187,8 +187,8 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
       type: alertRule.type,
       message: alertRule.message,
       status: alertRule.status,
-      vehicleLicensePlate: alertRule.criteria.vehicleLicensePlate || "",
-      driverLicenseNumber: alertRule.criteria.driverLicenseNumber || "",
+      vehicleLicensePlate: alertRule.criteria.vehicleLicensePlate || undefined, // Default to undefined
+      driverLicenseNumber: alertRule.criteria.driverLicenseNumber || undefined, // Default to undefined
       thresholdValue: alertRule.criteria.thresholdValue,
       thresholdUnit: alertRule.criteria.thresholdUnit,
       maintenanceType: alertRule.criteria.maintenanceType,
@@ -203,8 +203,8 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
       type: alertRule.type,
       message: alertRule.message,
       status: alertRule.status,
-      vehicleLicensePlate: alertRule.criteria.vehicleLicensePlate || "",
-      driverLicenseNumber: alertRule.criteria.driverLicenseNumber || "",
+      vehicleLicensePlate: alertRule.criteria.vehicleLicensePlate || undefined,
+      driverLicenseNumber: alertRule.criteria.driverLicenseNumber || undefined,
       thresholdValue: alertRule.criteria.thresholdValue,
       thresholdUnit: alertRule.criteria.thresholdUnit,
       maintenanceType: alertRule.criteria.maintenanceType,
@@ -224,8 +224,8 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
         message: values.message,
         status: values.status,
         criteria: {
-          vehicleLicensePlate: values.vehicleLicensePlate || undefined,
-          driverLicenseNumber: values.driverLicenseNumber || undefined,
+          vehicleLicensePlate: values.vehicleLicensePlate,
+          driverLicenseNumber: values.driverLicenseNumber,
           thresholdValue: values.thresholdValue,
           thresholdUnit: values.thresholdUnit,
           maintenanceType: values.maintenanceType,
@@ -338,14 +338,17 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Plaque d'immatriculation du véhicule (optionnel)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "__NONE_SELECTED__" ? undefined : value)}
+                      value={field.value || "__NONE_SELECTED__"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Tous les véhicules ou sélectionner un spécifique" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Tous les véhicules</SelectItem>
+                        <SelectItem value="__NONE_SELECTED__">Tous les véhicules</SelectItem>
                         {availableLicensePlates.map((plate) => (
                           <SelectItem key={plate} value={plate}>
                             {plate}
@@ -366,14 +369,17 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Numéro de permis du conducteur (optionnel)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "__NONE_SELECTED__" ? undefined : value)}
+                      value={field.value || "__NONE_SELECTED__"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Tous les conducteurs ou sélectionner un spécifique" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Tous les conducteurs</SelectItem>
+                        <SelectItem value="__NONE_SELECTED__">Tous les conducteurs</SelectItem>
                         {availableDriverLicenses.map((license) => (
                           <SelectItem key={license} value={license}>
                             {license}
