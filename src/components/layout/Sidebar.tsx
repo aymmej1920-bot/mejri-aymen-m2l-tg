@@ -1,7 +1,7 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut } from "lucide-react";
+import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck } from "lucide-react"; // Importez CalendarCheck
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ const Sidebar = () => {
       <div className="mb-8 text-2xl font-bold text-sidebar-primary">
         Fleet Manager Pro
       </div>
-      <nav className="flex flex-col space-y-2 flex-grow"> {/* flex-grow pour pousser le bouton de déconnexion vers le bas */}
+      <nav className="flex flex-col space-y-2 flex-grow">
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -61,6 +61,15 @@ const Sidebar = () => {
           Maintenances
         </NavLink>
         <NavLink
+          to="/maintenance-plans"
+          className={({ isActive }) =>
+            cn(navLinkClasses, isActive && activeNavLinkClasses)
+          }
+        >
+          <CalendarCheck className="mr-2 h-4 w-4" />
+          Plans de Maintenance
+        </NavLink>
+        <NavLink
           to="/fuel"
           className={({ isActive }) =>
             cn(navLinkClasses, isActive && activeNavLinkClasses)
@@ -88,7 +97,7 @@ const Sidebar = () => {
           Paramètres
         </NavLink>
       </nav>
-      <div className="mt-auto pt-4 border-t border-sidebar-border"> {/* Bouton de déconnexion en bas */}
+      <div className="mt-auto pt-4 border-t border-sidebar-border">
         <Button
           variant="ghost"
           className={cn(navLinkClasses, "w-full justify-start")}

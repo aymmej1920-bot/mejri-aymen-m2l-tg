@@ -5,9 +5,11 @@ import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
 import { Maintenance } from "@/types/maintenance";
 import { FuelEntry } from "@/types/fuel";
-import { Assignment } from "@/types/assignment"; // Importez le type Assignment
+import { Assignment } from "@/types/assignment";
+import { MaintenancePlan } from "@/types/maintenancePlan"; // Importez le type MaintenancePlan
 import { showSuccess, showError } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
+import { addMonths, addYears, addDays, parseISO, format } from "date-fns"; // Importez les fonctions de date-fns
 
 interface FleetContextType {
   vehicles: Vehicle[];
@@ -26,10 +28,15 @@ interface FleetContextType {
   addFuelEntry: (fuelEntry: Omit<FuelEntry, 'id'>) => void;
   editFuelEntry: (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => void;
   deleteFuelEntry: (fuelEntryToDelete: FuelEntry) => void;
-  assignments: Assignment[]; // Ajoutez l'état des affectations
-  addAssignment: (assignment: Omit<Assignment, 'id'>) => void; // Ajoutez la fonction d'ajout
-  editAssignment: (originalAssignment: Assignment, updatedAssignment: Assignment) => void; // Ajoutez la fonction de modification
-  deleteAssignment: (assignmentToDelete: Assignment) => void; // Ajoutez la fonction de suppression
+  assignments: Assignment[];
+  addAssignment: (assignment: Omit<Assignment, 'id'>) => void;
+  editAssignment: (originalAssignment: Assignment, updatedAssignment: Assignment) => void;
+  deleteAssignment: (assignmentToDelete: Assignment) => void;
+  maintenancePlans: MaintenancePlan[]; // Ajoutez l'état des plans de maintenance
+  addMaintenancePlan: (plan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>) => void; // Ajoutez la fonction d'ajout
+  editMaintenancePlan: (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => void; // Ajoutez la fonction de modification
+  deleteMaintenancePlan: (planToDelete: MaintenancePlan) => void; // Ajoutez la fonction de suppression
+  generateMaintenanceFromPlan: (plan: MaintenancePlan) => void; // Fonction pour générer une maintenance
   clearAllData: () => void;
 }
 
@@ -76,6 +83,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
+  const [maintenancePlans, setMaintenancePlans] = useState<MaintenancePlan[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedPlans = localStorage.getItem("fleet-maintenance-plans");
+      return savedPlans ? JSON.parse(savedPlans) : [];
+    }
+    return [];
+  });
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
@@ -105,6 +120,12 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.setItem("fleet-assignments", JSON.stringify(assignments));
     }
   }, [assignments]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-maintenance-plans", JSON.stringify(maintenancePlans));
+    }
+  }, [maintenancePlans]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
@@ -194,18 +215,88 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showSuccess("Affectation supprimée avec succès !");
   };
 
+  const addMaintenancePlan = (newPlan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>) => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    let nextDueDate: string | null = null;
+
+    if (newPlan.intervalType === "Temps") {
+      // Pour l'instant, nous allons simplement ajouter l'intervalle à la date d'aujourd'hui pour le premier calcul
+      // Dans une implémentation plus complexe, on pourrait demander une date de début
+      const futureDate = addMonths(new Date(), newPlan.intervalValue); // Exemple: intervalValue en mois
+      nextDueDate = format(futureDate, "yyyy-MM-dd");
+    }
+    // Pour le kilométrage, nextDueDate sera calculé lors de la génération ou basé sur le relevé kilométrique du véhicule
+
+    const planWithId: MaintenancePlan = {
+      ...newPlan,
+      id: uuidv4(),
+      lastGeneratedDate: null, // Pas encore généré
+      nextDueDate: nextDueDate,
+    };
+    setMaintenancePlans((prev) => [...prev, planWithId]);
+    showSuccess("Plan de maintenance ajouté avec succès !");
+  };
+
+  const editMaintenancePlan = (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => {
+    setMaintenancePlans((prev) =>
+      prev.map((p) => (p.id === originalPlan.id ? updatedPlan : p))
+    );
+    showSuccess("Plan de maintenance modifié avec succès !");
+  };
+
+  const deleteMaintenancePlan = (planToDelete: MaintenancePlan) => {
+    setMaintenancePlans((prev) => prev.filter((p) => p.id !== planToDelete.id));
+    showSuccess("Plan de maintenance supprimé avec succès !");
+  };
+
+  const generateMaintenanceFromPlan = (plan: MaintenancePlan) => {
+    const today = format(new Date(), "yyyy-MM-dd");
+
+    const newMaintenance: Omit<Maintenance, 'id'> = {
+      vehicleLicensePlate: plan.vehicleLicensePlate,
+      type: plan.type,
+      description: `Maintenance générée par plan: ${plan.description}`,
+      cost: plan.estimatedCost,
+      date: today,
+      provider: plan.provider,
+      status: "Planifiée", // Par défaut, une maintenance générée est planifiée
+    };
+
+    addMaintenance(newMaintenance); // Utilise la fonction existante pour ajouter la maintenance
+
+    // Mettre à jour le plan avec la nouvelle date de dernière génération et la prochaine date d'échéance
+    let nextDueDate: string | null = null;
+    if (plan.intervalType === "Temps") {
+      const lastDate = new Date(today);
+      const futureDate = addMonths(lastDate, plan.intervalValue); // Supposons que intervalValue est en mois
+      nextDueDate = format(futureDate, "yyyy-MM-dd");
+    }
+    // Pour le kilométrage, la prochaine échéance serait calculée en fonction du relevé kilométrique actuel du véhicule + intervalValue
+
+    const updatedPlan: MaintenancePlan = {
+      ...plan,
+      lastGeneratedDate: today,
+      nextDueDate: nextDueDate,
+      status: "Actif", // S'assurer que le plan reste actif après génération
+    };
+    editMaintenancePlan(plan, updatedPlan); // Mettre à jour le plan dans le contexte
+    showSuccess(`Maintenance générée pour le véhicule ${plan.vehicleLicensePlate} !`);
+  };
+
   const clearAllData = () => {
     setVehicles([]);
     setDrivers([]);
     setMaintenances([]);
     setFuelEntries([]);
-    setAssignments([]); // Effacez aussi les affectations
+    setAssignments([]);
+    setMaintenancePlans([]); // Effacez aussi les plans de maintenance
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
       localStorage.removeItem("fleet-maintenances");
       localStorage.removeItem("fleet-fuel-entries");
-      localStorage.removeItem("fleet-assignments"); // Supprimez du localStorage
+      localStorage.removeItem("fleet-assignments");
+      localStorage.removeItem("fleet-maintenance-plans"); // Supprimez du localStorage
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -229,10 +320,15 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addFuelEntry,
         editFuelEntry,
         deleteFuelEntry,
-        assignments, // Exposez les affectations
-        addAssignment, // Exposez les fonctions d'affectation
+        assignments,
+        addAssignment,
         editAssignment,
         deleteAssignment,
+        maintenancePlans, // Exposez les plans de maintenance
+        addMaintenancePlan, // Exposez les fonctions de plan de maintenance
+        editMaintenancePlan,
+        deleteMaintenancePlan,
+        generateMaintenanceFromPlan, // Exposez la fonction de génération
         clearAllData,
       }}
     >

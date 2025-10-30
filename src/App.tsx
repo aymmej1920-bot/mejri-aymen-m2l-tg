@@ -11,13 +11,13 @@ import SettingsPage from "./pages/SettingsPage";
 import MaintenancePage from "./pages/MaintenancePage";
 import FuelPage from "./pages/FuelPage";
 import AssignmentsPage from "./pages/AssignmentsPage";
-import LoginPage from "./pages/LoginPage"; // Importez la page de connexion
+import MaintenancePlansPage from "./pages/MaintenancePlansPage"; // Importez la nouvelle page
+import LoginPage from "./pages/LoginPage";
 import { FleetProvider } from "@/context/FleetContext";
-import { SessionContextProvider, useSession } from "@/context/SessionContext"; // Importez le contexte de session
+import { SessionContextProvider, useSession } from "@/context/SessionContext";
 
 const queryClient = new QueryClient();
 
-// Composant de protection des routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, isLoading } = useSession();
 
@@ -69,6 +69,11 @@ const router = createBrowserRouter([
         path: "/maintenances",
         element: <MaintenancePage />,
         handle: { title: "Gestion des Maintenances" },
+      },
+      {
+        path: "/maintenance-plans", // Nouvelle route
+        element: <MaintenancePlansPage />,
+        handle: { title: "Gestion des Plans de Maintenance" },
       },
       {
         path: "/fuel",
