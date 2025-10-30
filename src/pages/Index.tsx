@@ -2,7 +2,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFleet } from "@/context/FleetContext";
-import { Car, Users, PlusCircle, Wrench, Fuel, Link, Route, ClipboardCheck } from "lucide-react"; // Importez ClipboardCheck
+import { Car, Users, PlusCircle, Wrench, Fuel, Link, Route, ClipboardCheck, BellRing } from "lucide-react"; // Importez BellRing
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
 import AddDriverDialog from "@/components/drivers/AddDriverDialog";
 import AddTourDialog from "@/components/tours/AddTourDialog";
@@ -22,7 +22,7 @@ import {
 } from "recharts";
 
 const Index = () => {
-  const { vehicles, drivers, fuelEntries, maintenances, assignments, tours, inspections } = useFleet();
+  const { vehicles, drivers, fuelEntries, maintenances, assignments, tours, inspections, alertRules } = useFleet();
 
   // Calculer le coût total du carburant pour le mois en cours
   const currentMonth = new Date();
@@ -45,6 +45,9 @@ const Index = () => {
 
   // Calculer le nombre d'inspections non conformes
   const nonConformInspectionsCount = inspections.filter(i => i.overallStatus === "Non conforme").length;
+
+  // Calculer le nombre de règles d'alerte actives
+  const activeAlertRulesCount = alertRules.filter(rule => rule.status === "Active").length;
 
   // Préparer les données pour le graphique des coûts de carburant par mois
   const fuelCostsByMonth = fuelEntries.reduce((acc, entry) => {
@@ -129,12 +132,12 @@ const Index = () => {
             </Card>
             <Card className="glass rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Inspections Non Conformes</CardTitle>
-                <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Alertes Actives</CardTitle>
+                <BellRing className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{nonConformInspectionsCount}</div>
-                <p className="text-xs text-muted-foreground">inspections nécessitant une action</p>
+                <div className="text-2xl font-bold">{activeAlertRulesCount}</div>
+                <p className="text-xs text-muted-foreground">règles d'alerte actives</p>
               </CardContent>
             </Card>
           </div>

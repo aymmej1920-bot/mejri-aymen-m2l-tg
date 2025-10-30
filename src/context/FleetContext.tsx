@@ -1,19 +1,20 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
+import React, { createContext, useState, useContext, ReactNode, useEffect, useRef } from "react";
 import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
 import { Maintenance } from "@/types/maintenance";
 import { FuelEntry } from "@/types/fuel";
-import { Assignment } from "@/types/assignment"; // Correction de l'importation
+import { Assignment } from "@/types/assignment";
 import { MaintenancePlan } from "@/types/maintenancePlan";
 import { Document } from "@/types/document";
 import { Tour } from "@/types/tour";
 import { Inspection } from "@/types/inspection";
+import { AlertRule } from "@/types/alertRule";
 import { showSuccess, showError } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
-import { addMonths, addYears, addDays, parseISO, format } from "date-fns";
-import { fr } from "date-fns/locale"; // Importation de la locale 'fr'
+import { addMonths, addYears, addDays, parseISO, format, differenceInDays, isBefore } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface FleetContextType {
   vehicles: Vehicle[];
@@ -53,6 +54,10 @@ interface FleetContextType {
   addInspection: (inspection: Omit<Inspection, 'id'>) => void;
   editInspection: (originalInspection: Inspection, updatedInspection: Inspection) => void;
   deleteInspection: (inspectionToDelete: Inspection) => void;
+  alertRules: AlertRule[];
+  addAlertRule: (rule: Omit<AlertRule, 'id' | 'lastTriggered'>) => void;
+  editAlertRule: (originalRule: AlertRule, updatedRule: AlertRule) => void;
+  deleteAlertRule: (ruleToDelete: AlertRule) => void;
   clearAllData: () => void;
 }
 
@@ -131,6 +136,16 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
+  const [alertRules, setAlertRules] = useState<AlertRule[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedAlertRules = localStorage.getItem("fleet-alert-rules");
+      return savedAlertRules ? JSON.parse(savedAlertRules) : [];
+    }
+    return [];
+  });
+
+  const triggeredAlertsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
@@ -184,6 +199,12 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.setItem("fleet-inspections", JSON.stringify(inspections));
     }
   }, [inspections]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-alert-rules", JSON.stringify(alertRules));
+    }
+  }, [alertRules]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
@@ -377,14 +398,13 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setInspections((prev) => [...prev, inspectionWithId]);
     showSuccess("Inspection ajoutée avec succès !");
 
-    // Générer des tâches de maintenance corrective pour les points "NOK"
     newInspection.checkpoints.forEach(cp => {
       if (cp.status === "NOK") {
         addMaintenance({
           vehicleLicensePlate: newInspection.vehicleLicensePlate,
           type: "Corrective",
           description: `Maintenance corrective requise suite à l'inspection du ${format(new Date(newInspection.date), "PPP", { locale: fr })} - Point: ${cp.name}. Observation: ${cp.observation || "Aucune"}.`,
-          cost: 0, // Coût initial à 0, à mettre à jour lors de la planification
+          cost: 0,
           date: format(new Date(), "yyyy-MM-dd"),
           provider: "À définir",
           status: "Planifiée",
@@ -399,10 +419,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     );
     showSuccess("Inspection modifiée avec succès !");
 
-    // Re-évaluer et générer des tâches de maintenance corrective si nécessaire
     updatedInspection.checkpoints.forEach(cp => {
-      // Si un point est NOK et qu'il n'y avait pas de maintenance corrective pour ce point spécifique de cette inspection
-      // (Simplification: pour l'instant, on génère une nouvelle tâche si NOK, sans vérifier les doublons complexes)
       if (cp.status === "NOK") {
         addMaintenance({
           vehicleLicensePlate: updatedInspection.vehicleLicensePlate,
@@ -422,6 +439,127 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showSuccess("Inspection supprimée avec succès !");
   };
 
+  const addAlertRule = (newRule: Omit<AlertRule, 'id' | 'lastTriggered'>) => {
+    const ruleWithId = { ...newRule, id: uuidv4(), lastTriggered: null };
+    setAlertRules((prev) => [...prev, ruleWithId]);
+    showSuccess("Règle d'alerte ajoutée avec succès !");
+  };
+
+  const editAlertRule = (originalRule: AlertRule, updatedRule: AlertRule) => {
+    setAlertRules((prev) =>
+      prev.map((r) => (r.id === originalRule.id ? updatedRule : r))
+    );
+    showSuccess("Règle d'alerte modifiée avec succès !");
+  };
+
+  const deleteAlertRule = (ruleToDelete: AlertRule) => {
+    setAlertRules((prev) => prev.filter((r) => r.id !== ruleToDelete.id));
+    showSuccess("Règle d'alerte supprimée avec succès !");
+  };
+
+  const checkAlerts = React.useCallback(() => {
+    const now = new Date();
+    alertRules.filter(rule => rule.status === "Active").forEach(rule => {
+      let shouldTrigger = false;
+      let alertMessage = rule.message;
+      const alertId = `${rule.id}-${format(now, 'yyyy-MM-dd')}`; // Unique ID for daily alerts
+
+      // Prevent duplicate alerts for the same rule on the same day
+      if (triggeredAlertsRef.current.has(alertId)) {
+        return;
+      }
+
+      switch (rule.type) {
+        case "MaintenanceDue":
+          maintenancePlans.filter(plan =>
+            (!rule.criteria.vehicleLicensePlate || plan.vehicleLicensePlate === rule.criteria.vehicleLicensePlate) &&
+            (!rule.criteria.maintenanceType || plan.type === rule.criteria.maintenanceType) &&
+            plan.status === "Actif" &&
+            plan.nextDueDate
+          ).forEach(plan => {
+            const nextDueDate = parseISO(plan.nextDueDate!);
+            const daysUntilDue = differenceInDays(nextDueDate, now);
+
+            if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilDue <= rule.criteria.thresholdValue && daysUntilDue >= 0) {
+              shouldTrigger = true;
+              alertMessage = `Maintenance "${plan.description}" pour le véhicule ${plan.vehicleLicensePlate} est due dans ${daysUntilDue} jours.`;
+            }
+            // TODO: Add mileage-based checks if odometer readings are available
+          });
+          break;
+
+        case "DocumentExpiry":
+          documents.filter(doc =>
+            (!rule.criteria.vehicleLicensePlate || doc.vehicleLicensePlate === rule.criteria.vehicleLicensePlate) &&
+            (!rule.criteria.driverLicenseNumber || doc.driverLicenseNumber === rule.criteria.driverLicenseNumber) &&
+            (!rule.criteria.documentType || doc.type === rule.criteria.documentType) &&
+            doc.expiryDate
+          ).forEach(doc => {
+            const expiryDate = parseISO(doc.expiryDate);
+            const daysUntilExpiry = differenceInDays(expiryDate, now);
+
+            if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilExpiry <= rule.criteria.thresholdValue && daysUntilExpiry >= 0) {
+              shouldTrigger = true;
+              alertMessage = `Le document "${doc.name}" (${doc.type}) pour ${doc.vehicleLicensePlate || doc.driverLicenseNumber} expire dans ${daysUntilExpiry} jours.`;
+            }
+          });
+          break;
+
+        case "VehicleAssignmentEnd":
+          assignments.filter(assign =>
+            (!rule.criteria.vehicleLicensePlate || assign.vehicleLicensePlate === rule.criteria.vehicleLicensePlate) &&
+            assign.status === "Active" &&
+            assign.endDate
+          ).forEach(assign => {
+            const endDate = parseISO(assign.endDate);
+            const daysUntilEnd = differenceInDays(endDate, now);
+
+            if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilEnd <= rule.criteria.thresholdValue && daysUntilEnd >= 0) {
+              shouldTrigger = true;
+              alertMessage = `L'affectation du véhicule ${assign.vehicleLicensePlate} se termine dans ${daysUntilEnd} jours.`;
+            }
+          });
+          break;
+
+        case "DriverLicenseExpiry":
+          drivers.filter(driver =>
+            (!rule.criteria.driverLicenseNumber || driver.licenseNumber === rule.criteria.driverLicenseNumber) &&
+            documents.some(doc => doc.driverLicenseNumber === driver.licenseNumber && doc.type === "Permis de conduire" && doc.expiryDate)
+          ).forEach(driver => {
+            const licenseDoc = documents.find(doc => doc.driverLicenseNumber === driver.licenseNumber && doc.type === "Permis de conduire" && doc.expiryDate);
+            if (licenseDoc) {
+              const expiryDate = parseISO(licenseDoc.expiryDate);
+              const daysUntilExpiry = differenceInDays(expiryDate, now);
+
+              if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilExpiry <= rule.criteria.thresholdValue && daysUntilExpiry >= 0) {
+                shouldTrigger = true;
+                alertMessage = `Le permis de conduire de ${driver.firstName} ${driver.lastName} expire dans ${daysUntilExpiry} jours.`;
+              }
+            }
+          });
+          break;
+      }
+
+      if (shouldTrigger) {
+        showError(alertMessage);
+        triggeredAlertsRef.current.add(alertId);
+        setAlertRules(prevRules =>
+          prevRules.map(r => r.id === rule.id ? { ...r, lastTriggered: format(now, 'yyyy-MM-dd') } : r)
+        );
+      }
+    });
+  }, [alertRules, maintenancePlans, documents, assignments, drivers]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkAlerts();
+    }, 60 * 60 * 1000);
+
+    checkAlerts();
+
+    return () => clearInterval(interval);
+  }, [checkAlerts]);
+
   const clearAllData = () => {
     setVehicles([]);
     setDrivers([]);
@@ -432,6 +570,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setDocuments([]);
     setTours([]);
     setInspections([]);
+    setAlertRules([]);
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
@@ -442,6 +581,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.removeItem("fleet-documents");
       localStorage.removeItem("fleet-tours");
       localStorage.removeItem("fleet-inspections");
+      localStorage.removeItem("fleet-alert-rules");
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -486,6 +626,10 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addInspection,
         editInspection,
         deleteInspection,
+        alertRules,
+        addAlertRule,
+        editAlertRule,
+        deleteAlertRule,
         clearAllData,
       }}
     >

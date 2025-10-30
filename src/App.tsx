@@ -14,7 +14,8 @@ import AssignmentsPage from "./pages/AssignmentsPage";
 import MaintenancePlansPage from "./pages/MaintenancePlansPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import ToursPage from "./pages/ToursPage";
-import InspectionsPage from "./pages/InspectionsPage"; // Importez la nouvelle page
+import InspectionsPage from "./pages/InspectionsPage";
+import AlertsPage from "./pages/AlertsPage"; // Importez la nouvelle page
 import LoginPage from "./pages/LoginPage";
 import { FleetProvider } from "@/context/FleetContext";
 import { SessionContextProvider, useSession } from "@/context/SessionContext";
@@ -99,9 +100,14 @@ const router = createBrowserRouter([
         handle: { title: "Gestion des Tournées" },
       },
       {
-        path: "/inspections", // Nouvelle route
+        path: "/inspections",
         element: <InspectionsPage />,
         handle: { title: "Gestion des Inspections" },
+      },
+      {
+        path: "/alerts", // Nouvelle route
+        element: <AlertsPage />,
+        handle: { title: "Gestion des Alertes" },
       },
       {
         path: "/settings",
