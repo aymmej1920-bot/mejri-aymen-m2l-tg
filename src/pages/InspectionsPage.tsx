@@ -31,7 +31,7 @@ import { Inspection } from "@/types/inspection";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+import { CustomBadge } from "@/components/CustomBadge"; // Import CustomBadge
 
 const InspectionsPage = () => {
   const { inspections, deleteInspection, vehicles } = useFleet();
@@ -51,13 +51,26 @@ const InspectionsPage = () => {
     inspection.checkpoints.some(cp => cp.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const getStatusBadgeVariant = (status: Inspection['overallStatus']) => {
+  const getOverallStatusBadgeVariant = (status: Inspection['overallStatus']) => {
     switch (status) {
       case "Conforme":
-        return "default";
+        return "success"; // Using new success variant
       case "Non conforme":
         return "destructive";
       case "En cours":
+        return "warning"; // Using new warning variant
+      default:
+        return "outline";
+    }
+  };
+
+  const getCheckpointStatusBadgeVariant = (status: Inspection['overallStatus']) => {
+    switch (status) {
+      case "OK":
+        return "success";
+      case "NOK":
+        return "destructive";
+      case "N/A":
         return "secondary";
       default:
         return "outline";
@@ -111,9 +124,9 @@ const InspectionsPage = () => {
                     <TableCell>{format(new Date(inspection.date), "PPP", { locale: fr })}</TableCell>
                     <TableCell>{inspection.inspectorName}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(inspection.overallStatus)}>
+                      <CustomBadge variant={getOverallStatusBadgeVariant(inspection.overallStatus)}>
                         {inspection.overallStatus}
-                      </Badge>
+                      </CustomBadge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
@@ -164,12 +177,12 @@ const InspectionsPage = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <p><strong>Statut Global :</strong> <Badge variant={getStatusBadgeVariant(viewingInspection.overallStatus)}>{viewingInspection.overallStatus}</Badge></p>
+              <p><strong>Statut Global :</strong> <CustomBadge variant={getOverallStatusBadgeVariant(viewingInspection.overallStatus)}>{viewingInspection.overallStatus}</CustomBadge></p>
               <h4 className="font-semibold text-md mt-2">Points de contrôle :</h4>
               <div className="grid gap-2">
                 {viewingInspection.checkpoints.map((cp, idx) => (
                   <div key={idx} className="border p-2 rounded-md">
-                    <p><strong>{cp.name} :</strong> <Badge variant={cp.status === "OK" ? "default" : cp.status === "NOK" ? "destructive" : "secondary"}>{cp.status}</Badge></p>
+                    <p><strong>{cp.name} :</strong> <CustomBadge variant={getCheckpointStatusBadgeVariant(cp.status)}>{cp.status}</CustomBadge></p>
                     {cp.observation && <p className="text-sm text-muted-foreground mt-1">Observations : {cp.observation}</p>}
                   </div>
                 ))}

@@ -84,7 +84,8 @@ const Index = () => {
     value: maintenanceStatusCounts[status],
   }));
 
-  const PIE_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]; // Couleurs pour le graphique en secteurs
+  // Using Tailwind CSS colors directly or CSS variables
+  const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))", "hsl(var(--secondary))"];
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
@@ -152,7 +153,7 @@ const Index = () => {
                     <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
                     <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
                     <Legend />
-                    <Bar dataKey="Coût (TND)" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Coût (TND)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
 
@@ -164,7 +165,7 @@ const Index = () => {
                       cy="50%"
                       labelLine={false}
                       outerRadius={80}
-                      fill="#8884d8"
+                      fill="hsl(var(--primary))"
                       dataKey="value"
                       label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                     >
