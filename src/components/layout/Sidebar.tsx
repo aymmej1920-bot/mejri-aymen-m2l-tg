@@ -1,7 +1,7 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck } from "lucide-react"; // Importez CalendarCheck
+import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck, FileText } from "lucide-react"; // Importez FileText
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,6 +86,15 @@ const Sidebar = () => {
         >
           <Link className="mr-2 h-4 w-4" />
           Affectations
+        </NavLink>
+        <NavLink
+          to="/documents"
+          className={({ isActive }) =>
+            cn(navLinkClasses, isActive && activeNavLinkClasses)
+          }
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          Documents
         </NavLink>
         <NavLink
           to="/settings"

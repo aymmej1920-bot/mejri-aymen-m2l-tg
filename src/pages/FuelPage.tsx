@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Fuel } from "lucide-react";
+import { Trash2, Fuel as FuelIcon, DollarSign, Gauge } from "lucide-react"; // Importez les nouvelles icônes
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,11 +41,50 @@ const FuelPage = () => {
     )
   );
 
+  // Calculer les statistiques de résumé
+  const totalFuelEntries = fuelEntries.length;
+  const totalFuelCost = fuelEntries.reduce((sum, entry) => sum + entry.cost, 0);
+  const totalFuelVolume = fuelEntries.reduce((sum, entry) => sum + entry.volume, 0);
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gestion du Carburant</h1>
         <AddFuelEntryDialog />
+      </div>
+
+      {/* Nouvelles cartes de résumé */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="glass rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Ravitaillements</CardTitle>
+            <FuelIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalFuelEntries}</div>
+            <p className="text-xs text-muted-foreground">entrées enregistrées</p>
+          </CardContent>
+        </Card>
+        <Card className="glass rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Coût Total Carburant</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalFuelCost.toFixed(2)} TND</div>
+            <p className="text-xs text-muted-foreground">dépensé au total</p>
+          </CardContent>
+        </Card>
+        <Card className="glass rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Volume Total Carburant</CardTitle>
+            <Gauge className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalFuelVolume.toFixed(2)} L</div>
+            <p className="text-xs text-muted-foreground">consommé au total</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>

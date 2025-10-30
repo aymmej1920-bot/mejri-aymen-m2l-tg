@@ -6,10 +6,11 @@ import { Driver } from "@/types/driver";
 import { Maintenance } from "@/types/maintenance";
 import { FuelEntry } from "@/types/fuel";
 import { Assignment } from "@/types/assignment";
-import { MaintenancePlan } from "@/types/maintenancePlan"; // Importez le type MaintenancePlan
+import { MaintenancePlan } from "@/types/maintenancePlan";
+import { Document } from "@/types/document"; // Importez le type Document
 import { showSuccess, showError } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
-import { addMonths, addYears, addDays, parseISO, format } from "date-fns"; // Importez les fonctions de date-fns
+import { addMonths, addYears, addDays, parseISO, format } from "date-fns";
 
 interface FleetContextType {
   vehicles: Vehicle[];
@@ -32,11 +33,15 @@ interface FleetContextType {
   addAssignment: (assignment: Omit<Assignment, 'id'>) => void;
   editAssignment: (originalAssignment: Assignment, updatedAssignment: Assignment) => void;
   deleteAssignment: (assignmentToDelete: Assignment) => void;
-  maintenancePlans: MaintenancePlan[]; // Ajoutez l'état des plans de maintenance
-  addMaintenancePlan: (plan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>) => void; // Ajoutez la fonction d'ajout
-  editMaintenancePlan: (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => void; // Ajoutez la fonction de modification
-  deleteMaintenancePlan: (planToDelete: MaintenancePlan) => void; // Ajoutez la fonction de suppression
-  generateMaintenanceFromPlan: (plan: MaintenancePlan) => void; // Fonction pour générer une maintenance
+  maintenancePlans: MaintenancePlan[];
+  addMaintenancePlan: (plan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>) => void;
+  editMaintenancePlan: (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => void;
+  deleteMaintenancePlan: (planToDelete: MaintenancePlan) => void;
+  generateMaintenanceFromPlan: (plan: MaintenancePlan) => void;
+  documents: Document[]; // Ajoutez l'état des documents
+  addDocument: (document: Omit<Document, 'id'>) => void; // Ajoutez la fonction d'ajout de document
+  editDocument: (originalDocument: Document, updatedDocument: Document) => void; // Ajoutez la fonction de modification de document
+  deleteDocument: (documentToDelete: Document) => void; // Ajoutez la fonction de suppression de document
   clearAllData: () => void;
 }
 
@@ -91,6 +96,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
+  const [documents, setDocuments] = useState<Document[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedDocuments = localStorage.getItem("fleet-documents");
+      return savedDocuments ? JSON.parse(savedDocuments) : [];
+    }
+    return [];
+  });
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
@@ -126,6 +139,12 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.setItem("fleet-maintenance-plans", JSON.stringify(maintenancePlans));
     }
   }, [maintenancePlans]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-documents", JSON.stringify(documents));
+    }
+  }, [documents]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
@@ -220,17 +239,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     let nextDueDate: string | null = null;
 
     if (newPlan.intervalType === "Temps") {
-      // Pour l'instant, nous allons simplement ajouter l'intervalle à la date d'aujourd'hui pour le premier calcul
-      // Dans une implémentation plus complexe, on pourrait demander une date de début
-      const futureDate = addMonths(new Date(), newPlan.intervalValue); // Exemple: intervalValue en mois
+      const futureDate = addMonths(new Date(), newPlan.intervalValue);
       nextDueDate = format(futureDate, "yyyy-MM-dd");
     }
-    // Pour le kilométrage, nextDueDate sera calculé lors de la génération ou basé sur le relevé kilométrique du véhicule
 
     const planWithId: MaintenancePlan = {
       ...newPlan,
       id: uuidv4(),
-      lastGeneratedDate: null, // Pas encore généré
+      lastGeneratedDate: null,
       nextDueDate: nextDueDate,
     };
     setMaintenancePlans((prev) => [...prev, planWithId]);
@@ -259,28 +275,44 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       cost: plan.estimatedCost,
       date: today,
       provider: plan.provider,
-      status: "Planifiée", // Par défaut, une maintenance générée est planifiée
+      status: "Planifiée",
     };
 
-    addMaintenance(newMaintenance); // Utilise la fonction existante pour ajouter la maintenance
+    addMaintenance(newMaintenance);
 
-    // Mettre à jour le plan avec la nouvelle date de dernière génération et la prochaine date d'échéance
     let nextDueDate: string | null = null;
     if (plan.intervalType === "Temps") {
       const lastDate = new Date(today);
-      const futureDate = addMonths(lastDate, plan.intervalValue); // Supposons que intervalValue est en mois
+      const futureDate = addMonths(lastDate, plan.intervalValue);
       nextDueDate = format(futureDate, "yyyy-MM-dd");
     }
-    // Pour le kilométrage, la prochaine échéance serait calculée en fonction du relevé kilométrique actuel du véhicule + intervalValue
 
     const updatedPlan: MaintenancePlan = {
       ...plan,
       lastGeneratedDate: today,
       nextDueDate: nextDueDate,
-      status: "Actif", // S'assurer que le plan reste actif après génération
+      status: "Actif",
     };
-    editMaintenancePlan(plan, updatedPlan); // Mettre à jour le plan dans le contexte
+    editMaintenancePlan(plan, updatedPlan);
     showSuccess(`Maintenance générée pour le véhicule ${plan.vehicleLicensePlate} !`);
+  };
+
+  const addDocument = (newDocument: Omit<Document, 'id'>) => {
+    const documentWithId = { ...newDocument, id: uuidv4() };
+    setDocuments((prev) => [...prev, documentWithId]);
+    showSuccess("Document ajouté avec succès !");
+  };
+
+  const editDocument = (originalDocument: Document, updatedDocument: Document) => {
+    setDocuments((prev) =>
+      prev.map((d) => (d.id === originalDocument.id ? updatedDocument : d))
+    );
+    showSuccess("Document modifié avec succès !");
+  };
+
+  const deleteDocument = (documentToDelete: Document) => {
+    setDocuments((prev) => prev.filter((d) => d.id !== documentToDelete.id));
+    showSuccess("Document supprimé avec succès !");
   };
 
   const clearAllData = () => {
@@ -289,14 +321,16 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setMaintenances([]);
     setFuelEntries([]);
     setAssignments([]);
-    setMaintenancePlans([]); // Effacez aussi les plans de maintenance
+    setMaintenancePlans([]);
+    setDocuments([]); // Effacez aussi les documents
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
       localStorage.removeItem("fleet-maintenances");
       localStorage.removeItem("fleet-fuel-entries");
       localStorage.removeItem("fleet-assignments");
-      localStorage.removeItem("fleet-maintenance-plans"); // Supprimez du localStorage
+      localStorage.removeItem("fleet-maintenance-plans");
+      localStorage.removeItem("fleet-documents"); // Supprimez du localStorage
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -324,11 +358,15 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addAssignment,
         editAssignment,
         deleteAssignment,
-        maintenancePlans, // Exposez les plans de maintenance
-        addMaintenancePlan, // Exposez les fonctions de plan de maintenance
+        maintenancePlans,
+        addMaintenancePlan,
         editMaintenancePlan,
         deleteMaintenancePlan,
-        generateMaintenanceFromPlan, // Exposez la fonction de génération
+        generateMaintenanceFromPlan,
+        documents, // Exposez les documents
+        addDocument, // Exposez les fonctions de document
+        editDocument,
+        deleteDocument,
         clearAllData,
       }}
     >

@@ -11,7 +11,8 @@ import SettingsPage from "./pages/SettingsPage";
 import MaintenancePage from "./pages/MaintenancePage";
 import FuelPage from "./pages/FuelPage";
 import AssignmentsPage from "./pages/AssignmentsPage";
-import MaintenancePlansPage from "./pages/MaintenancePlansPage"; // Importez la nouvelle page
+import MaintenancePlansPage from "./pages/MaintenancePlansPage";
+import DocumentsPage from "./pages/DocumentsPage"; // Importez la nouvelle page
 import LoginPage from "./pages/LoginPage";
 import { FleetProvider } from "@/context/FleetContext";
 import { SessionContextProvider, useSession } from "@/context/SessionContext";
@@ -71,7 +72,7 @@ const router = createBrowserRouter([
         handle: { title: "Gestion des Maintenances" },
       },
       {
-        path: "/maintenance-plans", // Nouvelle route
+        path: "/maintenance-plans",
         element: <MaintenancePlansPage />,
         handle: { title: "Gestion des Plans de Maintenance" },
       },
@@ -84,6 +85,11 @@ const router = createBrowserRouter([
         path: "/assignments",
         element: <AssignmentsPage />,
         handle: { title: "Gestion des Affectations" },
+      },
+      {
+        path: "/documents", // Nouvelle route
+        element: <DocumentsPage />,
+        handle: { title: "Gestion des Documents" },
       },
       {
         path: "/settings",
