@@ -25,41 +25,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { showSuccess, showError } from "@/utils/toast";
-import { Vehicle } from "@/types/vehicle"; // Importation de l'interface Vehicle partagée
+import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { Vehicle } from "@/types/vehicle";
 
 const VehiclesPage = () => {
-  const [vehicles, setVehicles] = React.useState<Vehicle[]>([]);
-
-  const handleAddVehicle = (newVehicle: Vehicle) => {
-    setVehicles((prevVehicles) => [...prevVehicles, newVehicle]);
-  };
-
-  const handleEditVehicle = (updatedVehicle: Vehicle, originalIndex: number) => {
-    setVehicles((prevVehicles) =>
-      prevVehicles.map((vehicle, index) =>
-        index === originalIndex ? updatedVehicle : vehicle
-      )
-    );
-  };
-
-  const handleDeleteVehicle = (indexToDelete: number) => {
-    try {
-      setVehicles((prevVehicles) =>
-        prevVehicles.filter((_, index) => index !== indexToDelete)
-      );
-      showSuccess("Véhicule supprimé avec succès !");
-    } catch (error) {
-      showError("Erreur lors de la suppression du véhicule.");
-      console.error("Failed to delete vehicle:", error);
-    }
-  };
+  const { vehicles, deleteVehicle } = useFleet(); // Utilisez le contexte pour les véhicules et la fonction de suppression
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gestion des Véhicules</h1>
-        <AddVehicleDialog onAddVehicle={handleAddVehicle} />
+        <AddVehicleDialog /> {/* Le composant AddVehicleDialog gérera l'ajout via le contexte */}
       </div>
 
       <Card>
@@ -93,7 +69,7 @@ const VehiclesPage = () => {
                       <div className="flex justify-end space-x-2">
                         <EditVehicleDialog
                           vehicle={vehicle}
-                          onEditVehicle={(updatedVehicle) => handleEditVehicle(updatedVehicle, index)}
+                          // La fonction onEditVehicle sera gérée par le composant EditVehicleDialog lui-même via le contexte
                         />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -110,7 +86,7 @@ const VehiclesPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteVehicle(index)}>
+                              <AlertDialogAction onClick={() => deleteVehicle(vehicle)}>
                                 Supprimer
                               </AlertDialogAction>
                             </AlertDialogFooter>

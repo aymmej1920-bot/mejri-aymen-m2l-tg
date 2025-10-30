@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddDriverDialog from "@/components/drivers/AddDriverDialog";
-import EditDriverDialog from "@/components/drivers/EditDriverDialog"; // Importez le nouveau composant
+import EditDriverDialog from "@/components/drivers/EditDriverDialog";
 import {
   Table,
   TableBody,
@@ -25,41 +25,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { showSuccess, showError } from "@/utils/toast";
+import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
 import { Driver } from "@/types/driver";
 
 const DriversPage = () => {
-  const [drivers, setDrivers] = React.useState<Driver[]>([]);
-
-  const handleAddDriver = (newDriver: Driver) => {
-    setDrivers((prevDrivers) => [...prevDrivers, newDriver]);
-  };
-
-  const handleEditDriver = (updatedDriver: Driver, originalIndex: number) => {
-    setDrivers((prevDrivers) =>
-      prevDrivers.map((driver, index) =>
-        index === originalIndex ? updatedDriver : driver
-      )
-    );
-  };
-
-  const handleDeleteDriver = (indexToDelete: number) => {
-    try {
-      setDrivers((prevDrivers) =>
-        prevDrivers.filter((_, index) => index !== indexToDelete)
-      );
-      showSuccess("Conducteur supprimé avec succès !");
-    } catch (error) {
-      showError("Erreur lors de la suppression du conducteur.");
-      console.error("Failed to delete driver:", error);
-    }
-  };
+  const { drivers, deleteDriver } = useFleet(); // Utilisez le contexte pour les conducteurs et la fonction de suppression
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gestion des Conducteurs</h1>
-        <AddDriverDialog onAddDriver={handleAddDriver} />
+        <AddDriverDialog /> {/* Le composant AddDriverDialog gérera l'ajout via le contexte */}
       </div>
 
       <Card>
@@ -93,7 +69,7 @@ const DriversPage = () => {
                       <div className="flex justify-end space-x-2">
                         <EditDriverDialog
                           driver={driver}
-                          onEditDriver={(updatedDriver) => handleEditDriver(updatedDriver, index)}
+                          // La fonction onEditDriver sera gérée par le composant EditDriverDialog lui-même via le contexte
                         />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -110,7 +86,7 @@ const DriversPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteDriver(index)}>
+                              <AlertDialogAction onClick={() => deleteDriver(driver)}>
                                 Supprimer
                               </AlertDialogAction>
                             </AlertDialogFooter>

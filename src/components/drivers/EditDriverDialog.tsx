@@ -23,8 +23,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Pencil } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast";
-import { Driver } from "@/types/driver"; // Importation de l'interface Driver partagée
+import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { Driver } from "@/types/driver";
 
 const formSchema = z.object({
   firstName: z.string().min(2, {
@@ -43,27 +43,27 @@ const formSchema = z.object({
 
 interface EditDriverDialogProps {
   driver: Driver;
-  onEditDriver: (updatedDriver: Driver) => void;
+  // Plus besoin de onEditDriver en prop, car le contexte gère la modification
 }
 
-const EditDriverDialog: React.FC<EditDriverDialogProps> = ({ driver, onEditDriver }) => {
+const EditDriverDialog: React.FC<EditDriverDialogProps> = ({ driver }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { editDriver } = useFleet(); // Utilisez le contexte pour la fonction editDriver
   const form = useForm<Driver>({
     resolver: zodResolver(formSchema),
-    defaultValues: driver, // Pré-remplir avec les données du conducteur existant
+    defaultValues: driver,
   });
 
   React.useEffect(() => {
-    form.reset(driver); // Mettre à jour le formulaire si le conducteur change
+    form.reset(driver);
   }, [driver, form]);
 
   const onSubmit = (values: Driver) => {
     try {
-      onEditDriver(values);
-      showSuccess("Conducteur modifié avec succès !");
+      editDriver(driver, values); // Appelez la fonction du contexte, en passant l'original et le mis à jour
       setIsOpen(false);
     } catch (error) {
-      showError("Erreur lors de la modification du conducteur.");
+      // showError est déjà géré dans le contexte, mais on peut logguer ici si besoin
       console.error("Failed to edit driver:", error);
     }
   };

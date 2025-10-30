@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PlusCircle } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast";
+import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
 import { Driver } from "@/types/driver";
 
 const formSchema = z.object({
@@ -41,12 +41,11 @@ const formSchema = z.object({
   }),
 });
 
-interface AddDriverDialogProps {
-  onAddDriver: (driver: Driver) => void;
-}
+interface AddDriverDialogProps {} // Plus besoin de onAddDriver en prop
 
-const AddDriverDialog: React.FC<AddDriverDialogProps> = ({ onAddDriver }) => {
+const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { addDriver } = useFleet(); // Utilisez le contexte pour la fonction addDriver
   const form = useForm<Driver>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,12 +58,11 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = ({ onAddDriver }) => {
 
   const onSubmit = (values: Driver) => {
     try {
-      onAddDriver(values);
-      showSuccess("Conducteur ajouté avec succès !");
+      addDriver(values); // Appelez la fonction du contexte
       form.reset();
       setIsOpen(false);
     } catch (error) {
-      showError("Erreur lors de l'ajout du conducteur.");
+      // showError est déjà géré dans le contexte, mais on peut logguer ici si besoin
       console.error("Failed to add driver:", error);
     }
   };

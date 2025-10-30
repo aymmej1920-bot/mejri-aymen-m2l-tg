@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PlusCircle } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast";
+import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
 import { Vehicle } from "@/types/vehicle";
 
 const formSchema = z.object({
@@ -41,14 +41,11 @@ const formSchema = z.object({
   }),
 });
 
-type VehicleFormValues = Vehicle;
+interface AddVehicleDialogProps {} // Plus besoin de onAddVehicle en prop
 
-interface AddVehicleDialogProps {
-  onAddVehicle: (vehicle: Vehicle) => void;
-}
-
-const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => {
+const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { addVehicle } = useFleet(); // Utilisez le contexte pour la fonction addVehicle
   const form = useForm<Vehicle>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,12 +58,11 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = ({ onAddVehicle }) => 
 
   const onSubmit = (values: Vehicle) => {
     try {
-      onAddVehicle(values);
-      showSuccess("Véhicule ajouté avec succès !");
+      addVehicle(values); // Appelez la fonction du contexte
       form.reset();
       setIsOpen(false);
     } catch (error) {
-      showError("Erreur lors de l'ajout du véhicule.");
+      // showError est déjà géré dans le contexte, mais on peut logguer ici si besoin
       console.error("Failed to add vehicle:", error);
     }
   };

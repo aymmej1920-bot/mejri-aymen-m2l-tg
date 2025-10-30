@@ -23,8 +23,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Pencil } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast";
-import { Vehicle } from "@/types/vehicle"; // Importation de l'interface Vehicle partagée
+import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { Vehicle } from "@/types/vehicle";
 
 const formSchema = z.object({
   make: z.string().min(2, {
@@ -41,15 +41,14 @@ const formSchema = z.object({
   }),
 });
 
-type VehicleFormValues = Vehicle;
-
 interface EditVehicleDialogProps {
   vehicle: Vehicle;
-  onEditVehicle: (updatedVehicle: Vehicle) => void;
+  // Plus besoin de onEditVehicle en prop, car le contexte gère la modification
 }
 
-const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle, onEditVehicle }) => {
+const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { editVehicle } = useFleet(); // Utilisez le contexte pour la fonction editVehicle
   const form = useForm<Vehicle>({
     resolver: zodResolver(formSchema),
     defaultValues: vehicle,
@@ -61,11 +60,10 @@ const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle, onEditVe
 
   const onSubmit = (values: Vehicle) => {
     try {
-      onEditVehicle(values);
-      showSuccess("Véhicule modifié avec succès !");
+      editVehicle(vehicle, values); // Appelez la fonction du contexte, en passant l'original et le mis à jour
       setIsOpen(false);
     } catch (error) {
-      showError("Erreur lors de la modification du véhicule.");
+      // showError est déjà géré dans le contexte, mais on peut logguer ici si besoin
       console.error("Failed to edit vehicle:", error);
     }
   };
