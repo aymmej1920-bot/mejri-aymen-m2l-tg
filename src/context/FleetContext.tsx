@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode, useEffect, useRef } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
 import { Maintenance } from "@/types/maintenance";
@@ -11,18 +11,20 @@ import { Document } from "@/types/document";
 import { Tour } from "@/types/tour";
 import { Inspection } from "@/types/inspection";
 import { AlertRule } from "@/types/alertRule";
-import { showSuccess, showError } from "@/utils/toast";
+import { showSuccess } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
-import { addMonths, addYears, addDays, parseISO, format, differenceInDays, isBefore } from "date-fns";
+import { addMonths, format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
+import { useAlertChecker } from "@/hooks/use-alert-checker";
 
 interface FleetContextType {
   vehicles: Vehicle[];
-  addVehicle: (vehicle: Vehicle) => void;
+  addVehicle: (vehicle: Omit<Vehicle, 'id'>) => void;
   editVehicle: (originalVehicle: Vehicle, updatedVehicle: Vehicle) => void;
   deleteVehicle: (vehicleToDelete: Vehicle) => void;
   drivers: Driver[];
-  addDriver: (driver: Driver) => void;
+  addDriver: (driver: Omit<Driver, 'id'>) => void;
   editDriver: (originalDriver: Driver, updatedDriver: Driver) => void;
   deleteDriver: (driverToDelete: Driver) => void;
   maintenances: Maintenance[];
@@ -64,234 +66,36 @@ interface FleetContextType {
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
 
 export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedVehicles = localStorage.getItem("fleet-vehicles");
-      return savedVehicles ? JSON.parse(savedVehicles) : [];
-    }
-    return [];
-  });
+  const { items: vehicles, addItem: addVehicleBase, editItem: editVehicle, deleteItem: deleteVehicle, setItems: setVehicles } = useLocalStorageState<Vehicle>("fleet-vehicles", [], "Véhicule");
+  const { items: drivers, addItem: addDriverBase, editItem: editDriver, deleteItem: deleteDriver, setItems: setDrivers } = useLocalStorageState<Driver>("fleet-drivers", [], "Conducteur");
+  const { items: maintenances, addItem: addMaintenanceBase, editItem: editMaintenance, deleteItem: deleteMaintenance, setItems: setMaintenances } = useLocalStorageState<Maintenance>("fleet-maintenances", [], "Maintenance");
+  const { items: fuelEntries, addItem: addFuelEntryBase, editItem: editFuelEntry, deleteItem: deleteFuelEntry, setItems: setFuelEntries } = useLocalStorageState<FuelEntry>("fleet-fuel-entries", [], "Entrée de carburant");
+  const { items: assignments, addItem: addAssignmentBase, editItem: editAssignment, deleteItem: deleteAssignment, setItems: setAssignments } = useLocalStorageState<Assignment>("fleet-assignments", [], "Affectation");
+  const { items: maintenancePlans, addItem: addMaintenancePlanBase, editItem: editMaintenancePlan, deleteItem: deleteMaintenancePlan, setItems: setMaintenancePlans } = useLocalStorageState<MaintenancePlan>("fleet-maintenance-plans", [], "Plan de maintenance");
+  const { items: documents, addItem: addDocumentBase, editItem: editDocument, deleteItem: deleteDocument, setItems: setDocuments } = useLocalStorageState<Document>("fleet-documents", [], "Document");
+  const { items: tours, addItem: addTourBase, editItem: editTour, deleteItem: deleteTour, setItems: setTours } = useLocalStorageState<Tour>("fleet-tours", [], "Tournée");
+  const { items: inspections, addItem: addInspectionBase, editItem: editInspection, deleteItem: deleteInspection, setItems: setInspections } = useLocalStorageState<Inspection>("fleet-inspections", [], "Inspection");
+  const { items: alertRules, addItem: addAlertRuleBase, editItem: editAlertRule, deleteItem: deleteAlertRule, setItems: setAlertRules } = useLocalStorageState<AlertRule>("fleet-alert-rules", [], "Règle d'alerte");
 
-  const [drivers, setDrivers] = useState<Driver[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedDrivers = localStorage.getItem("fleet-drivers");
-      return savedDrivers ? JSON.parse(savedDrivers) : [];
-    }
-    return [];
-  });
-
-  const [maintenances, setMaintenances] = useState<Maintenance[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedMaintenances = localStorage.getItem("fleet-maintenances");
-      return savedMaintenances ? JSON.parse(savedMaintenances) : [];
-    }
-    return [];
-  });
-
-  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedFuelEntries = localStorage.getItem("fleet-fuel-entries");
-      return savedFuelEntries ? JSON.parse(savedFuelEntries) : [];
-    }
-    return [];
-  });
-
-  const [assignments, setAssignments] = useState<Assignment[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedAssignments = localStorage.getItem("fleet-assignments");
-      return savedAssignments ? JSON.parse(savedAssignments) : [];
-    }
-    return [];
-  });
-
-  const [maintenancePlans, setMaintenancePlans] = useState<MaintenancePlan[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedPlans = localStorage.getItem("fleet-maintenance-plans");
-      return savedPlans ? JSON.parse(savedPlans) : [];
-    }
-    return [];
-  });
-
-  const [documents, setDocuments] = useState<Document[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedDocuments = localStorage.getItem("fleet-documents");
-      return savedDocuments ? JSON.parse(savedDocuments) : [];
-    }
-    return [];
-  });
-
-  const [tours, setTours] = useState<Tour[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedTours = localStorage.getItem("fleet-tours");
-      return savedTours ? JSON.parse(savedTours) : [];
-    }
-    return [];
-  });
-
-  const [inspections, setInspections] = useState<Inspection[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedInspections = localStorage.getItem("fleet-inspections");
-      return savedInspections ? JSON.parse(savedInspections) : [];
-    }
-    return [];
-  });
-
-  const [alertRules, setAlertRules] = useState<AlertRule[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedAlertRules = localStorage.getItem("fleet-alert-rules");
-      return savedAlertRules ? JSON.parse(savedAlertRules) : [];
-    }
-    return [];
-  });
-
-  const triggeredAlertsRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
-    }
-  }, [vehicles]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-drivers", JSON.stringify(drivers));
-    }
-  }, [drivers]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-maintenances", JSON.stringify(maintenances));
-    }
-  }, [maintenances]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-fuel-entries", JSON.stringify(fuelEntries));
-    }
-  }, [fuelEntries]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-assignments", JSON.stringify(assignments));
-    }
-  }, [assignments]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-maintenance-plans", JSON.stringify(maintenancePlans));
-    }
-  }, [maintenancePlans]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-documents", JSON.stringify(documents));
-    }
-  }, [documents]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-tours", JSON.stringify(tours));
-    }
-  }, [tours]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-inspections", JSON.stringify(inspections));
-    }
-  }, [inspections]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fleet-alert-rules", JSON.stringify(alertRules));
-    }
-  }, [alertRules]);
-
-  const addVehicle = (newVehicle: Vehicle) => {
-    setVehicles((prev) => [...prev, newVehicle]);
-    showSuccess("Véhicule ajouté avec succès !");
+  // Custom add functions to generate IDs
+  const addVehicle = (newVehicle: Omit<Vehicle, 'id'>) => {
+    addVehicleBase({ ...newVehicle, id: uuidv4() });
   };
 
-  const editVehicle = (originalVehicle: Vehicle, updatedVehicle: Vehicle) => {
-    setVehicles((prev) =>
-      prev.map((v) => (v === originalVehicle ? updatedVehicle : v))
-    );
-    showSuccess("Véhicule modifié avec succès !");
-  };
-
-  const deleteVehicle = (vehicleToDelete: Vehicle) => {
-    setVehicles((prev) => prev.filter((v) => v !== vehicleToDelete));
-    showSuccess("Véhicule supprimé avec succès !");
-  };
-
-  const addDriver = (newDriver: Driver) => {
-    setDrivers((prev) => [...prev, newDriver]);
-    showSuccess("Conducteur ajouté avec succès !");
-  };
-
-  const editDriver = (originalDriver: Driver, updatedDriver: Driver) => {
-    setDrivers((prev) =>
-      prev.map((d) => (d === originalDriver ? updatedDriver : d))
-    );
-    showSuccess("Conducteur modifié avec succès !");
-  };
-
-  const deleteDriver = (driverToDelete: Driver) => {
-    setDrivers((prev) => prev.filter((d) => d !== driverToDelete));
-    showSuccess("Conducteur supprimé avec succès !");
+  const addDriver = (newDriver: Omit<Driver, 'id'>) => {
+    addDriverBase({ ...newDriver, id: uuidv4() });
   };
 
   const addMaintenance = (newMaintenance: Omit<Maintenance, 'id'>) => {
-    const maintenanceWithId = { ...newMaintenance, id: uuidv4() };
-    setMaintenances((prev) => [...prev, maintenanceWithId]);
-    showSuccess("Maintenance ajoutée avec succès !");
-  };
-
-  const editMaintenance = (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => {
-    setMaintenances((prev) =>
-      prev.map((m) => (m.id === originalMaintenance.id ? updatedMaintenance : m))
-    );
-    showSuccess("Maintenance modifiée avec succès !");
-  };
-
-  const deleteMaintenance = (maintenanceToDelete: Maintenance) => {
-    setMaintenances((prev) => prev.filter((m) => m.id !== maintenanceToDelete.id));
-    showSuccess("Maintenance supprimée avec succès !");
+    addMaintenanceBase({ ...newMaintenance, id: uuidv4() });
   };
 
   const addFuelEntry = (newFuelEntry: Omit<FuelEntry, 'id'>) => {
-    const fuelEntryWithId = { ...newFuelEntry, id: uuidv4() };
-    setFuelEntries((prev) => [...prev, fuelEntryWithId]);
-    showSuccess("Entrée de carburant ajoutée avec succès !");
-  };
-
-  const editFuelEntry = (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => {
-    setFuelEntries((prev) =>
-      prev.map((f) => (f.id === originalFuelEntry.id ? updatedFuelEntry : f))
-    );
-    showSuccess("Entrée de carburant modifiée avec succès !");
-  };
-
-  const deleteFuelEntry = (fuelEntryToDelete: FuelEntry) => {
-    setFuelEntries((prev) => prev.filter((f) => f.id !== fuelEntryToDelete.id));
-    showSuccess("Entrée de carburant supprimée avec succès !");
+    addFuelEntryBase({ ...newFuelEntry, id: uuidv4() });
   };
 
   const addAssignment = (newAssignment: Omit<Assignment, 'id'>) => {
-    const assignmentWithId = { ...newAssignment, id: uuidv4() };
-    setAssignments((prev) => [...prev, assignmentWithId]);
-    showSuccess("Affectation ajoutée avec succès !");
-  };
-
-  const editAssignment = (originalAssignment: Assignment, updatedAssignment: Assignment) => {
-    setAssignments((prev) =>
-      prev.map((a) => (a.id === originalAssignment.id ? updatedAssignment : a))
-    );
-    showSuccess("Affectation modifiée avec succès !");
-  };
-
-  const deleteAssignment = (assignmentToDelete: Assignment) => {
-    setAssignments((prev) => prev.filter((a) => a.id !== assignmentToDelete.id));
-    showSuccess("Affectation supprimée avec succès !");
+    addAssignmentBase({ ...newAssignment, id: uuidv4() });
   };
 
   const addMaintenancePlan = (newPlan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>) => {
@@ -309,20 +113,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       lastGeneratedDate: null,
       nextDueDate: nextDueDate,
     };
-    setMaintenancePlans((prev) => [...prev, planWithId]);
-    showSuccess("Plan de maintenance ajouté avec succès !");
-  };
-
-  const editMaintenancePlan = (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => {
-    setMaintenancePlans((prev) =>
-      prev.map((p) => (p.id === originalPlan.id ? updatedPlan : p))
-    );
-    showSuccess("Plan de maintenance modifié avec succès !");
-  };
-
-  const deleteMaintenancePlan = (planToDelete: MaintenancePlan) => {
-    setMaintenancePlans((prev) => prev.filter((p) => p.id !== planToDelete.id));
-    showSuccess("Plan de maintenance supprimé avec succès !");
+    addMaintenancePlanBase(planWithId);
   };
 
   const generateMaintenanceFromPlan = (plan: MaintenancePlan) => {
@@ -358,44 +149,16 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const addDocument = (newDocument: Omit<Document, 'id'>) => {
-    const documentWithId = { ...newDocument, id: uuidv4() };
-    setDocuments((prev) => [...prev, documentWithId]);
-    showSuccess("Document ajouté avec succès !");
-  };
-
-  const editDocument = (originalDocument: Document, updatedDocument: Document) => {
-    setDocuments((prev) =>
-      prev.map((d) => (d.id === originalDocument.id ? updatedDocument : d))
-    );
-    showSuccess("Document modifié avec succès !");
-  };
-
-  const deleteDocument = (documentToDelete: Document) => {
-    setDocuments((prev) => prev.filter((d) => d.id !== documentToDelete.id));
-    showSuccess("Document supprimé avec succès !");
+    addDocumentBase({ ...newDocument, id: uuidv4() });
   };
 
   const addTour = (newTour: Omit<Tour, 'id'>) => {
-    const tourWithId = { ...newTour, id: uuidv4() };
-    setTours((prev) => [...prev, tourWithId]);
-    showSuccess("Tournée ajoutée avec succès !");
-  };
-
-  const editTour = (originalTour: Tour, updatedTour: Tour) => {
-    setTours((prev) =>
-      prev.map((t) => (t.id === originalTour.id ? updatedTour : t))
-    );
-    showSuccess("Tournée modifiée avec succès !");
-  };
-
-  const deleteTour = (tourToDelete: Tour) => {
-    setTours((prev) => prev.filter((t) => t.id !== tourToDelete.id));
-    showSuccess("Tournée supprimée avec succès !");
+    addTourBase({ ...newTour, id: uuidv4() });
   };
 
   const addInspection = (newInspection: Omit<Inspection, 'id'>) => {
     const inspectionWithId = { ...newInspection, id: uuidv4() };
-    setInspections((prev) => [...prev, inspectionWithId]);
+    addInspectionBase(inspectionWithId);
     showSuccess("Inspection ajoutée avec succès !");
 
     newInspection.checkpoints.forEach(cp => {
@@ -413,10 +176,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
-  const editInspection = (originalInspection: Inspection, updatedInspection: Inspection) => {
-    setInspections((prev) =>
-      prev.map((i) => (i.id === originalInspection.id ? updatedInspection : i))
-    );
+  const editInspectionCustom = (originalInspection: Inspection, updatedInspection: Inspection) => {
+    editInspection(originalInspection, updatedInspection);
     showSuccess("Inspection modifiée avec succès !");
 
     updatedInspection.checkpoints.forEach(cp => {
@@ -434,131 +195,9 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
-  const deleteInspection = (inspectionToDelete: Inspection) => {
-    setInspections((prev) => prev.filter((i) => i.id !== inspectionToDelete.id));
-    showSuccess("Inspection supprimée avec succès !");
-  };
-
   const addAlertRule = (newRule: Omit<AlertRule, 'id' | 'lastTriggered'>) => {
-    const ruleWithId = { ...newRule, id: uuidv4(), lastTriggered: null };
-    setAlertRules((prev) => [...prev, ruleWithId]);
-    showSuccess("Règle d'alerte ajoutée avec succès !");
+    addAlertRuleBase({ ...newRule, id: uuidv4(), lastTriggered: null });
   };
-
-  const editAlertRule = (originalRule: AlertRule, updatedRule: AlertRule) => {
-    setAlertRules((prev) =>
-      prev.map((r) => (r.id === originalRule.id ? updatedRule : r))
-    );
-    showSuccess("Règle d'alerte modifiée avec succès !");
-  };
-
-  const deleteAlertRule = (ruleToDelete: AlertRule) => {
-    setAlertRules((prev) => prev.filter((r) => r.id !== ruleToDelete.id));
-    showSuccess("Règle d'alerte supprimée avec succès !");
-  };
-
-  const checkAlerts = React.useCallback(() => {
-    const now = new Date();
-    alertRules.filter(rule => rule.status === "Active").forEach(rule => {
-      let shouldTrigger = false;
-      let alertMessage = rule.message;
-      const alertId = `${rule.id}-${format(now, 'yyyy-MM-dd')}`; // Unique ID for daily alerts
-
-      // Prevent duplicate alerts for the same rule on the same day
-      if (triggeredAlertsRef.current.has(alertId)) {
-        return;
-      }
-
-      switch (rule.type) {
-        case "MaintenanceDue":
-          maintenancePlans.filter(plan =>
-            (!rule.criteria.vehicleLicensePlate || plan.vehicleLicensePlate === rule.criteria.vehicleLicensePlate) &&
-            (!rule.criteria.maintenanceType || plan.type === rule.criteria.maintenanceType) &&
-            plan.status === "Actif" &&
-            plan.nextDueDate
-          ).forEach(plan => {
-            const nextDueDate = parseISO(plan.nextDueDate!);
-            const daysUntilDue = differenceInDays(nextDueDate, now);
-
-            if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilDue <= rule.criteria.thresholdValue && daysUntilDue >= 0) {
-              shouldTrigger = true;
-              alertMessage = `Maintenance "${plan.description}" pour le véhicule ${plan.vehicleLicensePlate} est due dans ${daysUntilDue} jours.`;
-            }
-            // TODO: Add mileage-based checks if odometer readings are available
-          });
-          break;
-
-        case "DocumentExpiry":
-          documents.filter(doc =>
-            (!rule.criteria.vehicleLicensePlate || doc.vehicleLicensePlate === rule.criteria.vehicleLicensePlate) &&
-            (!rule.criteria.driverLicenseNumber || doc.driverLicenseNumber === rule.criteria.driverLicenseNumber) &&
-            (!rule.criteria.documentType || doc.type === rule.criteria.documentType) &&
-            doc.expiryDate
-          ).forEach(doc => {
-            const expiryDate = parseISO(doc.expiryDate);
-            const daysUntilExpiry = differenceInDays(expiryDate, now);
-
-            if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilExpiry <= rule.criteria.thresholdValue && daysUntilExpiry >= 0) {
-              shouldTrigger = true;
-              alertMessage = `Le document "${doc.name}" (${doc.type}) pour ${doc.vehicleLicensePlate || doc.driverLicenseNumber} expire dans ${daysUntilExpiry} jours.`;
-            }
-          });
-          break;
-
-        case "VehicleAssignmentEnd":
-          assignments.filter(assign =>
-            (!rule.criteria.vehicleLicensePlate || assign.vehicleLicensePlate === rule.criteria.vehicleLicensePlate) &&
-            assign.status === "Active" &&
-            assign.endDate
-          ).forEach(assign => {
-            const endDate = parseISO(assign.endDate);
-            const daysUntilEnd = differenceInDays(endDate, now);
-
-            if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilEnd <= rule.criteria.thresholdValue && daysUntilEnd >= 0) {
-              shouldTrigger = true;
-              alertMessage = `L'affectation du véhicule ${assign.vehicleLicensePlate} se termine dans ${daysUntilEnd} jours.`;
-            }
-          });
-          break;
-
-        case "DriverLicenseExpiry":
-          drivers.filter(driver =>
-            (!rule.criteria.driverLicenseNumber || driver.licenseNumber === rule.criteria.driverLicenseNumber) &&
-            documents.some(doc => doc.driverLicenseNumber === driver.licenseNumber && doc.type === "Permis de conduire" && doc.expiryDate)
-          ).forEach(driver => {
-            const licenseDoc = documents.find(doc => doc.driverLicenseNumber === driver.licenseNumber && doc.type === "Permis de conduire" && doc.expiryDate);
-            if (licenseDoc) {
-              const expiryDate = parseISO(licenseDoc.expiryDate);
-              const daysUntilExpiry = differenceInDays(expiryDate, now);
-
-              if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilExpiry <= rule.criteria.thresholdValue && daysUntilExpiry >= 0) {
-                shouldTrigger = true;
-                alertMessage = `Le permis de conduire de ${driver.firstName} ${driver.lastName} expire dans ${daysUntilExpiry} jours.`;
-              }
-            }
-          });
-          break;
-      }
-
-      if (shouldTrigger) {
-        showError(alertMessage);
-        triggeredAlertsRef.current.add(alertId);
-        setAlertRules(prevRules =>
-          prevRules.map(r => r.id === rule.id ? { ...r, lastTriggered: format(now, 'yyyy-MM-dd') } : r)
-        );
-      }
-    });
-  }, [alertRules, maintenancePlans, documents, assignments, drivers]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      checkAlerts();
-    }, 60 * 60 * 1000);
-
-    checkAlerts();
-
-    return () => clearInterval(interval);
-  }, [checkAlerts]);
 
   const clearAllData = () => {
     setVehicles([]);
@@ -585,6 +224,16 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
+
+  // Integrate alert checker
+  useAlertChecker({
+    alertRules,
+    maintenancePlans,
+    documents,
+    assignments,
+    drivers,
+    setAlertRules,
+  });
 
   return (
     <FleetContext.Provider
@@ -624,7 +273,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         deleteTour,
         inspections,
         addInspection,
-        editInspection,
+        editInspection: editInspectionCustom,
         deleteInspection,
         alertRules,
         addAlertRule,

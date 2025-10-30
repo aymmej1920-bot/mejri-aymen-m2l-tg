@@ -44,7 +44,7 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: "Le nom du document doit contenir au moins 2 caractères.",
   }),
-  type: z.enum(["Assurance", "Vignette", "Visite Technique", "Taxe"], {
+  type: z.enum(["Assurance", "Vignette", "Visite Technique", "Taxe", "Permis de conduire"], {
     message: "Veuillez sélectionner un type de document valide.",
   }),
   url: z.string().url({
@@ -202,6 +202,7 @@ const AddDocumentDialog: React.FC = () => {
                       <SelectItem value="Vignette">Vignette</SelectItem>
                       <SelectItem value="Visite Technique">Visite Technique</SelectItem>
                       <SelectItem value="Taxe">Taxe</SelectItem>
+                      <SelectItem value="Permis de conduire">Permis de conduire</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
