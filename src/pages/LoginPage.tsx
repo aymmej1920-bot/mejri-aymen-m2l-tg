@@ -62,9 +62,8 @@ const LoginPage: React.FC = () => {
                   email_input_placeholder: 'Votre adresse e-mail',
                   password_input_placeholder: 'Votre mot de passe',
                   button_label: 'Se connecter',
-                  social_auth_button_text: 'Se connecter avec {{provider}}',
+                  social_provider_text: 'Se connecter avec {{provider}}',
                   link_text: 'Déjà un compte ? Connectez-vous',
-                  forgotten_password: 'Mot de passe oublié ?',
                   confirmation_text: 'Vérifiez votre e-mail pour le lien de connexion',
                 },
                 sign_up: {
@@ -73,11 +72,11 @@ const LoginPage: React.FC = () => {
                   email_input_placeholder: 'Votre adresse e-mail',
                   password_input_placeholder: 'Votre mot de passe',
                   button_label: 'S\'inscrire',
-                  social_auth_button_text: 'S\'inscrire avec {{provider}}',
+                  social_provider_text: 'S\'inscrire avec {{provider}}',
                   link_text: 'Pas encore de compte ? Inscrivez-vous',
                   confirmation_text: 'Vérifiez votre e-mail pour le lien de confirmation',
                 },
-                forgotten_password: {
+                forgotten_password: { // Déplacé ici
                   email_label: 'Adresse e-mail',
                   password_label: 'Nouveau mot de passe',
                   email_input_placeholder: 'Votre adresse e-mail',
@@ -101,9 +100,9 @@ const LoginPage: React.FC = () => {
                   email_input_placeholder: 'Votre adresse e-mail',
                   phone_input_placeholder: 'Votre numéro de téléphone',
                   token_input_placeholder: 'Votre code OTP',
-                  email_label: 'Adresse e-mail',
-                  phone_label: 'Numéro de téléphone',
-                  token_label: 'Code OTP',
+                  email_input_label: 'Adresse e-mail',
+                  phone_input_label: 'Numéro de téléphone',
+                  token_input_label: 'Code OTP', // Correction ici
                   button_label: 'Vérifier le code OTP',
                   link_text: 'Vous avez déjà un code OTP ?',
                   confirmation_text: 'Vérifiez votre e-mail/téléphone pour le code OTP',
