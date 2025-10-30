@@ -6,7 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import VehiclesPage from "./pages/VehiclesPage"; // Importez la nouvelle page des véhicules
+import VehiclesPage from "./pages/VehiclesPage";
+import DriversPage from "./pages/DriversPage"; // Importez la nouvelle page des conducteurs
 
 const queryClient = new QueryClient();
 
@@ -20,8 +21,8 @@ const App = () => (
           <Route path="/" element={<Layout />}>
             <Route index element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="/vehicles" element={<VehiclesPage />} /> {/* Utilisez le composant VehiclesPage */}
-            <Route path="/drivers" element={<div>Page Conducteurs</div>} />
+            <Route path="/vehicles" element={<VehiclesPage />} />
+            <Route path="/drivers" element={<DriversPage />} /> {/* Ajoutez la route pour les conducteurs */}
             <Route path="/settings" element={<div>Page Paramètres</div>} />
             <Route path="*" element={<NotFound />} />
           </Route>
