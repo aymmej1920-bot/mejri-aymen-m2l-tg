@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
 import { showSuccess, showError } from "@/utils/toast";
@@ -19,8 +19,36 @@ interface FleetContextType {
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
 
 export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+  // Initialiser l'état avec les données du localStorage ou un tableau vide
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedVehicles = localStorage.getItem("fleet-vehicles");
+      return savedVehicles ? JSON.parse(savedVehicles) : [];
+    }
+    return [];
+  });
+
+  const [drivers, setDrivers] = useState<Driver[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedDrivers = localStorage.getItem("fleet-drivers");
+      return savedDrivers ? JSON.parse(savedDrivers) : [];
+    }
+    return [];
+  });
+
+  // Sauvegarder les véhicules dans le localStorage chaque fois qu'ils changent
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
+    }
+  }, [vehicles]);
+
+  // Sauvegarder les conducteurs dans le localStorage chaque fois qu'ils changent
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-drivers", JSON.stringify(drivers));
+    }
+  }, [drivers]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
