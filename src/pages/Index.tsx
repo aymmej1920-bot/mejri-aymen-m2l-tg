@@ -1,10 +1,13 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
-import { Car, Users } from "lucide-react"; // Importez les icônes
+import { Button } from "@/components/ui/button"; // Importez le composant Button
+import { useFleet } from "@/context/FleetContext";
+import { Car, Users, PlusCircle } from "lucide-react"; // Importez les icônes
+import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog"; // Importez AddVehicleDialog
+import AddDriverDialog from "@/components/drivers/AddDriverDialog"; // Importez AddDriverDialog
 
 const Index = () => {
-  const { vehicles, drivers } = useFleet(); // Utilisez le contexte pour obtenir les données
+  const { vehicles, drivers } = useFleet();
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
@@ -38,6 +41,18 @@ const Index = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Nouvelle section pour les actions rapides */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Actions Rapides</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row gap-4 justify-center">
+              <AddVehicleDialog />
+              <AddDriverDialog />
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
