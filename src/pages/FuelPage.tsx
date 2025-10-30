@@ -55,7 +55,7 @@ const FuelPage = () => {
 
       {/* Nouvelles cartes de résumé */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="glass rounded-2xl">
+        <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Ravitaillements</CardTitle>
             <FuelIcon className="h-4 w-4 text-muted-foreground" />
@@ -65,7 +65,7 @@ const FuelPage = () => {
             <p className="text-xs text-muted-foreground">entrées enregistrées</p>
           </CardContent>
         </Card>
-        <Card className="glass rounded-2xl">
+        <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Coût Total Carburant</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -75,7 +75,7 @@ const FuelPage = () => {
             <p className="text-xs text-muted-foreground">dépensé au total</p>
           </CardContent>
         </Card>
-        <Card className="glass rounded-2xl">
+        <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Volume Total Carburant</CardTitle>
             <Gauge className="h-4 w-4 text-muted-foreground" />
@@ -87,7 +87,7 @@ const FuelPage = () => {
         </Card>
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Ravitaillements</CardTitle>
         </CardHeader>

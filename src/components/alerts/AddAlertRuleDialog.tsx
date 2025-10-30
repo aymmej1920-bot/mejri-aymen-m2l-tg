@@ -228,7 +228,7 @@ const AddAlertRuleDialog: React.FC = () => {
           Ajouter une règle d'alerte
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-slideUp">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle règle d'alerte</DialogTitle>
           <DialogDescription>

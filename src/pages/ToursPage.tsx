@@ -67,7 +67,7 @@ const ToursPage = () => {
 
       {/* Nouvelles cartes de résumé */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="glass rounded-2xl">
+        <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Tournées</CardTitle>
             <Route className="h-4 w-4 text-muted-foreground" />
@@ -77,7 +77,7 @@ const ToursPage = () => {
             <p className="text-xs text-muted-foreground">tournées enregistrées</p>
           </CardContent>
         </Card>
-        <Card className="glass rounded-2xl">
+        <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tournées Actives</CardTitle>
             <Car className="h-4 w-4 text-muted-foreground" />
@@ -87,7 +87,7 @@ const ToursPage = () => {
             <p className="text-xs text-muted-foreground">en cours</p>
           </CardContent>
         </Card>
-        <Card className="glass rounded-2xl">
+        <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tournées Planifiées</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -99,7 +99,7 @@ const ToursPage = () => {
         </Card>
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Tournées</CardTitle>
         </CardHeader>

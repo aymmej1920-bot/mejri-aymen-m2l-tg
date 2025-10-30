@@ -47,7 +47,7 @@ const VehiclesPage = () => {
         <AddVehicleDialog />
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Véhicules</CardTitle>
         </CardHeader>

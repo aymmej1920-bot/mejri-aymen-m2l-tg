@@ -124,7 +124,7 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
         <DialogHeader>
           <DialogTitle>Modifier le document</DialogTitle>
           <DialogDescription>

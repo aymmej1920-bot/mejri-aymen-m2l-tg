@@ -48,7 +48,7 @@ const MaintenancePage = () => {
         <AddMaintenanceDialog />
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Maintenances</CardTitle>
         </CardHeader>

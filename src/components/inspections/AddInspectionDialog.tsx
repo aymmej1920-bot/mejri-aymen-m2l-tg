@@ -136,7 +136,7 @@ const AddInspectionDialog: React.FC = () => {
           Ajouter une inspection
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-slideUp">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle inspection</DialogTitle>
           <DialogDescription>

@@ -82,7 +82,7 @@ const AlertsPage = () => {
         <AddAlertRuleDialog />
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Règles d'Alerte</CardTitle>
         </CardHeader>

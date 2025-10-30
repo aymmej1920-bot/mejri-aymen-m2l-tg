@@ -22,7 +22,7 @@ const Layout = () => {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64">
+          <SheetContent side="left" className="p-0 w-64 animate-slideUp">
             <Sidebar />
           </SheetContent>
         </Sheet>
@@ -31,7 +31,7 @@ const Layout = () => {
           <Sidebar />
         </div>
       )}
-      <main className="flex-1 p-6 lg:p-8 overflow-auto">
+      <main className="flex-1 p-6 lg:p-8 overflow-auto animate-fadeIn">
         <Header /> {/* Affichez l'en-tête ici */}
         <Outlet />
       </main>

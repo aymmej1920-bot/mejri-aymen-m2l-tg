@@ -47,7 +47,7 @@ const DriversPage = () => {
         <AddDriverDialog />
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Conducteurs</CardTitle>
         </CardHeader>

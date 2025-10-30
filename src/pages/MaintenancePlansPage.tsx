@@ -54,7 +54,7 @@ const MaintenancePlansPage = () => {
         <AddMaintenancePlanDialog />
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Plans de Maintenance</CardTitle>
         </CardHeader>

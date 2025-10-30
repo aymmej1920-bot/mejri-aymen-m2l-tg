@@ -84,7 +84,7 @@ const InspectionsPage = () => {
         <AddInspectionDialog />
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Inspections</CardTitle>
         </CardHeader>
@@ -169,7 +169,7 @@ const InspectionsPage = () => {
 
       {viewingInspection && (
         <Dialog open={!!viewingInspection} onOpenChange={() => setViewingInspection(null)}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl">
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-slideUp">
             <DialogHeader>
               <DialogTitle>Détails de l'inspection</DialogTitle>
               <DialogDescription>

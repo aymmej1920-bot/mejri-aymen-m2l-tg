@@ -94,7 +94,7 @@ const AddAssignmentDialog: React.FC = () => {
           Ajouter une affectation
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle affectation</DialogTitle>
           <DialogDescription>

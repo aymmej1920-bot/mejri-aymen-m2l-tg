@@ -46,7 +46,7 @@ const SettingsPage = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Paramètres de l'application</h1>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Général</CardTitle>
         </CardHeader>
@@ -104,7 +104,7 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
-      <Card className="mt-6 glass rounded-2xl">
+      <Card className="mt-6 glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Notifications</CardTitle>
         </CardHeader>

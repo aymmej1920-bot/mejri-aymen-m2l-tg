@@ -115,7 +115,7 @@ const AddDocumentDialog: React.FC = () => {
           Ajouter un document
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau document</DialogTitle>
           <DialogDescription>

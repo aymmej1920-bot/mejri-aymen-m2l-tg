@@ -33,7 +33,7 @@ const NotificationCenter: React.FC = () => {
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px] flex flex-col glass rounded-2xl">
+      <SheetContent className="w-[400px] sm:w-[540px] flex flex-col glass rounded-2xl animate-slideUp">
         <SheetHeader>
           <SheetTitle>Notifications</SheetTitle>
         </SheetHeader>

@@ -108,7 +108,7 @@ const AddTourDialog: React.FC = () => {
           Ajouter une tournée
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle tournée</DialogTitle>
           <DialogDescription>

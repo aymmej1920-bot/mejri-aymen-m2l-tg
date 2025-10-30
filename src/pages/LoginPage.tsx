@@ -28,7 +28,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center app-background-gradient p-4">
-      <Card className="w-full max-w-md glass rounded-2xl p-6">
+      <Card className="w-full max-w-md glass rounded-2xl p-6 animate-fadeIn">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold mb-4">Connectez-vous à Fleet Manager Pro</CardTitle>
         </CardHeader>

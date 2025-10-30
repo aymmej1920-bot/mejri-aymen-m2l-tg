@@ -94,7 +94,7 @@ const EditFuelEntryDialog: React.FC<EditFuelEntryDialogProps> = ({ fuelEntry }) 
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
         <DialogHeader>
           <DialogTitle>Modifier le ravitaillement</DialogTitle>
           <DialogDescription>
@@ -172,17 +172,20 @@ const EditFuelEntryDialog: React.FC<EditFuelEntryDialogProps> = ({ fuelEntry }) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Type de carburant</FormLabel>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Essence">Essence</SelectItem>
-                    <SelectItem value="Diesel">Diesel</SelectItem>
-                    <SelectItem value="Électrique">Électrique</SelectItem>
-                    <SelectItem value="GPL">GPL</SelectItem>
-                  </SelectContent>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Essence">Essence</SelectItem>
+                      <SelectItem value="Diesel">Diesel</SelectItem>
+                      <SelectItem value="Électrique">Électrique</SelectItem>
+                      <SelectItem value="GPL">GPL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
                 </FormItem>
               )}
             />

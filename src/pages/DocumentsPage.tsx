@@ -62,7 +62,7 @@ const DocumentsPage = () => {
         <AddDocumentDialog />
       </div>
 
-      <Card className="glass rounded-2xl">
+      <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
           <CardTitle>Liste des Documents</CardTitle>
         </CardHeader>
