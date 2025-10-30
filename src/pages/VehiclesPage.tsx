@@ -25,17 +25,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { Input } from "@/components/ui/input"; // Importez le composant Input
+import { useFleet } from "@/context/FleetContext";
 import { Vehicle } from "@/types/vehicle";
 
 const VehiclesPage = () => {
-  const { vehicles, deleteVehicle } = useFleet(); // Utilisez le contexte pour les véhicules et la fonction de suppression
+  const { vehicles, deleteVehicle } = useFleet();
+  const [searchTerm, setSearchTerm] = React.useState(""); // État pour le terme de recherche
+
+  // Filtrer les véhicules en fonction du terme de recherche
+  const filteredVehicles = vehicles.filter((vehicle) =>
+    Object.values(vehicle).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gestion des Véhicules</h1>
-        <AddVehicleDialog /> {/* Le composant AddVehicleDialog gérera l'ajout via le contexte */}
+        <AddVehicleDialog />
       </div>
 
       <Card>
@@ -43,6 +52,19 @@ const VehiclesPage = () => {
           <CardTitle>Liste des Véhicules</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">
+            <Input
+              placeholder="Rechercher un véhicule..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+          {filteredVehicles.length === 0 && vehicles.length > 0 && (
+            <p className="text-muted-foreground">
+              Aucun véhicule ne correspond à votre recherche.
+            </p>
+          )}
           {vehicles.length === 0 ? (
             <p className="text-muted-foreground">
               Aucun véhicule enregistré pour le moment. Cliquez sur "Ajouter un véhicule" pour commencer.
@@ -59,7 +81,7 @@ const VehiclesPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vehicles.map((vehicle, index) => (
+                {filteredVehicles.map((vehicle, index) => (
                   <TableRow key={index}>
                     <TableCell className="font-medium">{vehicle.make}</TableCell>
                     <TableCell>{vehicle.model}</TableCell>
@@ -69,7 +91,6 @@ const VehiclesPage = () => {
                       <div className="flex justify-end space-x-2">
                         <EditVehicleDialog
                           vehicle={vehicle}
-                          // La fonction onEditVehicle sera gérée par le composant EditVehicleDialog lui-même via le contexte
                         />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>

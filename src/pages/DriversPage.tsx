@@ -25,17 +25,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { Input } from "@/components/ui/input"; // Importez le composant Input
+import { useFleet } from "@/context/FleetContext";
 import { Driver } from "@/types/driver";
 
 const DriversPage = () => {
-  const { drivers, deleteDriver } = useFleet(); // Utilisez le contexte pour les conducteurs et la fonction de suppression
+  const { drivers, deleteDriver } = useFleet();
+  const [searchTerm, setSearchTerm] = React.useState(""); // État pour le terme de recherche
+
+  // Filtrer les conducteurs en fonction du terme de recherche
+  const filteredDrivers = drivers.filter((driver) =>
+    Object.values(driver).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gestion des Conducteurs</h1>
-        <AddDriverDialog /> {/* Le composant AddDriverDialog gérera l'ajout via le contexte */}
+        <AddDriverDialog />
       </div>
 
       <Card>
@@ -43,7 +52,19 @@ const DriversPage = () => {
           <CardTitle>Liste des Conducteurs</CardTitle>
         </CardHeader>
         <CardContent>
-          {drivers.length === 0 ? (
+          <div className="mb-4">
+            <Input
+              placeholder="Rechercher un conducteur..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+          {filteredDrivers.length === 0 && drivers.length > 0 ? (
+            <p className="text-muted-foreground">
+              Aucun conducteur ne correspond à votre recherche.
+            </p>
+          ) : drivers.length === 0 ? (
             <p className="text-muted-foreground">
               Aucun conducteur enregistré pour le moment. Cliquez sur "Ajouter un conducteur" pour commencer.
             </p>
@@ -59,7 +80,7 @@ const DriversPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {drivers.map((driver, index) => (
+                {filteredDrivers.map((driver, index) => (
                   <TableRow key={index}>
                     <TableCell className="font-medium">{driver.firstName}</TableCell>
                     <TableCell>{driver.lastName}</TableCell>
@@ -69,7 +90,6 @@ const DriversPage = () => {
                       <div className="flex justify-end space-x-2">
                         <EditDriverDialog
                           driver={driver}
-                          // La fonction onEditDriver sera gérée par le composant EditDriverDialog lui-même via le contexte
                         />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
