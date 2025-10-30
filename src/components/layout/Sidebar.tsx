@@ -1,19 +1,29 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { Home, Car, Users, Settings, Wrench, Fuel, Link } from "lucide-react"; // Importez l'icône Link pour les affectations
+import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { showError } from "@/utils/toast";
 
 const Sidebar = () => {
   const navLinkClasses = "flex items-center px-3 py-2 rounded-md transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
   const activeNavLinkClasses = "bg-sidebar-primary text-sidebar-primary-foreground";
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      showError("Échec de la déconnexion : " + error.message);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full p-4 bg-sidebar text-sidebar-foreground">
       <div className="mb-8 text-2xl font-bold text-sidebar-primary">
         Fleet Manager Pro
       </div>
-      <nav className="flex flex-col space-y-2">
+      <nav className="flex flex-col space-y-2 flex-grow"> {/* flex-grow pour pousser le bouton de déconnexion vers le bas */}
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -60,7 +70,7 @@ const Sidebar = () => {
           Carburant
         </NavLink>
         <NavLink
-          to="/assignments" // Nouveau lien pour les affectations
+          to="/assignments"
           className={({ isActive }) =>
             cn(navLinkClasses, isActive && activeNavLinkClasses)
           }
@@ -78,6 +88,16 @@ const Sidebar = () => {
           Paramètres
         </NavLink>
       </nav>
+      <div className="mt-auto pt-4 border-t border-sidebar-border"> {/* Bouton de déconnexion en bas */}
+        <Button
+          variant="ghost"
+          className={cn(navLinkClasses, "w-full justify-start")}
+          onClick={handleLogout}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Déconnexion
+        </Button>
+      </div>
     </div>
   );
 };

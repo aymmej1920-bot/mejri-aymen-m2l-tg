@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button"; // Importez le composant Button
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,15 +22,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"; // Importez les composants AlertDialog
-import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+} from "@/components/ui/alert-dialog";
+import { useFleet } from "@/context/FleetContext";
+import { supabase } from "@/integrations/supabase/client"; // Importez le client Supabase
+import { showError } from "@/utils/toast"; // Importez showError
 
 const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
-  const { clearAllData } = useFleet(); // Utilisez le contexte pour la fonction clearAllData
+  const { clearAllData } = useFleet();
 
   const handleClearAllData = () => {
     clearAllData();
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      showError("Échec de la déconnexion : " + error.message);
+    }
   };
 
   return (
@@ -82,6 +91,15 @@ const SettingsPage = () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+          </div>
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-2">Authentification</h3>
+            <p className="text-muted-foreground mb-4">
+              Déconnectez-vous de votre compte.
+            </p>
+            <Button variant="outline" onClick={handleLogout}>
+              Déconnexion
+            </Button>
           </div>
         </CardContent>
       </Card>
