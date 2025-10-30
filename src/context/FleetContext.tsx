@@ -5,7 +5,35 @@ import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
 import { Maintenance } from "@/types/maintenance";
 import { FuelEntry } from "@/types/fuel";
-import { Assignment } => void;
+import { Assignment } from "@/types/assignment"; // Correction de l'importation
+import { MaintenancePlan } from "@/types/maintenancePlan";
+import { Document } from "@/types/document";
+import { Tour } from "@/types/tour";
+import { Inspection } from "@/types/inspection";
+import { showSuccess, showError } from "@/utils/toast";
+import { v4 as uuidv4 } from "uuid";
+import { addMonths, addYears, addDays, parseISO, format } from "date-fns";
+import { fr } from "date-fns/locale"; // Importation de la locale 'fr'
+
+interface FleetContextType {
+  vehicles: Vehicle[];
+  addVehicle: (vehicle: Vehicle) => void;
+  editVehicle: (originalVehicle: Vehicle, updatedVehicle: Vehicle) => void;
+  deleteVehicle: (vehicleToDelete: Vehicle) => void;
+  drivers: Driver[];
+  addDriver: (driver: Driver) => void;
+  editDriver: (originalDriver: Driver, updatedDriver: Driver) => void;
+  deleteDriver: (driverToDelete: Driver) => void;
+  maintenances: Maintenance[];
+  addMaintenance: (maintenance: Omit<Maintenance, 'id'>) => void;
+  editMaintenance: (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => void;
+  deleteMaintenance: (maintenanceToDelete: Maintenance) => void;
+  fuelEntries: FuelEntry[];
+  addFuelEntry: (fuelEntry: Omit<FuelEntry, 'id'>) => void;
+  editFuelEntry: (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => void;
+  deleteFuelEntry: (fuelEntryToDelete: FuelEntry) => void;
+  assignments: Assignment[];
+  addAssignment: (assignment: Omit<Assignment, 'id'>) => void;
   editAssignment: (originalAssignment: Assignment, updatedAssignment: Assignment) => void;
   deleteAssignment: (assignmentToDelete: Assignment) => void;
   maintenancePlans: MaintenancePlan[];

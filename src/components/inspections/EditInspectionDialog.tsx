@@ -76,7 +76,7 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
   const [isOpen, setIsOpen] = React.useState(false);
   const { editInspection, vehicles } = useFleet();
 
-  const form = useForm<EditInspectionFormValues>({ // Utilisation du type inféré par Zod
+  const form = useForm<EditInspectionFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: inspection,
   });
@@ -85,15 +85,19 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
     form.reset(inspection);
   }, [inspection, form]);
 
-  const onSubmit = (values: EditInspectionFormValues) => { // Utilisation du type inféré par Zod
+  const onSubmit = (values: EditInspectionFormValues) => {
     try {
-      const overallStatus = values.checkpoints.some(cp => cp.status === "NOK")
+      const overallStatus: Inspection['overallStatus'] = values.checkpoints.some(cp => cp.status === "NOK")
         ? "Non conforme"
         : "Conforme";
 
       const updatedInspection: Inspection = {
-        ...values,
-        overallStatus,
+        id: values.id,
+        vehicleLicensePlate: values.vehicleLicensePlate,
+        date: values.date,
+        inspectorName: values.inspectorName,
+        checkpoints: values.checkpoints,
+        overallStatus: overallStatus,
       };
       editInspection(inspection, updatedInspection);
       setIsOpen(false);
@@ -207,7 +211,7 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
                   render={() => (
                     <FormItem>
                       <FormControl>
-                        <InspectionCheckpointForm index={index} checkpoint={checkpoint} />
+                        <InspectionCheckpointForm index={index} checkpoint={checkpoint as InspectionCheckpoint} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
