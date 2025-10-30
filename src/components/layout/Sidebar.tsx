@@ -115,7 +115,7 @@ const Sidebar = () => {
           Inspections
         </NavLink>
         <NavLink
-          to="/alerts" {/* Nouveau lien */}
+          to="/alerts" // Nouveau lien
           className={({ isActive }) =>
             cn(navLinkClasses, isActive && activeNavLinkClasses)
           }
