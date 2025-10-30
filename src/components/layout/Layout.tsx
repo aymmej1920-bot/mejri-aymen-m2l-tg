@@ -14,7 +14,7 @@ const Layout = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen app-background-gradient text-foreground"> {/* Ajout de la classe de dégradé */}
       {isMobile ? (
         <Sheet>
           <SheetTrigger asChild>
