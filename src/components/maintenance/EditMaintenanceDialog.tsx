@@ -170,7 +170,7 @@ const EditMaintenanceDialog: React.FC<EditMaintenanceDialogProps> = ({ maintenan
               name="cost"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Coût (€)</FormLabel>
+                  <FormLabel>Coût (TND)</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                   </FormControl>

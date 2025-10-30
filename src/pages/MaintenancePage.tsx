@@ -90,7 +90,7 @@ const MaintenancePage = () => {
                     <TableCell className="font-medium">{maintenance.vehicleLicensePlate}</TableCell>
                     <TableCell>{maintenance.type}</TableCell>
                     <TableCell>{maintenance.description}</TableCell>
-                    <TableCell>{maintenance.cost.toFixed(2)} €</TableCell>
+                    <TableCell>{maintenance.cost.toFixed(2)} TND</TableCell>
                     <TableCell>{format(new Date(maintenance.date), "PPP", { locale: fr })}</TableCell>
                     <TableCell>{maintenance.provider}</TableCell>
                     <TableCell>{maintenance.status}</TableCell>
