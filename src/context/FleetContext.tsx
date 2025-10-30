@@ -3,9 +3,10 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
-import { Maintenance } from "@/types/maintenance"; // Importez le type Maintenance
+import { Maintenance } from "@/types/maintenance";
+import { FuelEntry } from "@/types/fuel"; // Importez le type FuelEntry
 import { showSuccess, showError } from "@/utils/toast";
-import { v4 as uuidv4 } from "uuid"; // Importez uuid
+import { v4 as uuidv4 } from "uuid";
 
 interface FleetContextType {
   vehicles: Vehicle[];
@@ -16,10 +17,14 @@ interface FleetContextType {
   addDriver: (driver: Driver) => void;
   editDriver: (originalDriver: Driver, updatedDriver: Driver) => void;
   deleteDriver: (driverToDelete: Driver) => void;
-  maintenances: Maintenance[]; // Ajoutez l'état des maintenances
-  addMaintenance: (maintenance: Omit<Maintenance, 'id'>) => void; // Ajoutez la fonction d'ajout de maintenance
-  editMaintenance: (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => void; // Ajoutez la fonction de modification de maintenance
-  deleteMaintenance: (maintenanceToDelete: Maintenance) => void; // Ajoutez la fonction de suppression de maintenance
+  maintenances: Maintenance[];
+  addMaintenance: (maintenance: Omit<Maintenance, 'id'>) => void;
+  editMaintenance: (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => void;
+  deleteMaintenance: (maintenanceToDelete: Maintenance) => void;
+  fuelEntries: FuelEntry[]; // Ajoutez l'état des entrées de carburant
+  addFuelEntry: (fuelEntry: Omit<FuelEntry, 'id'>) => void; // Ajoutez la fonction d'ajout
+  editFuelEntry: (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => void; // Ajoutez la fonction de modification
+  deleteFuelEntry: (fuelEntryToDelete: FuelEntry) => void; // Ajoutez la fonction de suppression
   clearAllData: () => void;
 }
 
@@ -50,6 +55,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
+  const [fuelEntries, setFuelEntries] = useState<FuelEntry[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedFuelEntries = localStorage.getItem("fleet-fuel-entries");
+      return savedFuelEntries ? JSON.parse(savedFuelEntries) : [];
+    }
+    return [];
+  });
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
@@ -67,6 +80,12 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.setItem("fleet-maintenances", JSON.stringify(maintenances));
     }
   }, [maintenances]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-fuel-entries", JSON.stringify(fuelEntries));
+    }
+  }, [fuelEntries]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
@@ -120,14 +139,34 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showSuccess("Maintenance supprimée avec succès !");
   };
 
+  const addFuelEntry = (newFuelEntry: Omit<FuelEntry, 'id'>) => {
+    const fuelEntryWithId = { ...newFuelEntry, id: uuidv4() };
+    setFuelEntries((prev) => [...prev, fuelEntryWithId]);
+    showSuccess("Entrée de carburant ajoutée avec succès !");
+  };
+
+  const editFuelEntry = (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => {
+    setFuelEntries((prev) =>
+      prev.map((f) => (f.id === originalFuelEntry.id ? updatedFuelEntry : f))
+    );
+    showSuccess("Entrée de carburant modifiée avec succès !");
+  };
+
+  const deleteFuelEntry = (fuelEntryToDelete: FuelEntry) => {
+    setFuelEntries((prev) => prev.filter((f) => f.id !== fuelEntryToDelete.id));
+    showSuccess("Entrée de carburant supprimée avec succès !");
+  };
+
   const clearAllData = () => {
     setVehicles([]);
     setDrivers([]);
-    setMaintenances([]); // Effacez aussi les maintenances
+    setMaintenances([]);
+    setFuelEntries([]); // Effacez aussi les entrées de carburant
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
-      localStorage.removeItem("fleet-maintenances"); // Supprimez du localStorage
+      localStorage.removeItem("fleet-maintenances");
+      localStorage.removeItem("fleet-fuel-entries"); // Supprimez du localStorage
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -143,10 +182,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addDriver,
         editDriver,
         deleteDriver,
-        maintenances, // Exposez les maintenances
-        addMaintenance, // Exposez les fonctions de maintenance
+        maintenances,
+        addMaintenance,
         editMaintenance,
         deleteMaintenance,
+        fuelEntries, // Exposez les entrées de carburant
+        addFuelEntry, // Exposez les fonctions de carburant
+        editFuelEntry,
+        deleteFuelEntry,
         clearAllData,
       }}
     >

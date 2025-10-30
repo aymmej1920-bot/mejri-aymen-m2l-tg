@@ -8,7 +8,8 @@ import NotFound from "./pages/NotFound";
 import VehiclesPage from "./pages/VehiclesPage";
 import DriversPage from "./pages/DriversPage";
 import SettingsPage from "./pages/SettingsPage";
-import MaintenancePage from "./pages/MaintenancePage"; // Importez la nouvelle page
+import MaintenancePage from "./pages/MaintenancePage";
+import FuelPage from "./pages/FuelPage"; // Importez la nouvelle page
 import { FleetProvider } from "@/context/FleetContext";
 
 const queryClient = new QueryClient();
@@ -34,9 +35,14 @@ const router = createBrowserRouter([
         handle: { title: "Gestion des Conducteurs" },
       },
       {
-        path: "/maintenances", // Nouvelle route pour les maintenances
+        path: "/maintenances",
         element: <MaintenancePage />,
         handle: { title: "Gestion des Maintenances" },
+      },
+      {
+        path: "/fuel", // Nouvelle route pour le carburant
+        element: <FuelPage />,
+        handle: { title: "Gestion du Carburant" },
       },
       {
         path: "/settings",

@@ -1,7 +1,7 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { Home, Car, Users, Settings, Wrench } from "lucide-react"; // Importez l'icône Wrench
+import { Home, Car, Users, Settings, Wrench, Fuel } from "lucide-react"; // Importez l'icône Fuel
 import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
@@ -42,13 +42,22 @@ const Sidebar = () => {
           Conducteurs
         </NavLink>
         <NavLink
-          to="/maintenances" // Nouveau lien pour les maintenances
+          to="/maintenances"
           className={({ isActive }) =>
             cn(navLinkClasses, isActive && activeNavLinkClasses)
           }
         >
           <Wrench className="mr-2 h-4 w-4" />
           Maintenances
+        </NavLink>
+        <NavLink
+          to="/fuel" // Nouveau lien pour le carburant
+          className={({ isActive }) =>
+            cn(navLinkClasses, isActive && activeNavLinkClasses)
+          }
+        >
+          <Fuel className="mr-2 h-4 w-4" />
+          Carburant
         </NavLink>
         <NavLink
           to="/settings"
