@@ -2,18 +2,36 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useTheme } from "next-themes"; // Importez le hook useTheme
+import { useTheme } from "next-themes";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Importez les composants Select de shadcn/ui
-import { Label } from "@/components/ui/label"; // Importez le composant Label
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"; // Importez le composant Button
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"; // Importez les composants AlertDialog
+import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
 
 const SettingsPage = () => {
-  const { theme, setTheme } = useTheme(); // Utilisez le hook useTheme
+  const { theme, setTheme } = useTheme();
+  const { clearAllData } = useFleet(); // Utilisez le contexte pour la fonction clearAllData
+
+  const handleClearAllData = () => {
+    clearAllData();
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -27,7 +45,7 @@ const SettingsPage = () => {
           <p className="text-muted-foreground mb-4">
             Gérez les paramètres généraux de votre application ici.
           </p>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 mb-4">
             <Label htmlFor="theme-select" className="text-sm font-medium">Thème :</Label>
             <Select value={theme} onValueChange={setTheme}>
               <SelectTrigger id="theme-select" className="w-[180px]">
@@ -39,6 +57,31 @@ const SettingsPage = () => {
                 <SelectItem value="system">Système</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-2">Gestion des données</h3>
+            <p className="text-muted-foreground mb-4">
+              Attention : Cette action effacera toutes les données de véhicules et de conducteurs de votre application.
+            </p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Effacer toutes les données</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action ne peut pas être annulée. Cela supprimera définitivement toutes vos données de véhicules et de conducteurs.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearAllData}>
+                    Effacer tout
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>

@@ -14,6 +14,7 @@ interface FleetContextType {
   addDriver: (driver: Driver) => void;
   editDriver: (originalDriver: Driver, updatedDriver: Driver) => void;
   deleteDriver: (driverToDelete: Driver) => void;
+  clearAllData: () => void; // Nouvelle fonction pour effacer toutes les données
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
@@ -84,6 +85,16 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showSuccess("Conducteur supprimé avec succès !");
   };
 
+  const clearAllData = () => {
+    setVehicles([]);
+    setDrivers([]);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("fleet-vehicles");
+      localStorage.removeItem("fleet-drivers");
+    }
+    showSuccess("Toutes les données de la flotte ont été effacées !");
+  };
+
   return (
     <FleetContext.Provider
       value={{
@@ -95,6 +106,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addDriver,
         editDriver,
         deleteDriver,
+        clearAllData, // Exposer la nouvelle fonction
       }}
     >
       {children}
