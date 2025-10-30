@@ -110,7 +110,7 @@ const AddInspectionDialog: React.FC = () => {
         vehicleLicensePlate: values.vehicleLicensePlate,
         date: values.date,
         inspectorName: values.inspectorName,
-        checkpoints: values.checkpoints,
+        checkpoints: values.checkpoints as InspectionCheckpoint[], // Ajout du cast ici
         overallStatus: overallStatus,
       };
       addInspection(newInspection);
