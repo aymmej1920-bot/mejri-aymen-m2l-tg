@@ -40,7 +40,7 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: "Le nom du document doit contenir au moins 2 caractères.",
   }),
-  type: z.enum(["Assurance", "Vignette", "Visite Technique", "Taxe"], { // Mise à jour pour utiliser z.enum
+  type: z.enum(["Assurance", "Vignette", "Visite Technique", "Taxe"], {
     message: "Veuillez sélectionner un type de document valide.",
   }),
   url: z.string().url({
@@ -60,11 +60,17 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
   const { editDocument, vehicles } = useFleet();
   const form = useForm<EditDocumentFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: document,
+    defaultValues: {
+      ...document,
+      vehicleLicensePlate: document.vehicleLicensePlate || "", // Assurez-vous que c'est une chaîne vide si undefined
+    },
   });
 
   React.useEffect(() => {
-    form.reset(document);
+    form.reset({
+      ...document,
+      vehicleLicensePlate: document.vehicleLicensePlate || "",
+    });
   }, [document, form]);
 
   const onSubmit = (values: EditDocumentFormValues) => {
@@ -108,14 +114,14 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Plaque d'immatriculation du véhicule (optionnel)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}> {/* Utilisez value pour contrôler le Select */}
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une plaque" />
+                        <SelectValue placeholder="Aucun véhicule" /> {/* Placeholder pour l'état vide */}
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Aucun véhicule</SelectItem>
+                      {/* Pas de SelectItem avec value="" ici */}
                       {availableLicensePlates.map((plate) => (
                         <SelectItem key={plate} value={plate}>
                           {plate}

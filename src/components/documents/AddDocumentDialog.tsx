@@ -39,7 +39,7 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: "Le nom du document doit contenir au moins 2 caractères.",
   }),
-  type: z.enum(["Assurance", "Vignette", "Visite Technique", "Taxe"], { // Mise à jour pour utiliser z.enum
+  type: z.enum(["Assurance", "Vignette", "Visite Technique", "Taxe"], {
     message: "Veuillez sélectionner un type de document valide.",
   }),
   url: z.string().url({
@@ -55,9 +55,9 @@ const AddDocumentDialog: React.FC = () => {
   const form = useForm<AddDocumentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      vehicleLicensePlate: "",
+      vehicleLicensePlate: "", // La valeur par défaut est une chaîne vide
       name: "",
-      type: "Assurance", // Valeur par défaut pour le sélecteur
+      type: "Assurance",
       url: "",
     },
   });
@@ -104,14 +104,14 @@ const AddDocumentDialog: React.FC = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Plaque d'immatriculation du véhicule (optionnel)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}> {/* Utilisez value pour contrôler le Select */}
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une plaque" />
+                        <SelectValue placeholder="Aucun véhicule" /> {/* Placeholder pour l'état vide */}
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Aucun véhicule</SelectItem>
+                      {/* Pas de SelectItem avec value="" ici */}
                       {availableLicensePlates.map((plate) => (
                         <SelectItem key={plate} value={plate}>
                           {plate}
