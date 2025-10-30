@@ -60,7 +60,7 @@ const AssignmentsPage = () => {
         <AddAssignmentDialog />
       </div>
 
-      <Card>
+      <Card className="glass rounded-2xl">
         <CardHeader>
           <CardTitle>Liste des Affectations</CardTitle>
         </CardHeader>

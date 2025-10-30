@@ -48,7 +48,7 @@ const MaintenancePage = () => {
         <AddMaintenanceDialog />
       </div>
 
-      <Card>
+      <Card className="glass rounded-2xl">
         <CardHeader>
           <CardTitle>Liste des Maintenances</CardTitle>
         </CardHeader>

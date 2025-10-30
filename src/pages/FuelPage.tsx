@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Fuel as FuelIcon, DollarSign, Gauge } from "lucide-react"; // Importez les nouvelles icônes
+import { Trash2, Fuel as FuelIcon, DollarSign, Gauge } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,7 +87,7 @@ const FuelPage = () => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="glass rounded-2xl">
         <CardHeader>
           <CardTitle>Liste des Ravitaillements</CardTitle>
         </CardHeader>

@@ -71,7 +71,7 @@ const InspectionsPage = () => {
         <AddInspectionDialog />
       </div>
 
-      <Card>
+      <Card className="glass rounded-2xl">
         <CardHeader>
           <CardTitle>Liste des Inspections</CardTitle>
         </CardHeader>

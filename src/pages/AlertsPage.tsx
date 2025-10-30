@@ -82,7 +82,7 @@ const AlertsPage = () => {
         <AddAlertRuleDialog />
       </div>
 
-      <Card>
+      <Card className="glass rounded-2xl">
         <CardHeader>
           <CardTitle>Liste des Règles d'Alerte</CardTitle>
         </CardHeader>

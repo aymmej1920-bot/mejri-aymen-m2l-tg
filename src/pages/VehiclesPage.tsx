@@ -47,7 +47,7 @@ const VehiclesPage = () => {
         <AddVehicleDialog />
       </div>
 
-      <Card>
+      <Card className="glass rounded-2xl">
         <CardHeader>
           <CardTitle>Liste des Véhicules</CardTitle>
         </CardHeader>
