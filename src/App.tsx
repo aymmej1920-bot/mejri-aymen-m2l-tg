@@ -7,7 +7,8 @@ import Layout from "@/components/layout/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import VehiclesPage from "./pages/VehiclesPage";
-import DriversPage from "./pages/DriversPage"; // Importez la nouvelle page des conducteurs
+import DriversPage from "./pages/DriversPage";
+import SettingsPage from "./pages/SettingsPage"; // Importez la nouvelle page des paramètres
 
 const queryClient = new QueryClient();
 
@@ -22,8 +23,8 @@ const App = () => (
             <Route index element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/vehicles" element={<VehiclesPage />} />
-            <Route path="/drivers" element={<DriversPage />} /> {/* Ajoutez la route pour les conducteurs */}
-            <Route path="/settings" element={<div>Page Paramètres</div>} />
+            <Route path="/drivers" element={<DriversPage />} />
+            <Route path="/settings" element={<SettingsPage />} /> {/* Mettez à jour la route pour les paramètres */}
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
