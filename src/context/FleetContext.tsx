@@ -11,6 +11,7 @@ import { Document } from "@/types/document";
 import { Tour } from "@/types/tour";
 import { Inspection } from "@/types/inspection";
 import { AlertRule } from "@/types/alertRule";
+import { Alert } from "@/types/alert"; // Importez le nouveau type Alert
 import { showSuccess } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
 import { addMonths, format } from "date-fns";
@@ -60,6 +61,10 @@ interface FleetContextType {
   addAlertRule: (rule: Omit<AlertRule, 'id' | 'lastTriggered'>) => void;
   editAlertRule: (originalRule: AlertRule, updatedRule: AlertRule) => void;
   deleteAlertRule: (ruleToDelete: AlertRule) => void;
+  activeAlerts: Alert[]; // Nouveau : stocke les alertes actives
+  addActiveAlert: (alert: Omit<Alert, 'id' | 'createdAt' | 'isRead'>) => void; // Nouveau : ajoute une alerte
+  markAlertAsRead: (alertId: string) => void; // Nouveau : marque une alerte comme lue
+  clearAllAlerts: () => void; // Nouveau : efface toutes les alertes
   clearAllData: () => void;
 }
 
@@ -76,6 +81,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const { items: tours, addItem: addTourBase, editItem: editTour, deleteItem: deleteTour, setItems: setTours } = useLocalStorageState<Tour>("fleet-tours", [], "Tournée");
   const { items: inspections, addItem: addInspectionBase, editItem: editInspection, deleteItem: deleteInspection, setItems: setInspections } = useLocalStorageState<Inspection>("fleet-inspections", [], "Inspection");
   const { items: alertRules, addItem: addAlertRuleBase, editItem: editAlertRule, deleteItem: deleteAlertRule, setItems: setAlertRules } = useLocalStorageState<AlertRule>("fleet-alert-rules", [], "Règle d'alerte");
+  const { items: activeAlerts, addItem: addActiveAlertBase, setItems: setActiveAlerts } = useLocalStorageState<Alert>("fleet-active-alerts", [], "Alerte"); // Nouveau : pour les alertes actives
 
   // Custom add functions to generate IDs
   const addVehicle = (newVehicle: Omit<Vehicle, 'id'>) => {
@@ -199,6 +205,31 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     addAlertRuleBase({ ...newRule, id: uuidv4(), lastTriggered: null });
   };
 
+  // Nouveau : fonctions pour gérer les alertes actives
+  const addActiveAlert = (newAlert: Omit<Alert, 'id' | 'createdAt' | 'isRead'>) => {
+    const alertWithId: Alert = {
+      ...newAlert,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    };
+    addActiveAlertBase(alertWithId);
+  };
+
+  const markAlertAsRead = (alertId: string) => {
+    setActiveAlerts(prev => prev.map(alert =>
+      alert.id === alertId ? { ...alert, isRead: true } : alert
+    ));
+  };
+
+  const clearAllAlerts = () => {
+    setActiveAlerts([]);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("fleet-active-alerts");
+    }
+    showSuccess("Toutes les alertes ont été effacées !");
+  };
+
   const clearAllData = () => {
     setVehicles([]);
     setDrivers([]);
@@ -210,6 +241,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setTours([]);
     setInspections([]);
     setAlertRules([]);
+    setActiveAlerts([]); // Efface aussi les alertes actives
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
@@ -221,6 +253,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.removeItem("fleet-tours");
       localStorage.removeItem("fleet-inspections");
       localStorage.removeItem("fleet-alert-rules");
+      localStorage.removeItem("fleet-active-alerts"); // Efface aussi les alertes actives du localStorage
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -233,6 +266,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     assignments,
     drivers,
     setAlertRules,
+    addActiveAlert, // Passe la nouvelle fonction au checker
   });
 
   return (
@@ -279,6 +313,10 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addAlertRule,
         editAlertRule,
         deleteAlertRule,
+        activeAlerts, // Expose les alertes actives
+        addActiveAlert, // Expose la fonction pour ajouter des alertes
+        markAlertAsRead, // Expose la fonction pour marquer comme lue
+        clearAllAlerts, // Expose la fonction pour effacer toutes les alertes
         clearAllData,
       }}
     >

@@ -2,7 +2,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFleet } from "@/context/FleetContext";
-import { Car, Users, PlusCircle, Wrench, Fuel, Link, Route, ClipboardCheck, BellRing } from "lucide-react"; // Importez BellRing
+import { Car, Users, PlusCircle, Wrench, Fuel, Link, Route, ClipboardCheck } from "lucide-react"; // Retirez BellRing
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
 import AddDriverDialog from "@/components/drivers/AddDriverDialog";
 import AddTourDialog from "@/components/tours/AddTourDialog";
@@ -22,7 +22,7 @@ import {
 } from "recharts";
 
 const Index = () => {
-  const { vehicles, drivers, fuelEntries, maintenances, assignments, tours, inspections, alertRules } = useFleet();
+  const { vehicles, drivers, fuelEntries, maintenances, assignments, tours, inspections, alertRules, activeAlerts } = useFleet();
 
   // Calculer le coût total du carburant pour le mois en cours
   const currentMonth = new Date();
@@ -45,9 +45,6 @@ const Index = () => {
 
   // Calculer le nombre d'inspections non conformes
   const nonConformInspectionsCount = inspections.filter(i => i.overallStatus === "Non conforme").length;
-
-  // Calculer le nombre de règles d'alerte actives
-  const activeAlertRulesCount = alertRules.filter(rule => rule.status === "Active").length;
 
   // Préparer les données pour le graphique des coûts de carburant par mois
   const fuelCostsByMonth = fuelEntries.reduce((acc, entry) => {
@@ -99,7 +96,7 @@ const Index = () => {
           <p className="text-lg text-muted-foreground mb-6">
             Commencez à gérer votre flotte de véhicules et vos conducteurs.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"> {/* Ajusté à 3 colonnes */}
             <Card className="glass rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Véhicules</CardTitle>
@@ -128,16 +125,6 @@ const Index = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{upcomingMaintenancesCount}</div>
                 <p className="text-xs text-muted-foreground">opérations planifiées</p>
-              </CardContent>
-            </Card>
-            <Card className="glass rounded-2xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Alertes Actives</CardTitle>
-                <BellRing className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{activeAlertRulesCount}</div>
-                <p className="text-xs text-muted-foreground">règles d'alerte actives</p>
               </CardContent>
             </Card>
           </div>

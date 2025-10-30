@@ -3,12 +3,13 @@
 import React, { useEffect, useRef } from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { showError } from "@/utils/toast";
+import { showError } from "@/utils/toast"; // Garder showError pour les messages d'erreur généraux si besoin
 import { AlertRule } from "@/types/alertRule";
 import { MaintenancePlan } from "@/types/maintenancePlan";
 import { Document } from "@/types/document";
 import { Assignment } from "@/types/assignment";
 import { Driver } from "@/types/driver";
+import { Alert } from "@/types/alert"; // Importez le nouveau type Alert
 
 interface UseAlertCheckerProps {
   alertRules: AlertRule[];
@@ -17,6 +18,7 @@ interface UseAlertCheckerProps {
   assignments: Assignment[];
   drivers: Driver[];
   setAlertRules: React.Dispatch<React.SetStateAction<AlertRule[]>>;
+  addActiveAlert: (alert: Omit<Alert, 'id' | 'createdAt' | 'isRead'>) => void; // Nouveau : fonction pour ajouter une alerte active
 }
 
 export function useAlertChecker({
@@ -26,6 +28,7 @@ export function useAlertChecker({
   assignments,
   drivers,
   setAlertRules,
+  addActiveAlert,
 }: UseAlertCheckerProps) {
   const triggeredAlertsRef = useRef<Set<string>>(new Set());
 
@@ -34,10 +37,10 @@ export function useAlertChecker({
     alertRules.filter(rule => rule.status === "Active").forEach(rule => {
       let shouldTrigger = false;
       let alertMessage = rule.message;
-      const alertId = `${rule.id}-${format(now, 'yyyy-MM-dd')}`; // Unique ID for daily alerts
+      const alertKey = `${rule.id}-${format(now, 'yyyy-MM-dd')}`; // Unique key for daily alerts per rule
 
-      if (triggeredAlertsRef.current.has(alertId)) {
-        return;
+      if (triggeredAlertsRef.current.has(alertKey)) {
+        return; // Already triggered this specific alert today
       }
 
       switch (rule.type) {
@@ -71,7 +74,7 @@ export function useAlertChecker({
 
             if (rule.criteria.thresholdUnit === "days" && rule.criteria.thresholdValue !== undefined && daysUntilExpiry <= rule.criteria.thresholdValue && daysUntilExpiry >= 0) {
               shouldTrigger = true;
-              alertMessage = `Le document "${doc.name}" (${doc.type}) pour ${doc.vehicleLicensePlate || doc.driverLicenseNumber} expire dans ${daysUntilExpiry} jours.`;
+              alertMessage = `Le document "${doc.name}" (${doc.type}) pour ${doc.vehicleLicensePlate || doc.driverLicenseNumber || 'un élément non spécifié'} expire dans ${daysUntilExpiry} jours.`;
             }
           });
           break;
@@ -112,14 +115,18 @@ export function useAlertChecker({
       }
 
       if (shouldTrigger) {
-        showError(alertMessage);
-        triggeredAlertsRef.current.add(alertId);
+        addActiveAlert({
+          ruleId: rule.id,
+          message: alertMessage,
+          type: rule.type,
+        });
+        triggeredAlertsRef.current.add(alertKey);
         setAlertRules(prevRules =>
           prevRules.map(r => r.id === rule.id ? { ...r, lastTriggered: format(now, 'yyyy-MM-dd') } : r)
         );
       }
     });
-  }, [alertRules, maintenancePlans, documents, assignments, drivers, setAlertRules]);
+  }, [alertRules, maintenancePlans, documents, assignments, drivers, setAlertRules, addActiveAlert]);
 
   useEffect(() => {
     const interval = setInterval(() => {
