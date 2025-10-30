@@ -1,7 +1,7 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck, FileText, Route, ClipboardCheck, BellRing } from "lucide-react";
+import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck, FileText, Route, ClipboardCheck, BellRing, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,13 +115,23 @@ const Sidebar = () => {
           Inspections
         </NavLink>
         <NavLink
-          to="/alerts" // Nouveau lien
+          to="/alerts"
           className={({ isActive }) =>
             cn(navLinkClasses, isActive && activeNavLinkClasses)
           }
         >
           <BellRing className="mr-2 h-4 w-4" />
           Alertes
+        </NavLink>
+        {/* Nouveau lien pour les rapports */}
+        <NavLink
+          to="/reports"
+          className={({ isActive }) =>
+            cn(navLinkClasses, isActive && activeNavLinkClasses)
+          }
+        >
+          <BarChart3 className="mr-2 h-4 w-4" />
+          Rapports & Analyses
         </NavLink>
         <NavLink
           to="/settings"
