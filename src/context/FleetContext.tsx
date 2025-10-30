@@ -5,33 +5,7 @@ import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
 import { Maintenance } from "@/types/maintenance";
 import { FuelEntry } from "@/types/fuel";
-import { Assignment } from "@/types/assignment";
-import { MaintenancePlan } from "@/types/maintenancePlan";
-import { Document } from "@/types/document";
-import { Tour } from "@/types/tour"; // Importez le type Tour
-import { showSuccess, showError } from "@/utils/toast";
-import { v4 as uuidv4 } from "uuid";
-import { addMonths, addYears, addDays, parseISO, format } from "date-fns";
-
-interface FleetContextType {
-  vehicles: Vehicle[];
-  addVehicle: (vehicle: Vehicle) => void;
-  editVehicle: (originalVehicle: Vehicle, updatedVehicle: Vehicle) => void;
-  deleteVehicle: (vehicleToDelete: Vehicle) => void;
-  drivers: Driver[];
-  addDriver: (driver: Driver) => void;
-  editDriver: (originalDriver: Driver, updatedDriver: Driver) => void;
-  deleteDriver: (driverToDelete: Driver) => void;
-  maintenances: Maintenance[];
-  addMaintenance: (maintenance: Omit<Maintenance, 'id'>) => void;
-  editMaintenance: (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => void;
-  deleteMaintenance: (maintenanceToDelete: Maintenance) => void;
-  fuelEntries: FuelEntry[];
-  addFuelEntry: (fuelEntry: Omit<FuelEntry, 'id'>) => void;
-  editFuelEntry: (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => void;
-  deleteFuelEntry: (fuelEntryToDelete: FuelEntry) => void;
-  assignments: Assignment[];
-  addAssignment: (assignment: Omit<Assignment, 'id'>) => void;
+import { Assignment } => void;
   editAssignment: (originalAssignment: Assignment, updatedAssignment: Assignment) => void;
   deleteAssignment: (assignmentToDelete: Assignment) => void;
   maintenancePlans: MaintenancePlan[];
@@ -43,10 +17,14 @@ interface FleetContextType {
   addDocument: (document: Omit<Document, 'id'>) => void;
   editDocument: (originalDocument: Document, updatedDocument: Document) => void;
   deleteDocument: (documentToDelete: Document) => void;
-  tours: Tour[]; // Ajoutez l'état des tournées
-  addTour: (tour: Omit<Tour, 'id'>) => void; // Ajoutez la fonction d'ajout de tournée
-  editTour: (originalTour: Tour, updatedTour: Tour) => void; // Ajoutez la fonction de modification de tournée
-  deleteTour: (tourToDelete: Tour) => void; // Ajoutez la fonction de suppression de tournée
+  tours: Tour[];
+  addTour: (tour: Omit<Tour, 'id'>) => void;
+  editTour: (originalTour: Tour, updatedTour: Tour) => void;
+  deleteTour: (tourToDelete: Tour) => void;
+  inspections: Inspection[];
+  addInspection: (inspection: Omit<Inspection, 'id'>) => void;
+  editInspection: (originalInspection: Inspection, updatedInspection: Inspection) => void;
+  deleteInspection: (inspectionToDelete: Inspection) => void;
   clearAllData: () => void;
 }
 
@@ -117,6 +95,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
+  const [inspections, setInspections] = useState<Inspection[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedInspections = localStorage.getItem("fleet-inspections");
+      return savedInspections ? JSON.parse(savedInspections) : [];
+    }
+    return [];
+  });
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
@@ -164,6 +150,12 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.setItem("fleet-tours", JSON.stringify(tours));
     }
   }, [tours]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-inspections", JSON.stringify(inspections));
+    }
+  }, [inspections]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
@@ -352,6 +344,56 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showSuccess("Tournée supprimée avec succès !");
   };
 
+  const addInspection = (newInspection: Omit<Inspection, 'id'>) => {
+    const inspectionWithId = { ...newInspection, id: uuidv4() };
+    setInspections((prev) => [...prev, inspectionWithId]);
+    showSuccess("Inspection ajoutée avec succès !");
+
+    // Générer des tâches de maintenance corrective pour les points "NOK"
+    newInspection.checkpoints.forEach(cp => {
+      if (cp.status === "NOK") {
+        addMaintenance({
+          vehicleLicensePlate: newInspection.vehicleLicensePlate,
+          type: "Corrective",
+          description: `Maintenance corrective requise suite à l'inspection du ${format(new Date(newInspection.date), "PPP", { locale: fr })} - Point: ${cp.name}. Observation: ${cp.observation || "Aucune"}.`,
+          cost: 0, // Coût initial à 0, à mettre à jour lors de la planification
+          date: format(new Date(), "yyyy-MM-dd"),
+          provider: "À définir",
+          status: "Planifiée",
+        });
+      }
+    });
+  };
+
+  const editInspection = (originalInspection: Inspection, updatedInspection: Inspection) => {
+    setInspections((prev) =>
+      prev.map((i) => (i.id === originalInspection.id ? updatedInspection : i))
+    );
+    showSuccess("Inspection modifiée avec succès !");
+
+    // Re-évaluer et générer des tâches de maintenance corrective si nécessaire
+    updatedInspection.checkpoints.forEach(cp => {
+      // Si un point est NOK et qu'il n'y avait pas de maintenance corrective pour ce point spécifique de cette inspection
+      // (Simplification: pour l'instant, on génère une nouvelle tâche si NOK, sans vérifier les doublons complexes)
+      if (cp.status === "NOK") {
+        addMaintenance({
+          vehicleLicensePlate: updatedInspection.vehicleLicensePlate,
+          type: "Corrective",
+          description: `Maintenance corrective requise suite à la modification de l'inspection du ${format(new Date(updatedInspection.date), "PPP", { locale: fr })} - Point: ${cp.name}. Observation: ${cp.observation || "Aucune"}.`,
+          cost: 0,
+          date: format(new Date(), "yyyy-MM-dd"),
+          provider: "À définir",
+          status: "Planifiée",
+        });
+      }
+    });
+  };
+
+  const deleteInspection = (inspectionToDelete: Inspection) => {
+    setInspections((prev) => prev.filter((i) => i.id !== inspectionToDelete.id));
+    showSuccess("Inspection supprimée avec succès !");
+  };
+
   const clearAllData = () => {
     setVehicles([]);
     setDrivers([]);
@@ -360,7 +402,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setAssignments([]);
     setMaintenancePlans([]);
     setDocuments([]);
-    setTours([]); // Effacez aussi les tournées
+    setTours([]);
+    setInspections([]);
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
@@ -369,7 +412,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       localStorage.removeItem("fleet-assignments");
       localStorage.removeItem("fleet-maintenance-plans");
       localStorage.removeItem("fleet-documents");
-      localStorage.removeItem("fleet-tours"); // Supprimez du localStorage
+      localStorage.removeItem("fleet-tours");
+      localStorage.removeItem("fleet-inspections");
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -406,10 +450,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addDocument,
         editDocument,
         deleteDocument,
-        tours, // Exposez les tournées
-        addTour, // Exposez les fonctions de tournée
+        tours,
+        addTour,
         editTour,
         deleteTour,
+        inspections,
+        addInspection,
+        editInspection,
+        deleteInspection,
         clearAllData,
       }}
     >

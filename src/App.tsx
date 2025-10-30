@@ -13,7 +13,8 @@ import FuelPage from "./pages/FuelPage";
 import AssignmentsPage from "./pages/AssignmentsPage";
 import MaintenancePlansPage from "./pages/MaintenancePlansPage";
 import DocumentsPage from "./pages/DocumentsPage";
-import ToursPage from "./pages/ToursPage"; // Importez la nouvelle page
+import ToursPage from "./pages/ToursPage";
+import InspectionsPage from "./pages/InspectionsPage"; // Importez la nouvelle page
 import LoginPage from "./pages/LoginPage";
 import { FleetProvider } from "@/context/FleetContext";
 import { SessionContextProvider, useSession } from "@/context/SessionContext";
@@ -93,9 +94,14 @@ const router = createBrowserRouter([
         handle: { title: "Gestion des Documents" },
       },
       {
-        path: "/tours", // Nouvelle route
+        path: "/tours",
         element: <ToursPage />,
         handle: { title: "Gestion des Tournées" },
+      },
+      {
+        path: "/inspections", // Nouvelle route
+        element: <InspectionsPage />,
+        handle: { title: "Gestion des Inspections" },
       },
       {
         path: "/settings",
