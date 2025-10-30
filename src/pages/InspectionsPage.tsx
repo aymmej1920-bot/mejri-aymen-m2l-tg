@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useFleet } from "@/context/FleetContext";
-import { Inspection } from "@/types/inspection";
+import { Inspection, InspectionCheckpoint } from "@/types/inspection";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -64,7 +64,7 @@ const InspectionsPage = () => {
     }
   };
 
-  const getCheckpointStatusBadgeVariant = (status: Inspection['overallStatus']) => {
+  const getCheckpointStatusBadgeVariant = (status: InspectionCheckpoint['status']) => { // Corrected type here
     switch (status) {
       case "OK":
         return "success";
