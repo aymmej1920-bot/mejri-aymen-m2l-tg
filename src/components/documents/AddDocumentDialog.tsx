@@ -35,12 +35,12 @@ import { Document } from "@/types/document";
 import { format } from "date-fns";
 
 const formSchema = z.object({
-  vehicleLicensePlate: z.string().optional(), // Optionnel, car un document peut ne pas être lié à un véhicule
+  vehicleLicensePlate: z.string().optional(),
   name: z.string().min(2, {
     message: "Le nom du document doit contenir au moins 2 caractères.",
   }),
-  type: z.string().min(2, {
-    message: "Le type de document doit contenir au moins 2 caractères.",
+  type: z.enum(["Assurance", "Vignette", "Visite Technique", "Taxe"], { // Mise à jour pour utiliser z.enum
+    message: "Veuillez sélectionner un type de document valide.",
   }),
   url: z.string().url({
     message: "L'URL du document n'est pas valide.",
@@ -57,7 +57,7 @@ const AddDocumentDialog: React.FC = () => {
     defaultValues: {
       vehicleLicensePlate: "",
       name: "",
-      type: "",
+      type: "Assurance", // Valeur par défaut pour le sélecteur
       url: "",
     },
   });
@@ -68,8 +68,8 @@ const AddDocumentDialog: React.FC = () => {
         name: values.name,
         type: values.type,
         url: values.url,
-        uploadDate: format(new Date(), "yyyy-MM-dd"), // Date d'upload automatique
-        vehicleLicensePlate: values.vehicleLicensePlate === "" ? undefined : values.vehicleLicensePlate, // S'assurer que c'est undefined si vide
+        uploadDate: format(new Date(), "yyyy-MM-dd"),
+        vehicleLicensePlate: values.vehicleLicensePlate === "" ? undefined : values.vehicleLicensePlate,
       };
       addDocument(newDocument);
       form.reset();
@@ -142,9 +142,19 @@ const AddDocumentDialog: React.FC = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Type de document</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Assurance" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Assurance">Assurance</SelectItem>
+                      <SelectItem value="Vignette">Vignette</SelectItem>
+                      <SelectItem value="Visite Technique">Visite Technique</SelectItem>
+                      <SelectItem value="Taxe">Taxe</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

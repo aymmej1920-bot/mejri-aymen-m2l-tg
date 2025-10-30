@@ -40,8 +40,8 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: "Le nom du document doit contenir au moins 2 caractères.",
   }),
-  type: z.string().min(2, {
-    message: "Le type de document doit contenir au moins 2 caractères.",
+  type: z.enum(["Assurance", "Vignette", "Visite Technique", "Taxe"], { // Mise à jour pour utiliser z.enum
+    message: "Veuillez sélectionner un type de document valide.",
   }),
   url: z.string().url({
     message: "L'URL du document n'est pas valide.",
@@ -75,7 +75,7 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
         type: values.type,
         url: values.url,
         uploadDate: values.uploadDate,
-        vehicleLicensePlate: values.vehicleLicensePlate === "" ? undefined : values.vehicleLicensePlate, // S'assurer que c'est undefined si vide
+        vehicleLicensePlate: values.vehicleLicensePlate === "" ? undefined : values.vehicleLicensePlate,
       };
       editDocument(document, updatedDocument);
       setIsOpen(false);
@@ -146,9 +146,19 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Type de document</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Assurance">Assurance</SelectItem>
+                      <SelectItem value="Vignette">Vignette</SelectItem>
+                      <SelectItem value="Visite Technique">Visite Technique</SelectItem>
+                      <SelectItem value="Taxe">Taxe</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
