@@ -3,7 +3,9 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { Vehicle } from "@/types/vehicle";
 import { Driver } from "@/types/driver";
+import { Maintenance } from "@/types/maintenance"; // Importez le type Maintenance
 import { showSuccess, showError } from "@/utils/toast";
+import { v4 as uuidv4 } from "uuid"; // Importez uuid
 
 interface FleetContextType {
   vehicles: Vehicle[];
@@ -14,13 +16,16 @@ interface FleetContextType {
   addDriver: (driver: Driver) => void;
   editDriver: (originalDriver: Driver, updatedDriver: Driver) => void;
   deleteDriver: (driverToDelete: Driver) => void;
-  clearAllData: () => void; // Nouvelle fonction pour effacer toutes les données
+  maintenances: Maintenance[]; // Ajoutez l'état des maintenances
+  addMaintenance: (maintenance: Omit<Maintenance, 'id'>) => void; // Ajoutez la fonction d'ajout de maintenance
+  editMaintenance: (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => void; // Ajoutez la fonction de modification de maintenance
+  deleteMaintenance: (maintenanceToDelete: Maintenance) => void; // Ajoutez la fonction de suppression de maintenance
+  clearAllData: () => void;
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
 
 export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialiser l'état avec les données du localStorage ou un tableau vide
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
     if (typeof window !== "undefined") {
       const savedVehicles = localStorage.getItem("fleet-vehicles");
@@ -37,19 +42,31 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return [];
   });
 
-  // Sauvegarder les véhicules dans le localStorage chaque fois qu'ils changent
+  const [maintenances, setMaintenances] = useState<Maintenance[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedMaintenances = localStorage.getItem("fleet-maintenances");
+      return savedMaintenances ? JSON.parse(savedMaintenances) : [];
+    }
+    return [];
+  });
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-vehicles", JSON.stringify(vehicles));
     }
   }, [vehicles]);
 
-  // Sauvegarder les conducteurs dans le localStorage chaque fois qu'ils changent
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("fleet-drivers", JSON.stringify(drivers));
     }
   }, [drivers]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fleet-maintenances", JSON.stringify(maintenances));
+    }
+  }, [maintenances]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles((prev) => [...prev, newVehicle]);
@@ -85,12 +102,32 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     showSuccess("Conducteur supprimé avec succès !");
   };
 
+  const addMaintenance = (newMaintenance: Omit<Maintenance, 'id'>) => {
+    const maintenanceWithId = { ...newMaintenance, id: uuidv4() };
+    setMaintenances((prev) => [...prev, maintenanceWithId]);
+    showSuccess("Maintenance ajoutée avec succès !");
+  };
+
+  const editMaintenance = (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => {
+    setMaintenances((prev) =>
+      prev.map((m) => (m.id === originalMaintenance.id ? updatedMaintenance : m))
+    );
+    showSuccess("Maintenance modifiée avec succès !");
+  };
+
+  const deleteMaintenance = (maintenanceToDelete: Maintenance) => {
+    setMaintenances((prev) => prev.filter((m) => m.id !== maintenanceToDelete.id));
+    showSuccess("Maintenance supprimée avec succès !");
+  };
+
   const clearAllData = () => {
     setVehicles([]);
     setDrivers([]);
+    setMaintenances([]); // Effacez aussi les maintenances
     if (typeof window !== "undefined") {
       localStorage.removeItem("fleet-vehicles");
       localStorage.removeItem("fleet-drivers");
+      localStorage.removeItem("fleet-maintenances"); // Supprimez du localStorage
     }
     showSuccess("Toutes les données de la flotte ont été effacées !");
   };
@@ -106,7 +143,11 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addDriver,
         editDriver,
         deleteDriver,
-        clearAllData, // Exposer la nouvelle fonction
+        maintenances, // Exposez les maintenances
+        addMaintenance, // Exposez les fonctions de maintenance
+        editMaintenance,
+        deleteMaintenance,
+        clearAllData,
       }}
     >
       {children}

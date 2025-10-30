@@ -1,18 +1,18 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider } from "react-router-dom"; // Importez createBrowserRouter et RouterProvider
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import VehiclesPage from "./pages/VehiclesPage";
 import DriversPage from "./pages/DriversPage";
 import SettingsPage from "./pages/SettingsPage";
+import MaintenancePage from "./pages/MaintenancePage"; // Importez la nouvelle page
 import { FleetProvider } from "@/context/FleetContext";
 
 const queryClient = new QueryClient();
 
-// Définissez vos routes sous forme d'un tableau d'objets
 const router = createBrowserRouter([
   {
     path: "/",
@@ -34,6 +34,11 @@ const router = createBrowserRouter([
         handle: { title: "Gestion des Conducteurs" },
       },
       {
+        path: "/maintenances", // Nouvelle route pour les maintenances
+        element: <MaintenancePage />,
+        handle: { title: "Gestion des Maintenances" },
+      },
+      {
         path: "/settings",
         element: <SettingsPage />,
         handle: { title: "Paramètres" },
@@ -52,7 +57,7 @@ const App = () => (
     <TooltipProvider>
       <Sonner />
       <FleetProvider>
-        <RouterProvider router={router} /> {/* Utilisez RouterProvider avec le routeur créé */}
+        <RouterProvider router={router} />
       </FleetProvider>
     </TooltipProvider>
   </QueryClientProvider>

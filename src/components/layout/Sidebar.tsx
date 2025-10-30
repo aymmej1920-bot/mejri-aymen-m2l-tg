@@ -1,7 +1,7 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { Home, Car, Users, Settings } from "lucide-react";
+import { Home, Car, Users, Settings, Wrench } from "lucide-react"; // Importez l'icône Wrench
 import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
@@ -9,7 +9,7 @@ const Sidebar = () => {
   const activeNavLinkClasses = "bg-sidebar-primary text-sidebar-primary-foreground";
 
   return (
-    <div className="flex flex-col h-full p-4 bg-sidebar text-sidebar-foreground"> {/* border-r removed */}
+    <div className="flex flex-col h-full p-4 bg-sidebar text-sidebar-foreground">
       <div className="mb-8 text-2xl font-bold text-sidebar-primary">
         Fleet Manager Pro
       </div>
@@ -40,6 +40,15 @@ const Sidebar = () => {
         >
           <Users className="mr-2 h-4 w-4" />
           Conducteurs
+        </NavLink>
+        <NavLink
+          to="/maintenances" // Nouveau lien pour les maintenances
+          className={({ isActive }) =>
+            cn(navLinkClasses, isActive && activeNavLinkClasses)
+          }
+        >
+          <Wrench className="mr-2 h-4 w-4" />
+          Maintenances
         </NavLink>
         <NavLink
           to="/settings"
