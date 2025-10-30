@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -9,17 +8,16 @@ import NotFound from "./pages/NotFound";
 import VehiclesPage from "./pages/VehiclesPage";
 import DriversPage from "./pages/DriversPage";
 import SettingsPage from "./pages/SettingsPage";
-import { FleetProvider } from "@/context/FleetContext"; // Importez le FleetProvider
+import { FleetProvider } from "@/context/FleetContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      <Sonner /> {/* Seul le composant Sonner est conservé pour les toasts */}
       <BrowserRouter>
-        <FleetProvider> {/* Enveloppez les routes avec le FleetProvider */}
+        <FleetProvider>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Index />} />
