@@ -6,7 +6,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Sidebar from "@/components/layout/Sidebar"; // Chemin corrigé
+import Sidebar from "@/components/layout/Sidebar";
+import { cn } from "@/lib/utils"; // Importez cn pour combiner les classes
 
 const Layout = () => {
   const isMobile = useIsMobile();
@@ -25,7 +26,7 @@ const Layout = () => {
           </SheetContent>
         </Sheet>
       ) : (
-        <div className="w-64 flex-shrink-0">
+        <div className={cn("w-64 flex-shrink-0", !isMobile && "border-r")}> {/* Appliquer border-r ici */}
           <Sidebar />
         </div>
       )}
