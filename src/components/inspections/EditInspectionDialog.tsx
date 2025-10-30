@@ -96,7 +96,7 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
         vehicleLicensePlate: values.vehicleLicensePlate,
         date: values.date,
         inspectorName: values.inspectorName,
-        checkpoints: values.checkpoints as InspectionCheckpoint[], // Ajout du cast ici
+        checkpoints: values.checkpoints as InspectionCheckpoint[],
         overallStatus: overallStatus,
       };
       editInspection(inspection, updatedInspection);
@@ -115,7 +115,7 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Modifier l'inspection</DialogTitle>
           <DialogDescription>

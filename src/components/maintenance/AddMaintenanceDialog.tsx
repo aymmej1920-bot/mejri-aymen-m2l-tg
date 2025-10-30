@@ -98,7 +98,7 @@ const AddMaintenanceDialog: React.FC = () => {
           Ajouter une maintenance
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle maintenance</DialogTitle>
           <DialogDescription>

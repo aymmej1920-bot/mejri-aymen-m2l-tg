@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PlusCircle } from "lucide-react";
-import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { useFleet } from "@/context/FleetContext";
 import { Driver } from "@/types/driver";
 
 const formSchema = z.object({
@@ -41,11 +41,11 @@ const formSchema = z.object({
   }),
 });
 
-interface AddDriverDialogProps {} // Plus besoin de onAddDriver en prop
+interface AddDriverDialogProps {}
 
 const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { addDriver } = useFleet(); // Utilisez le contexte pour la fonction addDriver
+  const { addDriver } = useFleet();
   const form = useForm<Driver>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -58,11 +58,10 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
 
   const onSubmit = (values: Driver) => {
     try {
-      addDriver(values); // Appelez la fonction du contexte
+      addDriver(values);
       form.reset();
       setIsOpen(false);
     } catch (error) {
-      // showError est déjà géré dans le contexte, mais on peut logguer ici si besoin
       console.error("Failed to add driver:", error);
     }
   };
@@ -75,7 +74,7 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
           Ajouter un conducteur
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau conducteur</DialogTitle>
           <DialogDescription>

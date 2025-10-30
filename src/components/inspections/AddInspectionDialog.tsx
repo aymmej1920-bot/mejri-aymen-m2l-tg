@@ -110,7 +110,7 @@ const AddInspectionDialog: React.FC = () => {
         vehicleLicensePlate: values.vehicleLicensePlate,
         date: values.date,
         inspectorName: values.inspectorName,
-        checkpoints: values.checkpoints as InspectionCheckpoint[], // Ajout du cast ici
+        checkpoints: values.checkpoints as InspectionCheckpoint[],
         overallStatus: overallStatus,
       };
       addInspection(newInspection);
@@ -136,7 +136,7 @@ const AddInspectionDialog: React.FC = () => {
           Ajouter une inspection
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle inspection</DialogTitle>
           <DialogDescription>

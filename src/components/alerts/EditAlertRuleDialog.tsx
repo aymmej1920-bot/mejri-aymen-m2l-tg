@@ -187,8 +187,8 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
       type: alertRule.type,
       message: alertRule.message,
       status: alertRule.status,
-      vehicleLicensePlate: alertRule.criteria.vehicleLicensePlate || undefined, // Default to undefined
-      driverLicenseNumber: alertRule.criteria.driverLicenseNumber || undefined, // Default to undefined
+      vehicleLicensePlate: alertRule.criteria.vehicleLicensePlate || undefined,
+      driverLicenseNumber: alertRule.criteria.driverLicenseNumber || undefined,
       thresholdValue: alertRule.criteria.thresholdValue,
       thresholdUnit: alertRule.criteria.thresholdUnit,
       maintenanceType: alertRule.criteria.maintenanceType,
@@ -231,7 +231,7 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
           maintenanceType: values.maintenanceType,
           documentType: values.documentType,
         },
-        lastTriggered: alertRule.lastTriggered, // Keep original lastTriggered
+        lastTriggered: alertRule.lastTriggered,
       };
       editAlertRule(alertRule, updatedAlertRule);
       setIsOpen(false);
@@ -250,7 +250,7 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Modifier la règle d'alerte</DialogTitle>
           <DialogDescription>
@@ -330,7 +330,6 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
               )}
             />
 
-            {/* Conditional Criteria Fields */}
             {(selectedType === "MaintenanceDue" || selectedType === "VehicleAssignmentEnd" || selectedType === "DocumentExpiry") && (
               <FormField
                 control={form.control}

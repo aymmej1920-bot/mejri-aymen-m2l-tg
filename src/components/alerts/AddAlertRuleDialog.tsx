@@ -181,9 +181,9 @@ const AddAlertRuleDialog: React.FC = () => {
       type: "MaintenanceDue",
       message: "",
       status: "Active",
-      vehicleLicensePlate: undefined, // Default to undefined for no selection
-      driverLicenseNumber: undefined, // Default to undefined for no selection
-      thresholdValue: 7, // Default to 7 days/km
+      vehicleLicensePlate: undefined,
+      driverLicenseNumber: undefined,
+      thresholdValue: 7,
       thresholdUnit: "days",
       maintenanceType: "Préventive",
       documentType: "Assurance",
@@ -228,7 +228,7 @@ const AddAlertRuleDialog: React.FC = () => {
           Ajouter une règle d'alerte
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle règle d'alerte</DialogTitle>
           <DialogDescription>
@@ -308,7 +308,6 @@ const AddAlertRuleDialog: React.FC = () => {
               )}
             />
 
-            {/* Conditional Criteria Fields */}
             {(selectedType === "MaintenanceDue" || selectedType === "VehicleAssignmentEnd" || selectedType === "DocumentExpiry") && (
               <FormField
                 control={form.control}

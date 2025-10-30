@@ -94,7 +94,7 @@ const AddFuelEntryDialog: React.FC = () => {
           Ajouter un ravitaillement
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau ravitaillement</DialogTitle>
           <DialogDescription>

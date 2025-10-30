@@ -19,7 +19,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="flex flex-col h-full p-4 bg-sidebar text-sidebar-foreground">
+    <div className="flex flex-col h-full p-4 glass rounded-2xl text-sidebar-foreground">
       <div className="mb-8 text-2xl font-bold text-sidebar-primary">
         Fleet Manager Pro
       </div>

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Pencil } from "lucide-react";
-import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { useFleet } from "@/context/FleetContext";
 import { Driver } from "@/types/driver";
 
 const formSchema = z.object({
@@ -43,12 +43,11 @@ const formSchema = z.object({
 
 interface EditDriverDialogProps {
   driver: Driver;
-  // Plus besoin de onEditDriver en prop, car le contexte gère la modification
 }
 
 const EditDriverDialog: React.FC<EditDriverDialogProps> = ({ driver }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { editDriver } = useFleet(); // Utilisez le contexte pour la fonction editDriver
+  const { editDriver } = useFleet();
   const form = useForm<Driver>({
     resolver: zodResolver(formSchema),
     defaultValues: driver,
@@ -60,10 +59,9 @@ const EditDriverDialog: React.FC<EditDriverDialogProps> = ({ driver }) => {
 
   const onSubmit = (values: Driver) => {
     try {
-      editDriver(driver, values); // Appelez la fonction du contexte, en passant l'original et le mis à jour
+      editDriver(driver, values);
       setIsOpen(false);
     } catch (error) {
-      // showError est déjà géré dans le contexte, mais on peut logguer ici si besoin
       console.error("Failed to edit driver:", error);
     }
   };
@@ -75,7 +73,7 @@ const EditDriverDialog: React.FC<EditDriverDialogProps> = ({ driver }) => {
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Modifier le conducteur</DialogTitle>
           <DialogDescription>

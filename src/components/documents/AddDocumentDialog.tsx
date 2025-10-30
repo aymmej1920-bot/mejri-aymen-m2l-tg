@@ -79,8 +79,8 @@ const AddDocumentDialog: React.FC = () => {
       name: "",
       type: "Assurance",
       url: "",
-      issueDate: format(new Date(), "yyyy-MM-dd"), // Date par défaut à aujourd'hui
-      expiryDate: format(new Date(), "yyyy-MM-dd"), // Date par défaut à aujourd'hui
+      issueDate: format(new Date(), "yyyy-MM-dd"),
+      expiryDate: format(new Date(), "yyyy-MM-dd"),
     },
   });
 
@@ -115,7 +115,7 @@ const AddDocumentDialog: React.FC = () => {
           Ajouter un document
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau document</DialogTitle>
           <DialogDescription>

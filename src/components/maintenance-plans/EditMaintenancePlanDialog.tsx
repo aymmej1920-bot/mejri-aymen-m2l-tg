@@ -97,7 +97,7 @@ const EditMaintenancePlanDialog: React.FC<EditMaintenancePlanDialogProps> = ({ p
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Modifier le plan de maintenance</DialogTitle>
           <DialogDescription>

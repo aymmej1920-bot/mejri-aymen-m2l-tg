@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Pencil } from "lucide-react";
-import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { useFleet } from "@/context/FleetContext";
 import { Vehicle } from "@/types/vehicle";
 
 const formSchema = z.object({
@@ -43,12 +43,11 @@ const formSchema = z.object({
 
 interface EditVehicleDialogProps {
   vehicle: Vehicle;
-  // Plus besoin de onEditVehicle en prop, car le contexte gère la modification
 }
 
 const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { editVehicle } = useFleet(); // Utilisez le contexte pour la fonction editVehicle
+  const { editVehicle } = useFleet();
   const form = useForm<Vehicle>({
     resolver: zodResolver(formSchema),
     defaultValues: vehicle,
@@ -60,10 +59,9 @@ const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle }) => {
 
   const onSubmit = (values: Vehicle) => {
     try {
-      editVehicle(vehicle, values); // Appelez la fonction du contexte, en passant l'original et le mis à jour
+      editVehicle(vehicle, values);
       setIsOpen(false);
     } catch (error) {
-      // showError est déjà géré dans le contexte, mais on peut logguer ici si besoin
       console.error("Failed to edit vehicle:", error);
     }
   };
@@ -75,7 +73,7 @@ const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle }) => {
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Modifier le véhicule</DialogTitle>
           <DialogDescription>

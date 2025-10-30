@@ -7,12 +7,11 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
+  SheetTrigger, // Added SheetTrigger import
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { useFleet } from "@/context/FleetContext";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -34,7 +33,7 @@ const NotificationCenter: React.FC = () => {
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px] flex flex-col">
+      <SheetContent className="w-[400px] sm:w-[540px] flex flex-col glass rounded-2xl">
         <SheetHeader>
           <SheetTitle>Notifications</SheetTitle>
         </SheetHeader>

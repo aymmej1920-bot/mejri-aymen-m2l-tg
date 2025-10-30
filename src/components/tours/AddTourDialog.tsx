@@ -69,11 +69,10 @@ const formSchema = z.object({
   path: ["endDate"],
 });
 
-// Utiliser directement Omit<Tour, 'id'> comme type pour le formulaire
 const AddTourDialog: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
   const { addTour, vehicles, drivers } = useFleet();
-  const form = useForm<Omit<Tour, 'id'>>({ // Type explicite ici
+  const form = useForm<Omit<Tour, 'id'>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -88,9 +87,8 @@ const AddTourDialog: React.FC = () => {
     },
   });
 
-  const onSubmit = (values: Omit<Tour, 'id'>) => { // Type explicite ici
+  const onSubmit = (values: Omit<Tour, 'id'>) => {
     try {
-      // 'values' est déjà du bon type, pas besoin de recréer l'objet
       addTour(values);
       form.reset();
       setIsOpen(false);
@@ -110,7 +108,7 @@ const AddTourDialog: React.FC = () => {
           Ajouter une tournée
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle tournée</DialogTitle>
           <DialogDescription>

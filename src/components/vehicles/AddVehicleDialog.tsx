@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PlusCircle } from "lucide-react";
-import { useFleet } from "@/context/FleetContext"; // Importez le hook useFleet
+import { useFleet } from "@/context/FleetContext";
 import { Vehicle } from "@/types/vehicle";
 
 const formSchema = z.object({
@@ -41,11 +41,11 @@ const formSchema = z.object({
   }),
 });
 
-interface AddVehicleDialogProps {} // Plus besoin de onAddVehicle en prop
+interface AddVehicleDialogProps {}
 
 const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { addVehicle } = useFleet(); // Utilisez le contexte pour la fonction addVehicle
+  const { addVehicle } = useFleet();
   const form = useForm<Vehicle>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -58,11 +58,10 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
 
   const onSubmit = (values: Vehicle) => {
     try {
-      addVehicle(values); // Appelez la fonction du contexte
+      addVehicle(values);
       form.reset();
       setIsOpen(false);
     } catch (error) {
-      // showError est déjà géré dans le contexte, mais on peut logguer ici si besoin
       console.error("Failed to add vehicle:", error);
     }
   };
@@ -75,7 +74,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
           Ajouter un véhicule
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau véhicule</DialogTitle>
           <DialogDescription>

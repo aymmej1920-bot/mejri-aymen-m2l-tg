@@ -53,7 +53,7 @@ const LoginPage: React.FC = () => {
                 },
               },
             }}
-            theme="dark" // Utilise le thème sombre par défaut pour Auth UI
+            theme="dark"
             localization={{
               variables: {
                 sign_in: {
@@ -64,7 +64,6 @@ const LoginPage: React.FC = () => {
                   button_label: 'Se connecter',
                   social_provider_text: 'Se connecter avec {{provider}}',
                   link_text: 'Déjà un compte ? Connectez-vous',
-                  // confirmation_text: 'Vérifiez votre e-mail pour le lien de connexion', // Supprimé
                 },
                 sign_up: {
                   email_label: 'Adresse e-mail',
@@ -104,8 +103,6 @@ const LoginPage: React.FC = () => {
                   phone_input_label: 'Numéro de téléphone',
                   token_input_label: 'Code OTP',
                   button_label: 'Vérifier le code OTP',
-                  // link_text: 'Vous avez déjà un code OTP ?', // Supprimé
-                  // confirmation_text: 'Vérifiez votre e-mail/téléphone pour le code OTP', // Supprimé
                 },
               },
             }}

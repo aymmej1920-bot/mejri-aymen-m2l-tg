@@ -156,7 +156,7 @@ const InspectionsPage = () => {
 
       {viewingInspection && (
         <Dialog open={!!viewingInspection} onOpenChange={() => setViewingInspection(null)}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl">
             <DialogHeader>
               <DialogTitle>Détails de l'inspection</DialogTitle>
               <DialogDescription>

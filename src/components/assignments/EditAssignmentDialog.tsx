@@ -95,7 +95,7 @@ const EditAssignmentDialog: React.FC<EditAssignmentDialogProps> = ({ assignment 
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl">
         <DialogHeader>
           <DialogTitle>Modifier l'affectation</DialogTitle>
           <DialogDescription>
