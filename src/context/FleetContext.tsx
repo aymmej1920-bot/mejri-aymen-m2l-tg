@@ -218,7 +218,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         supabase.from('inspections').select('*, checkpoints').eq('user_id', user.id),
         supabase.from('alert_rules').select('*, criteria').eq('user_id', user.id),
         supabase.from('alerts').select('*').eq('user_id', user.id),
-        supabase.from('profiles').select('*, role:role_id(*)').eq('id', user.id).single(), // Fetch profile with nested role
+        supabase.from('profiles').select('id, first_name, last_name, avatar_url, updated_at, role_id').eq('id', user.id).single(), // Fetch profile without embedding role
         supabase.from('roles').select('*'), // Fetch all roles
         supabase.from('permissions').select('*'), // Fetch all permissions
         supabase.from('role_permissions').select('*'), // Fetch role permissions
@@ -239,20 +239,24 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (permissionsError) throw permissionsError;
       if (rolePermissionsError) throw rolePermissionsError;
 
-      // Handle profile error separately, as it might not exist initially
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.warn("No profile found for user, creating one.", profileError);
-        // If no profile exists, create a basic one with default role
-        const { data: newProfileData, error: newProfileError } = await supabase.from('profiles').insert({ id: user.id }).select('*, role:role_id(*)').single();
-        if (newProfileError) throw newProfileError;
-        setProfile(mapToCamelCase(newProfileData));
-      } else if (profileData) {
-        setProfile(mapToCamelCase(profileData));
-      }
-
-      setRoles(mapToCamelCase(rolesData));
+      const camelCaseRoles = mapToCamelCase(rolesData) as Role[];
+      setRoles(camelCaseRoles);
       setPermissions(mapToCamelCase(permissionsData));
       setRolePermissions(mapToCamelCase(rolePermissionsData));
+
+      // Handle profile data and attach role manually
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.warn("No profile found for user, creating one.", profileError);
+        const { data: newProfileData, error: newProfileError } = await supabase.from('profiles').insert({ id: user.id }).select('id, first_name, last_name, avatar_url, updated_at, role_id').single();
+        if (newProfileError) throw newProfileError;
+        const mappedProfile = mapToCamelCase(newProfileData) as Profile;
+        mappedProfile.role = camelCaseRoles.find(r => r.id === mappedProfile.roleId);
+        setProfile(mappedProfile);
+      } else if (profileData) {
+        const mappedProfile = mapToCamelCase(profileData) as Profile;
+        mappedProfile.role = camelCaseRoles.find(r => r.id === mappedProfile.roleId);
+        setProfile(mappedProfile);
+      }
 
       const camelCaseVehicles = mapToCamelCase(vehiclesData) as Vehicle[];
       const camelCaseDrivers = mapToCamelCase(driversData) as Driver[];
@@ -283,20 +287,28 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setDriverMap(newDriverMap);
 
       // Fetch all users for Admin if current user is Admin
-      const currentUserProfile = mapToCamelCase(profileData) as Profile;
-      if (currentUserProfile?.role?.name === 'Admin') {
-        const { data: edgeFunctionUsersData, error: edgeFunctionUsersError } = await supabase.functions.invoke('admin-user-management', {
-            body: { action: 'listUsers' },
-            headers: {
-              'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`,
-              'Content-Type': 'application/json',
-            },
-          });
+      const currentUserProfile = profileData ? (mapToCamelCase(profileData) as Profile) : null;
+      if (currentUserProfile?.roleId) { // Check if roleId exists
+        const adminRole = camelCaseRoles.find(r => r.id === currentUserProfile.roleId && r.name === 'Admin');
+        if (adminRole) {
+          const { data: edgeFunctionUsersData, error: edgeFunctionUsersError } = await supabase.functions.invoke('admin-user-management', {
+              body: { action: 'listUsers' },
+              headers: {
+                'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`,
+                'Content-Type': 'application/json',
+              },
+            });
 
-          if (edgeFunctionUsersError) throw edgeFunctionUsersError;
-          if (edgeFunctionUsersData?.error) throw new Error(edgeFunctionUsersData.error);
+            if (edgeFunctionUsersError) throw edgeFunctionUsersError;
+            if (edgeFunctionUsersData?.error) throw new Error(edgeFunctionUsersData.error);
 
-          setUsers(edgeFunctionUsersData.users);
+            // Manually attach role objects to users fetched from Edge Function
+            const usersWithAttachedRoles = edgeFunctionUsersData.users.map((u: any) => ({
+              ...u,
+              role: camelCaseRoles.find(r => r.id === u.roleId) || null,
+            }));
+            setUsers(usersWithAttachedRoles);
+        }
       }
 
 
@@ -365,9 +377,11 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const updateProfile = async (updatedProfile: Omit<Profile, 'id' | 'updatedAt' | 'roleId' | 'role'>) => {
     if (!user) { showError("Vous devez être connecté pour modifier votre profil."); return; }
     try {
-      const { data, error } = await supabase.from('profiles').update(mapToSnakeCase(updatedProfile)).eq('id', user.id).select('*, role:role_id(*)').single();
+      const { data, error } = await supabase.from('profiles').update(mapToSnakeCase(updatedProfile)).eq('id', user.id).select('id, first_name, last_name, avatar_url, updated_at, role_id').single();
       if (error) throw error;
-      setProfile(mapToCamelCase(data));
+      const mappedProfile = mapToCamelCase(data) as Profile;
+      mappedProfile.role = roles.find(r => r.id === mappedProfile.roleId); // Attach role manually
+      setProfile(mappedProfile);
       showSuccess("Profil mis à jour avec succès !");
     } catch (error: any) {
       showError("Échec de la mise à jour du profil : " + error.message);

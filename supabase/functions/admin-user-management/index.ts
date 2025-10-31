@@ -30,11 +30,11 @@ serve(async (req) => {
 
     const { data: adminProfile, error: adminProfileError } = await supabaseAdmin
       .from('profiles')
-      .select('role_id, roles(name)')
+      .select('role_id, fk_role_id!roles(name)') // Use explicit foreign key name here
       .eq('id', user.id)
       .single();
 
-    if (adminProfileError || adminProfile?.roles?.name !== 'Admin') {
+    if (adminProfileError || adminProfile?.fk_role_id?.name !== 'Admin') { // Check against fk_role_id
       return new Response(JSON.stringify({ error: 'Permission denied: Only Admin users can perform this action.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
@@ -144,7 +144,7 @@ serve(async (req) => {
         const userIds = authUsers.users.map(u => u.id);
         const { data: profilesData, error: profilesError } = await supabaseAdmin
           .from('profiles')
-          .select('id, first_name, last_name, avatar_url, updated_at, role_id, roles(id, name, description)')
+          .select('id, first_name, last_name, avatar_url, updated_at, role_id, fk_role_id!roles(id, name, description)') // Explicitly use the foreign key name
           .in('id', userIds);
 
         if (profilesError) throw profilesError;
@@ -159,7 +159,7 @@ serve(async (req) => {
             avatarUrl: profile?.avatar_url || null,
             updatedAt: profile?.updated_at || null,
             roleId: profile?.role_id || null,
-            role: profile?.roles || null,
+            role: profile?.fk_role_id || null, // Use the explicit foreign key name here
             is_suspended: authUser.app_metadata?.is_suspended || false,
           };
         }).filter(u => u.id !== user.id); // Exclude the current admin user
