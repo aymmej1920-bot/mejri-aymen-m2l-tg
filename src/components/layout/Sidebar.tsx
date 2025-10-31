@@ -1,15 +1,17 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck, FileText, Route, ClipboardCheck, BellRing, BarChart3, UserCircle } from "lucide-react"; // Import UserCircle
+import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck, FileText, Route, ClipboardCheck, BellRing, BarChart3, UserCircle, UserCog } from "lucide-react"; // Import UserCog
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
+import { useFleet } from "@/context/FleetContext"; // Import useFleet
 
 const Sidebar = () => {
+  const { can } = useFleet(); // Use the can function from FleetContext
   const navLinkClasses = "flex items-center px-3 py-2 rounded-md transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
-  const activeNavLinkClasses = "gradient-brand text-white"; // Changed to use gradient-brand and white text
+  const activeNavLinkClasses = "gradient-brand text-white";
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -34,7 +36,7 @@ const Sidebar = () => {
           Accueil
         </NavLink>
         <NavLink
-          to="/profile" // New link for profile page
+          to="/profile"
           className={({ isActive }) =>
             cn(navLinkClasses, isActive && activeNavLinkClasses)
           }
@@ -42,6 +44,17 @@ const Sidebar = () => {
           <UserCircle className="mr-2 h-4 w-4" />
           Mon Profil
         </NavLink>
+        {can('manage_users') && ( // Only show "Gestion des Utilisateurs" if user has 'manage_users' permission
+          <NavLink
+            to="/users"
+            className={({ isActive }) =>
+              cn(navLinkClasses, isActive && activeNavLinkClasses)
+            }
+          >
+            <UserCog className="mr-2 h-4 w-4" />
+            Gestion des Utilisateurs
+          </NavLink>
+        )}
         <NavLink
           to="/vehicles"
           className={({ isActive }) =>
@@ -132,7 +145,6 @@ const Sidebar = () => {
           <BellRing className="mr-2 h-4 w-4" />
           Alertes
         </NavLink>
-        {/* Nouveau lien pour les rapports */}
         <NavLink
           to="/reports"
           className={({ isActive }) =>

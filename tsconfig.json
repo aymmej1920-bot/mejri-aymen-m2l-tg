@@ -27,5 +27,6 @@
     }
   },
   "include": ["src", "src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
+  "exclude": ["node_modules", "dist", "supabase/functions"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

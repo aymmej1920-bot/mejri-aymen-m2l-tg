@@ -18,8 +18,9 @@ import InspectionsPage from "./pages/InspectionsPage";
 import AlertsPage from "./pages/AlertsPage";
 import LoginPage from "./pages/LoginPage";
 import ReportsPage from "./pages/ReportsPage";
-import ProfilePage from "./pages/ProfilePage"; // Import ProfilePage
-import { FleetProvider } from "@/context/FleetContext";
+import ProfilePage from "./pages/ProfilePage";
+import UsersPage from "./pages/UsersPage"; // Import UsersPage
+import { FleetProvider, useFleet } from "@/context/FleetContext"; // Import useFleet
 import { SessionContextProvider, useSession } from "@/context/SessionContext";
 
 const queryClient = new QueryClient();
@@ -42,98 +43,117 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-    handle: { title: "Connexion" },
-  },
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <Index />,
-        handle: { title: "Accueil" },
-      },
-      {
-        path: "/profile", // New route for profile page
-        element: <ProfilePage />,
-        handle: { title: "Mon Profil" },
-      },
-      {
-        path: "/vehicles",
-        element: <VehiclesPage />,
-        handle: { title: "Gestion des Véhicules" },
-      },
-      {
-        path: "/drivers",
-        element: <DriversPage />,
-        handle: { title: "Gestion des Conducteurs" },
-      },
-      {
-        path: "/maintenances",
-        element: <MaintenancePage />,
-        handle: { title: "Gestion des Maintenances" },
-      },
-      {
-        path: "/maintenance-plans",
-        element: <MaintenancePlansPage />,
-        handle: { title: "Gestion des Plans de Maintenance" },
-      },
-      {
-        path: "/fuel",
-        element: <FuelPage />,
-        handle: { title: "Gestion du Carburant" },
-      },
-      {
-        path: "/assignments",
-        element: <AssignmentsPage />,
-        handle: { title: "Gestion des Affectations" },
-      },
-      {
-        path: "/documents",
-        element: <DocumentsPage />,
-        handle: { title: "Gestion des Documents" },
-      },
-      {
-        path: "/tours",
-        element: <ToursPage />,
-        handle: { title: "Gestion des Tournées" },
-      },
-      {
-        path: "/inspections",
-        element: <InspectionsPage />,
-        handle: { title: "Gestion des Inspections" },
-      },
-      {
-        path: "/alerts",
-        element: <AlertsPage />,
-        handle: { title: "Gestion des Alertes" },
-      },
-      {
-        path: "/reports",
-        element: <ReportsPage />,
-        handle: { title: "Rapports & Analyses" },
-      },
-      {
-        path: "/settings",
-        element: <SettingsPage />,
-        handle: { title: "Paramètres" },
-      },
-      {
-        path: "*",
-        element: <NotFound />,
-        handle: { title: "Page Introuvable" },
-      },
-    ],
-  },
-]);
+const AppRoutes = () => {
+  const { isLoadingFleetData } = useFleet(); // Use useFleet here
+
+  if (isLoadingFleetData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <p className="text-lg text-muted-foreground">Chargement des données de la flotte...</p>
+      </div>
+    );
+  }
+
+  const router = createBrowserRouter([
+    {
+      path: "/login",
+      element: <LoginPage />,
+      handle: { title: "Connexion" },
+    },
+    {
+      path: "/",
+      element: (
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <Index />,
+          handle: { title: "Accueil" },
+        },
+        {
+          path: "/profile",
+          element: <ProfilePage />,
+          handle: { title: "Mon Profil" },
+        },
+        {
+          path: "/users", // New route for user management
+          element: <UsersPage />,
+          handle: { title: "Gestion des Utilisateurs" },
+        },
+        {
+          path: "/vehicles",
+          element: <VehiclesPage />,
+          handle: { title: "Gestion des Véhicules" },
+        },
+        {
+          path: "/drivers",
+          element: <DriversPage />,
+          handle: { title: "Gestion des Conducteurs" },
+        },
+        {
+          path: "/maintenances",
+          element: <MaintenancePage />,
+          handle: { title: "Gestion des Maintenances" },
+        },
+        {
+          path: "/maintenance-plans",
+          element: <MaintenancePlansPage />,
+          handle: { title: "Gestion des Plans de Maintenance" },
+        },
+        {
+          path: "/fuel",
+          element: <FuelPage />,
+          handle: { title: "Gestion du Carburant" },
+        },
+        {
+          path: "/assignments",
+          element: <AssignmentsPage />,
+          handle: { title: "Gestion des Affectations" },
+        },
+        {
+          path: "/documents",
+          element: <DocumentsPage />,
+          handle: { title: "Gestion des Documents" },
+        },
+        {
+          path: "/tours",
+          element: <ToursPage />,
+          handle: { title: "Gestion des Tournées" },
+        },
+        {
+          path: "/inspections",
+          element: <InspectionsPage />,
+          handle: { title: "Gestion des Inspections" },
+        },
+        {
+          path: "/alerts",
+          element: <AlertsPage />,
+          handle: { title: "Gestion des Alertes" },
+        },
+        {
+          path: "/reports",
+          element: <ReportsPage />,
+          handle: { title: "Rapports & Analyses" },
+        },
+        {
+          path: "/settings",
+          element: <SettingsPage />,
+          handle: { title: "Paramètres" },
+        },
+        {
+          path: "*",
+          element: <NotFound />,
+          handle: { title: "Page Introuvable" },
+        },
+      ],
+    },
+  ]);
+  return <RouterProvider router={router} />;
+};
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -141,7 +161,7 @@ const App = () => (
       <Sonner position="top-right" />
       <SessionContextProvider>
         <FleetProvider>
-          <RouterProvider router={router} />
+          <AppRoutes />
         </FleetProvider>
       </SessionContextProvider>
     </TooltipProvider>
