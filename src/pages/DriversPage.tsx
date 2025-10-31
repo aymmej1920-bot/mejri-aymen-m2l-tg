@@ -49,7 +49,7 @@ const DriversPage = () => {
 
       <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
-          <CardTitle>Liste des Conducteurs</CardTitle>
+          <CardTitle className="text-lg font-bold">Liste des Conducteurs</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

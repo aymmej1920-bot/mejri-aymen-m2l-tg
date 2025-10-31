@@ -62,7 +62,7 @@ const AssignmentsPage = () => {
 
       <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
-          <CardTitle>Liste des Affectations</CardTitle>
+          <CardTitle className="text-lg font-bold">Liste des Affectations</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

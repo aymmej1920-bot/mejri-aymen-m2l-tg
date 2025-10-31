@@ -483,7 +483,7 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
               </>
             )}
 
-            <Button type="submit" className="w-full mt-4">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Enregistrer les modifications</Button>
           </form>
         </Form>
       </DialogContent>

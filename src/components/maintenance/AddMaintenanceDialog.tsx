@@ -93,7 +93,7 @@ const AddMaintenanceDialog: React.FC = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="hover:animate-hover-lift">
           <PlusCircle className="mr-2 h-4 w-4" />
           Ajouter une maintenance
         </Button>
@@ -253,7 +253,7 @@ const AddMaintenanceDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4">Ajouter la maintenance</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter la maintenance</Button>
           </form>
         </Form>
       </DialogContent>

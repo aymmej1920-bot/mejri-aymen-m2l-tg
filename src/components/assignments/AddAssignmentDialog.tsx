@@ -89,7 +89,7 @@ const AddAssignmentDialog: React.FC = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="hover:animate-hover-lift">
           <PlusCircle className="mr-2 h-4 w-4" />
           Ajouter une affectation
         </Button>
@@ -251,7 +251,7 @@ const AddAssignmentDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4">Ajouter l'affectation</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter l'affectation</Button>
           </form>
         </Form>
       </DialogContent>

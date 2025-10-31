@@ -86,7 +86,7 @@ const InspectionsPage = () => {
 
       <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
-          <CardTitle>Liste des Inspections</CardTitle>
+          <CardTitle className="text-lg font-bold">Liste des Inspections</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

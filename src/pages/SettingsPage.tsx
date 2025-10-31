@@ -48,7 +48,7 @@ const SettingsPage = () => {
 
       <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
-          <CardTitle>Général</CardTitle>
+          <CardTitle className="text-lg font-bold">Général</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">
@@ -74,7 +74,7 @@ const SettingsPage = () => {
             </p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">Effacer toutes les données</Button>
+                <Button variant="destructive" className="hover:animate-hover-lift">Effacer toutes les données</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -97,7 +97,7 @@ const SettingsPage = () => {
             <p className="text-muted-foreground mb-4">
               Déconnectez-vous de votre compte.
             </p>
-            <Button variant="outline" onClick={handleLogout}>
+            <Button variant="outline" onClick={handleLogout} className="hover:animate-hover-lift">
               Déconnexion
             </Button>
           </div>
@@ -106,7 +106,7 @@ const SettingsPage = () => {
 
       <Card className="mt-6 glass rounded-2xl animate-fadeIn">
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
+          <CardTitle className="text-lg font-bold">Notifications</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">

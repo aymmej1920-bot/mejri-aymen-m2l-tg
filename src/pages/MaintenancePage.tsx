@@ -50,7 +50,7 @@ const MaintenancePage = () => {
 
       <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
-          <CardTitle>Liste des Maintenances</CardTitle>
+          <CardTitle className="text-lg font-bold">Liste des Maintenances</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

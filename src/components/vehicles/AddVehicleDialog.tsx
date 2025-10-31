@@ -69,7 +69,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="hover:animate-hover-lift">
           <PlusCircle className="mr-2 h-4 w-4" />
           Ajouter un véhicule
         </Button>
@@ -135,7 +135,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4">Ajouter</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter</Button>
           </form>
         </Form>
       </DialogContent>

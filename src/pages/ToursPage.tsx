@@ -101,7 +101,7 @@ const ToursPage = () => {
 
       <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader>
-          <CardTitle>Liste des Tournées</CardTitle>
+          <CardTitle className="text-lg font-bold">Liste des Tournées</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

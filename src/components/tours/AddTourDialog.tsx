@@ -103,7 +103,7 @@ const AddTourDialog: React.FC = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="hover:animate-hover-lift">
           <PlusCircle className="mr-2 h-4 w-4" />
           Ajouter une tournée
         </Button>
@@ -305,7 +305,7 @@ const AddTourDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4">Ajouter la tournée</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter la tournée</Button>
           </form>
         </Form>
       </DialogContent>

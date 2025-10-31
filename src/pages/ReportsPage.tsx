@@ -102,7 +102,7 @@ const ReportsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-semibold">Coût du carburant par mois</CardTitle>
+            <CardTitle className="text-lg font-bold">Coût du carburant par mois</CardTitle>
             <Fuel className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="h-80">
@@ -124,7 +124,7 @@ const ReportsPage = () => {
 
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-semibold">Répartition des types de maintenance</CardTitle>
+            <CardTitle className="text-lg font-bold">Répartition des types de maintenance</CardTitle>
             <Wrench className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="h-80">
@@ -157,7 +157,7 @@ const ReportsPage = () => {
 
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-semibold">Nombre de véhicules par marque</CardTitle>
+            <CardTitle className="text-lg font-bold">Nombre de véhicules par marque</CardTitle>
             <Factory className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="h-80">
@@ -190,7 +190,7 @@ const ReportsPage = () => {
 
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-semibold">Derniers relevés kilométriques</CardTitle>
+            <CardTitle className="text-lg font-bold">Derniers relevés kilométriques</CardTitle>
             <Car className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>

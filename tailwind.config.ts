@@ -105,6 +105,10 @@ export default {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        hoverLift: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-3px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -112,6 +116,7 @@ export default {
         fadeIn: "fadeIn 0.5s ease-out forwards",
         slideUp: "slideUp 0.5s ease-out forwards",
         scaleIn: "scaleIn 0.5s ease-out forwards",
+        "hover-lift": "hoverLift 0.3s ease-in-out forwards",
       },
     },
   },
