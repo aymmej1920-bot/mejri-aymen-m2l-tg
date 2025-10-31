@@ -228,7 +228,7 @@ const AddAlertRuleDialog: React.FC = () => {
           Ajouter une règle d'alerte
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle règle d'alerte</DialogTitle>
           <DialogDescription>
@@ -461,7 +461,7 @@ const AddAlertRuleDialog: React.FC = () => {
               </>
             )}
 
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter la règle</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Ajouter la règle</Button>
           </form>
         </Form>
       </DialogContent>

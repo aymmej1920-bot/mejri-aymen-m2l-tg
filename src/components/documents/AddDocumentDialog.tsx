@@ -115,7 +115,7 @@ const AddDocumentDialog: React.FC = () => {
           Ajouter un document
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau document</DialogTitle>
           <DialogDescription>
@@ -300,7 +300,7 @@ const AddDocumentDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter le document</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Ajouter le document</Button>
           </form>
         </Form>
       </DialogContent>

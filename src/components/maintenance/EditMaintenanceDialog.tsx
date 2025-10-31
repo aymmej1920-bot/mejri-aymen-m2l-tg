@@ -97,7 +97,7 @@ const EditMaintenanceDialog: React.FC<EditMaintenanceDialogProps> = ({ maintenan
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Modifier la maintenance</DialogTitle>
           <DialogDescription>
@@ -252,7 +252,7 @@ const EditMaintenanceDialog: React.FC<EditMaintenanceDialogProps> = ({ maintenan
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
           </form>
         </Form>
       </DialogContent>

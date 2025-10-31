@@ -250,7 +250,7 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Modifier la règle d'alerte</DialogTitle>
           <DialogDescription>
@@ -483,7 +483,7 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
               </>
             )}
 
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
           </form>
         </Form>
       </DialogContent>

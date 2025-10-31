@@ -74,7 +74,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
           Ajouter un véhicule
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau véhicule</DialogTitle>
           <DialogDescription>
@@ -135,7 +135,7 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Ajouter</Button>
           </form>
         </Form>
       </DialogContent>

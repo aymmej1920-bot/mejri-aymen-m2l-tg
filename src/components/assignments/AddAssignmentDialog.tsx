@@ -94,7 +94,7 @@ const AddAssignmentDialog: React.FC = () => {
           Ajouter une affectation
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle affectation</DialogTitle>
           <DialogDescription>
@@ -251,7 +251,7 @@ const AddAssignmentDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter l'affectation</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Ajouter l'affectation</Button>
           </form>
         </Form>
       </DialogContent>

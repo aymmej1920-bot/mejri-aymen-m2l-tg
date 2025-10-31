@@ -74,7 +74,7 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
           Ajouter un conducteur
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau conducteur</DialogTitle>
           <DialogDescription>
@@ -135,7 +135,7 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Ajouter</Button>
           </form>
         </Form>
       </DialogContent>

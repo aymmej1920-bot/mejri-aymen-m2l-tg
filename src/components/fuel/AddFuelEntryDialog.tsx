@@ -94,7 +94,7 @@ const AddFuelEntryDialog: React.FC = () => {
           Ajouter un ravitaillement
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau ravitaillement</DialogTitle>
           <DialogDescription>
@@ -228,7 +228,7 @@ const AddFuelEntryDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter le ravitaillement</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Ajouter le ravitaillement</Button>
           </form>
         </Form>
       </DialogContent>

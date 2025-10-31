@@ -115,7 +115,7 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Modifier l'inspection</DialogTitle>
           <DialogDescription>
@@ -220,7 +220,7 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
               ))}
             </div>
 
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
           </form>
         </FormProvider>
       </DialogContent>

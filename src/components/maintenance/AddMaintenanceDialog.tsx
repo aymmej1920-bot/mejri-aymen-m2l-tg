@@ -98,7 +98,7 @@ const AddMaintenanceDialog: React.FC = () => {
           Ajouter une maintenance
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-slideUp">
+      <DialogContent className="sm:max-w-[425px] glass rounded-2xl animate-scaleIn">
         <DialogHeader>
           <DialogTitle>Ajouter une nouvelle maintenance</DialogTitle>
           <DialogDescription>
@@ -253,7 +253,7 @@ const AddMaintenanceDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift">Ajouter la maintenance</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Ajouter la maintenance</Button>
           </form>
         </Form>
       </DialogContent>
