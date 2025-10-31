@@ -20,7 +20,9 @@ import { useFleet } from "@/context/FleetContext";
 import { format, parseISO, getMonth, getYear, isSameMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Car, Wrench, Fuel, Factory, TrendingUp } from "lucide-react"; // Import TrendingUp icon
+import { Car, Wrench, Fuel, Factory, TrendingUp, Download } from "lucide-react"; // Import TrendingUp icon and Download
+import { Button } from "@/components/ui/button"; // Import Button
+import { exportToCsv } from "@/utils/export"; // Import exportToCsv utility
 
 const ReportsPage = () => {
   const { vehicles, fuelEntries, maintenances, getVehicleByLicensePlate } = useFleet();
@@ -121,6 +123,44 @@ const ReportsPage = () => {
       return dateA.getTime() - dateB.getTime();
     });
 
+  const handleExportFuelCosts = () => {
+    exportToCsv("rapport_couts_carburant", fuelChartData, [
+      { key: "name", label: "Mois" },
+      { key: "Coût (TND)", label: "Coût (TND)" },
+    ]);
+  };
+
+  const handleExportMaintenanceTypes = () => {
+    exportToCsv("rapport_types_maintenance", maintenancePieData, [
+      { key: "name", label: "Type de Maintenance" },
+      { key: "value", label: "Nombre" },
+    ]);
+  };
+
+  const handleExportVehicleMakes = () => {
+    exportToCsv("rapport_marques_vehicules", vehicleMakePieData, [
+      { key: "name", label: "Marque" },
+      { key: "value", label: "Nombre de Véhicules" },
+    ]);
+  };
+
+  const handleExportMaintenanceCosts = () => {
+    exportToCsv("rapport_tendance_couts_maintenance", maintenanceLineData, [
+      { key: "name", label: "Mois" },
+      { key: "Coût Maintenance (TND)", label: "Coût Maintenance (TND)" },
+    ]);
+  };
+
+  const handleExportOdometerReadings = () => {
+    exportToCsv("rapport_releves_kilometriques", latestOdometerReadings, [
+      { key: "licensePlate", label: "Plaque d'immatriculation" },
+      { key: "make", label: "Marque" },
+      { key: "model", label: "Modèle" },
+      { key: "latestOdometer", label: "Dernier Kilométrage" },
+      { key: "lastReadingDate", label: "Date du relevé" },
+    ]);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Rapports & Analyses</h1>
@@ -129,7 +169,12 @@ const ReportsPage = () => {
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-bold">Coût du carburant par mois</CardTitle>
-            <Fuel className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={handleExportFuelCosts} disabled={fuelChartData.length === 0}>
+                <Download className="h-4 w-4 mr-2" /> CSV
+              </Button>
+              <Fuel className="h-5 w-5 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent className="h-80">
             {fuelChartData.length > 0 ? (
@@ -151,7 +196,12 @@ const ReportsPage = () => {
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-bold">Répartition des types de maintenance</CardTitle>
-            <Wrench className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={handleExportMaintenanceTypes} disabled={maintenancePieData.length === 0}>
+                <Download className="h-4 w-4 mr-2" /> CSV
+              </Button>
+              <Wrench className="h-5 w-5 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent className="h-80">
             {maintenancePieData.length > 0 ? (
@@ -184,7 +234,12 @@ const ReportsPage = () => {
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-bold">Nombre de véhicules par marque</CardTitle>
-            <Factory className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={handleExportVehicleMakes} disabled={vehicleMakePieData.length === 0}>
+                <Download className="h-4 w-4 mr-2" /> CSV
+              </Button>
+              <Factory className="h-5 w-5 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent className="h-80">
             {vehicleMakePieData.length > 0 ? (
@@ -217,7 +272,12 @@ const ReportsPage = () => {
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-bold">Tendance des coûts de maintenance</CardTitle>
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={handleExportMaintenanceCosts} disabled={maintenanceLineData.length === 0}>
+                <Download className="h-4 w-4 mr-2" /> CSV
+              </Button>
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent className="h-80">
             {maintenanceLineData.length > 0 ? (
@@ -240,7 +300,12 @@ const ReportsPage = () => {
       <Card className="glass rounded-2xl animate-fadeIn">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-lg font-bold">Derniers relevés kilométriques</CardTitle>
-          <Car className="h-5 w-5 text-muted-foreground" />
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={handleExportOdometerReadings} disabled={latestOdometerReadings.length === 0}>
+              <Download className="h-4 w-4 mr-2" /> CSV
+            </Button>
+            <Car className="h-5 w-5 text-muted-foreground" />
+          </div>
         </CardHeader>
         <CardContent>
           {latestOdometerReadings.length > 0 ? (
