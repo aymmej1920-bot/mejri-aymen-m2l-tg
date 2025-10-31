@@ -17,7 +17,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Car, Users, Wrench } from "lucide-react"; // Removed Fuel
+import { Car, Users, Wrench } from "lucide-react";
 import { useFleet } from "@/context/FleetContext";
 
 const Index = () => {
@@ -156,7 +156,7 @@ const Index = () => {
                         dataKey="value"
                         label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                       >
-                        {maintenancePieData.map((entry, index) => (
+                        {maintenancePieData.map(({ name }, index) => (
                           <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                         ))}
                       </Pie>
