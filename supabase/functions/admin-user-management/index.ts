@@ -28,29 +28,18 @@ serve(async (req) => {
       });
     }
 
-    // --- Admin Role Check ---
     const { data: adminProfile, error: adminProfileError } = await supabaseAdmin
       .from('profiles')
       .select('role_id, fk_role_id!roles(name)') // Use explicit foreign key name here
       .eq('id', user.id)
       .single();
 
-    if (adminProfileError) {
-      console.error("Edge Function: Error fetching admin profile for user ID:", user.id, adminProfileError);
-      return new Response(JSON.stringify({ error: 'Permission denied: Could not retrieve user profile for role check.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 403,
-      });
-    }
-
-    if (!adminProfile || adminProfile.fk_role_id?.name !== 'Admin') {
-      console.warn("Edge Function: User ID", user.id, "is not an Admin or profile/role not found. Profile data:", adminProfile);
+    if (adminProfileError || adminProfile?.fk_role_id?.name !== 'Admin') { // Check against fk_role_id
       return new Response(JSON.stringify({ error: 'Permission denied: Only Admin users can perform this action.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
       });
     }
-    // --- End Admin Role Check ---
 
     const { action, email, password, roleName, firstName, lastName, userId, suspend } = await req.json();
 
