@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
-import { fr } from "date-fns/locale";
+// Removed unused import: import { fr } from "date-fns/locale";
 import { showError } from "@/utils/toast";
 import { AlertRule } from "@/types/alertRule";
 import { MaintenancePlan } from "@/types/maintenancePlan";

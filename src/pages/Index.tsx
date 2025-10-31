@@ -1,7 +1,7 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
-import AddDriverDialog from "@/components/drivers/AddDriverDialog";
+import AddDriverDialog from from "@/components/drivers/AddDriverDialog";
 import AddTourDialog from "@/components/tours/AddTourDialog";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -17,7 +17,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Car, Users, Wrench, Fuel } from "lucide-react";
+import { Car, Users, Wrench } from "lucide-react"; // Removed Fuel
 import { useFleet } from "@/context/FleetContext";
 
 const Index = () => {

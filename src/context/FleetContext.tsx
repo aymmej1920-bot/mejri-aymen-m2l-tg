@@ -682,7 +682,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const addMaintenancePlan = async (newPlan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate' | 'nextDueOdometer'>) => {
     if (!user || !can('maintenance_plans.add')) { showError("Vous n'avez pas la permission d'ajouter un plan de maintenance."); return; }
     try {
-      const today = format(new Date(), "yyyy-MM-dd");
+      // const today = format(new Date(), "yyyy-MM-dd"); // Removed unused variable
       let nextDueDate: string | null = null;
       let nextDueOdometer: number | null = null;
 
