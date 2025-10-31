@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { InspectionCheckpoint } from "@/types/inspection";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils"; // Import cn for conditional classNames
 
 interface InspectionCheckpointFormProps {
   index: number;
@@ -58,19 +59,19 @@ const InspectionCheckpointForm: React.FC<InspectionCheckpointFormProps> = ({ ind
                   <FormControl>
                     <RadioGroupItem value="OK" />
                   </FormControl>
-                  <FormLabel className="font-normal">OK</FormLabel>
+                  <FormLabel className={cn("font-normal", field.value === "OK" ? "text-success" : "text-foreground")}>OK</FormLabel>
                 </FormItem>
                 <FormItem className="flex items-center space-x-2">
                   <FormControl>
                     <RadioGroupItem value="NOK" />
                   </FormControl>
-                  <FormLabel className="font-normal">NOK</FormLabel>
+                  <FormLabel className={cn("font-normal", field.value === "NOK" ? "text-destructive" : "text-foreground")}>NOK</FormLabel>
                 </FormItem>
                 <FormItem className="flex items-center space-x-2">
                   <FormControl>
                     <RadioGroupItem value="N/A" />
                   </FormControl>
-                  <FormLabel className="font-normal">N/A</FormLabel>
+                  <FormLabel className={cn("font-normal", field.value === "N/A" ? "text-muted-foreground" : "text-foreground")}>N/A</FormLabel>
                 </FormItem>
               </RadioGroup>
             </FormControl>
