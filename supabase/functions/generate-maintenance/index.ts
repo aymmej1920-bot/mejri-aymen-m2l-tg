@@ -1,5 +1,9 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+/// <reference lib="deno.ns" />
+// @deno-types="https://deno.land/std@0.224.0/http/server.d.ts"
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+// @deno-types="https://esm.sh/@supabase/supabase-js@2.45.0/dist/main.d.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+// @deno-types="https://esm.sh/v135/date-fns@2.30.0/deno/index.d.ts"
 import { addMonths, format, parseISO } from "https://esm.sh/date-fns@2.30.0";
 
 const corsHeaders = {
