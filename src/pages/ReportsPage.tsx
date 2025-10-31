@@ -13,16 +13,16 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart, // Import LineChart
-  Line,      // Import Line
+  LineChart,
+  Line,
 } from "recharts";
 import { useFleet } from "@/context/FleetContext";
 import { format, parseISO, getMonth, getYear, isSameMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Car, Wrench, Fuel, Factory, TrendingUp, Download } from "lucide-react"; // Import TrendingUp icon and Download
-import { Button } from "@/components/ui/button"; // Import Button
-import { exportToCsv } from "@/utils/export"; // Import exportToCsv utility
+import { Car, Wrench, Fuel, Factory, TrendingUp, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportToCsv } from "@/utils/export";
 
 const ReportsPage = () => {
   const { vehicles, fuelEntries, maintenances, getVehicleByLicensePlate } = useFleet();
@@ -68,19 +68,23 @@ const ReportsPage = () => {
   // Using Tailwind CSS colors directly or CSS variables
   const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))", "hsl(var(--secondary))"];
 
-  // 3. Nombre de véhicules par marque (Pie Chart)
-  const vehicleMakeCounts = vehicles.reduce((acc, vehicle) => {
-    if (!acc[vehicle.make]) {
-      acc[vehicle.make] = 0;
+  // 3. Coût de maintenance par véhicule (Bar Chart - NEW)
+  const maintenanceCostByVehicle = maintenances.reduce((acc, maintenance) => {
+    const vehicle = getVehicleByLicensePlate(maintenance.vehicleLicensePlate);
+    const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})` : maintenance.vehicleLicensePlate;
+    if (!acc[vehicleName]) {
+      acc[vehicleName] = 0;
     }
-    acc[vehicle.make]++;
+    acc[vehicleName] += maintenance.cost;
     return acc;
   }, {} as Record<string, number>);
 
-  const vehicleMakePieData = Object.keys(vehicleMakeCounts).map((make) => ({
-    name: make,
-    value: vehicleMakeCounts[make],
-  }));
+  const maintenanceCostByVehicleData = Object.keys(maintenanceCostByVehicle)
+    .map((vehicleName) => ({
+      name: vehicleName,
+      "Coût Maintenance (TND)": maintenanceCostByVehicle[vehicleName],
+    }))
+    .sort((a, b) => b["Coût Maintenance (TND)"] - a["Coût Maintenance (TND)"]); // Sort descending by cost
 
   // 4. Derniers relevés kilométriques par véhicule (Table)
   const latestOdometerReadings = vehicles.map(vehicle => {
@@ -137,10 +141,10 @@ const ReportsPage = () => {
     ]);
   };
 
-  const handleExportVehicleMakes = () => {
-    exportToCsv("rapport_marques_vehicules", vehicleMakePieData, [
-      { key: "name", label: "Marque" },
-      { key: "value", label: "Nombre de Véhicules" },
+  const handleExportMaintenanceCostByVehicle = () => {
+    exportToCsv("rapport_cout_maintenance_par_vehicule", maintenanceCostByVehicleData, [
+      { key: "name", label: "Véhicule" },
+      { key: "Coût Maintenance (TND)", label: "Coût Maintenance (TND)" },
     ]);
   };
 
@@ -211,7 +215,7 @@ const ReportsPage = () => {
                     data={maintenancePieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60} // Added for doughnut effect
+                    innerRadius={60}
                     outerRadius={80}
                     fill="hsl(var(--primary))"
                     dataKey="value"
@@ -233,38 +237,27 @@ const ReportsPage = () => {
 
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold">Nombre de véhicules par marque</CardTitle>
+            <CardTitle className="text-lg font-bold">Coût de maintenance par véhicule</CardTitle>
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleExportVehicleMakes} disabled={vehicleMakePieData.length === 0}>
+              <Button variant="outline" size="sm" onClick={handleExportMaintenanceCostByVehicle} disabled={maintenanceCostByVehicleData.length === 0}>
                 <Download className="h-4 w-4 mr-2" /> CSV
               </Button>
-              <Factory className="h-5 w-5 text-muted-foreground" />
+              <Car className="h-5 w-5 text-muted-foreground" />
             </div>
           </CardHeader>
           <CardContent className="h-80">
-            {vehicleMakePieData.length > 0 ? (
+            {maintenanceCostByVehicleData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={vehicleMakePieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="hsl(var(--primary))"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  >
-                    {vehicleMakePieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => `${value} véhicules`} />
+                <BarChart data={maintenanceCostByVehicleData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
+                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
                   <Legend />
-                </PieChart>
+                  <Bar dataKey="Coût Maintenance (TND)" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de véhicule disponible.</p>
+              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance par véhicule disponible.</p>
             )}
           </CardContent>
         </Card>
