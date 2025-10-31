@@ -13,12 +13,14 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart, // Import LineChart
+  Line,      // Import Line
 } from "recharts";
 import { useFleet } from "@/context/FleetContext";
 import { format, parseISO, getMonth, getYear, isSameMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Car, Wrench, Fuel, Factory } from "lucide-react";
+import { Car, Wrench, Fuel, Factory, TrendingUp } from "lucide-react"; // Import TrendingUp icon
 
 const ReportsPage = () => {
   const { vehicles, fuelEntries, maintenances } = useFleet();
@@ -47,7 +49,7 @@ const ReportsPage = () => {
       return dateA.getTime() - dateB.getTime();
     });
 
-  // 2. Répartition des types de maintenance (Pie Chart)
+  // 2. Répartition des types de maintenance (Doughnut Chart)
   const maintenanceTypeCounts = maintenances.reduce((acc, maintenance) => {
     if (!acc[maintenance.type]) {
       acc[maintenance.type] = 0;
@@ -95,6 +97,30 @@ const ReportsPage = () => {
     };
   });
 
+  // 5. Coût des maintenances par mois (Line Chart)
+  const maintenanceCostsOverTime = maintenances.reduce((acc, maintenance) => {
+    const date = parseISO(maintenance.date);
+    const monthYear = format(date, "MMM yyyy", { locale: fr });
+    if (!acc[monthYear]) {
+      acc[monthYear] = 0;
+    }
+    acc[monthYear] += maintenance.cost;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const maintenanceLineData = Object.keys(maintenanceCostsOverTime)
+    .map((monthYear) => ({
+      name: monthYear,
+      "Coût Maintenance (TND)": maintenanceCostsOverTime[monthYear],
+    }))
+    .sort((a, b) => {
+      const [monthA, yearA] = a.name.split(" ");
+      const [monthB, yearB] = b.name.split(" ");
+      const dateA = new Date(`${monthA} 1, ${yearA}`);
+      const dateB = new Date(`${monthB} 1, ${yearB}`);
+      return dateA.getTime() - dateB.getTime();
+    });
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Rapports & Analyses</h1>
@@ -135,7 +161,7 @@ const ReportsPage = () => {
                     data={maintenancePieData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
+                    innerRadius={60} // Added for doughnut effect
                     outerRadius={80}
                     fill="hsl(var(--primary))"
                     dataKey="value"
@@ -190,39 +216,61 @@ const ReportsPage = () => {
 
         <Card className="glass rounded-2xl animate-fadeIn">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold">Derniers relevés kilométriques</CardTitle>
-            <Car className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-lg font-bold">Tendance des coûts de maintenance</CardTitle>
+            <TrendingUp className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            {latestOdometerReadings.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Plaque</TableHead>
-                    <TableHead>Marque</TableHead>
-                    <TableHead>Modèle</TableHead>
-                    <TableHead>Dernier Km</TableHead>
-                    <TableHead>Date du relevé</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {latestOdometerReadings.map((data, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{data.licensePlate}</TableCell>
-                      <TableCell>{data.make}</TableCell>
-                      <TableCell>{data.model}</TableCell>
-                      <TableCell>{data.latestOdometer} Km</TableCell>
-                      <TableCell>{data.lastReadingDate}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <CardContent className="h-80">
+            {maintenanceLineData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={maintenanceLineData}>
+                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
+                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
+                  <Legend />
+                  <Line type="monotone" dataKey="Coût Maintenance (TND)" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucun relevé kilométrique disponible.</p>
+              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible pour la tendance.</p>
             )}
           </CardContent>
         </Card>
       </div>
+
+      <Card className="glass rounded-2xl animate-fadeIn">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg font-bold">Derniers relevés kilométriques</CardTitle>
+          <Car className="h-5 w-5 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          {latestOdometerReadings.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Plaque</TableHead>
+                  <TableHead>Marque</TableHead>
+                  <TableHead>Modèle</TableHead>
+                  <TableHead>Dernier Km</TableHead>
+                  <TableHead>Date du relevé</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {latestOdometerReadings.map((data, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{data.licensePlate}</TableCell>
+                    <TableCell>{data.make}</TableCell>
+                    <TableCell>{data.model}</TableCell>
+                    <TableCell>{data.latestOdometer} Km</TableCell>
+                    <TableCell>{data.lastReadingDate}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-muted-foreground text-center mt-10">Aucun relevé kilométrique disponible.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
