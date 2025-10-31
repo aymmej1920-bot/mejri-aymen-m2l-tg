@@ -1,7 +1,4 @@
-/// <reference lib="deno.ns" />
-// @deno-types="https://deno.land/std@0.224.0/http/server.d.ts"
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-// @deno-types="https://esm.sh/@supabase/supabase-js@2.45.0/dist/main.d.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
@@ -9,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req: Request) => { // Explicitly type req as Request
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -62,7 +59,7 @@ serve(async (req: Request) => { // Explicitly type req as Request
           data: {
             first_name: firstName,
             last_name: lastName,
-            role_id: roleData.id,
+            // role_id is handled by the handle_new_user trigger
           },
           // @ts-ignore
           redirectTo: Deno.env.get('SUPABASE_URL') + '/login',
@@ -74,35 +71,21 @@ serve(async (req: Request) => { // Explicitly type req as Request
         break;
       }
       case 'createUser': {
-        const { data: roleData, error: roleError } = await supabaseAdmin
-          .from('roles')
-          .select('id')
-          .eq('name', roleName)
-          .single();
-
-        if (roleError || !roleData) throw new Error(`Role '${roleName}' not found.`);
-
-        const { data: createdUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        const { error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password,
           email_confirm: true,
           user_metadata: {
             first_name: firstName,
             last_name: lastName,
-            role_id: roleData.id,
+            // role_id is handled by the handle_new_user trigger
           },
         });
 
         if (createError) throw createError;
 
-        const { error: profileInsertError } = await supabaseAdmin.from('profiles').insert({
-          id: createdUser.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          role_id: roleData.id,
-        });
-        if (profileInsertError) console.error("Error inserting profile for created user:", profileInsertError);
-
+        // The handle_new_user trigger will insert the profile with the correct role_id
+        // No need to manually insert profile here.
 
         responseMessage = `Utilisateur ${email} créé avec succès avec le rôle ${roleName}.`;
         break;
@@ -144,7 +127,7 @@ serve(async (req: Request) => { // Explicitly type req as Request
         const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
         if (authUsersError) throw authUsersError;
 
-        const userIds = authUsers.users.map((u: any) => u.id); // Explicitly type u
+        const userIds = authUsers.users.map((u: any) => u.id);
         const { data: profilesData, error: profilesError } = await supabaseAdmin
           .from('profiles')
           .select('id, first_name, last_name, avatar_url, updated_at, role_id, roles(id, name, description)')
@@ -152,8 +135,8 @@ serve(async (req: Request) => { // Explicitly type req as Request
 
         if (profilesError) throw profilesError;
 
-        const usersList = authUsers.users.map((authUser: any) => { // Explicitly type authUser
-          const profile = profilesData.find((p: any) => p.id === authUser.id); // Explicitly type p
+        const usersList = authUsers.users.map((authUser: any) => {
+          const profile = profilesData.find((p: any) => p.id === authUser.id);
           return {
             id: authUser.id,
             email: authUser.email,
@@ -165,7 +148,7 @@ serve(async (req: Request) => { // Explicitly type req as Request
             role: profile?.roles || null,
             is_suspended: authUser.app_metadata?.is_suspended || false,
           };
-        }).filter((u: any) => u.id !== user.id); // Exclude the current admin user, explicitly type u
+        }).filter((u: any) => u.id !== user.id);
 
         return new Response(JSON.stringify({ users: usersList }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -181,9 +164,9 @@ serve(async (req: Request) => { // Explicitly type req as Request
       status: 200,
     });
 
-  } catch (error: any) { // Cast error to any
+  } catch (error: any) {
     console.error("Edge Function error:", error);
-    return new Response(JSON.stringify({ error: (error as Error).message }), { // Cast error to Error
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });

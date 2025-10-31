@@ -28,10 +28,16 @@ import { Loader2 } from "lucide-react"; // Import Loader2
 
 const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
-  const { clearAllData } = useFleet();
+  const { clearAllData, profile } = useFleet(); // Added profile to check role
   const [isClearingData, setIsClearingData] = React.useState(false); // Add loading state for clearing data
 
+  const isAdmin = profile?.role?.name === 'Admin'; // Check if user is Admin
+
   const handleClearAllData = async () => { // Make async
+    if (!isAdmin) { // Check permission before clearing data
+      console.error("Permission denied: Only Admin users can clear all data.");
+      return;
+    }
     setIsClearingData(true); // Set loading to true
     try {
       await clearAllData(); // Await the async operation
@@ -74,7 +80,7 @@ const SettingsPage = () => {
             </p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="hover:animate-hover-lift" disabled={isClearingData}>
+                <Button variant="destructive" className="hover:animate-hover-lift" disabled={isClearingData || !isAdmin}>
                   {isClearingData ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -93,7 +99,7 @@ const SettingsPage = () => {
                   <AlertDialogCancel>Annuler</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleClearAllData}
-                    disabled={isClearingData}
+                    disabled={isClearingData || !isAdmin}
                   >
                     {isClearingData ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

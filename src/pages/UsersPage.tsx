@@ -21,7 +21,7 @@ import { CustomBadge } from "@/components/CustomBadge";
 import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const UsersPage = () => {
-  const { users, isLoadingFleetData, can } = useFleet();
+  const { users, isLoadingFleetData, profile } = useFleet(); // Removed 'can'
   const [searchTerm, setSearchTerm] = React.useState("");
 
   const filteredUsers = users.filter((user) =>
@@ -32,7 +32,9 @@ const UsersPage = () => {
     user.role?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!can('users.view')) { // Using a more specific permission key
+  const isAdmin = profile?.role?.name === 'Admin'; // Re-added isAdmin check
+
+  if (!isAdmin) { // Check if user is Admin
     return (
       <div className="flex flex-col items-center justify-center h-full p-4">
         <Card className="glass rounded-2xl animate-fadeIn text-center p-8">
