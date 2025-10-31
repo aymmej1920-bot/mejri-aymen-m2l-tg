@@ -156,7 +156,7 @@ const Index = () => {
                         dataKey="value"
                         label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                       >
-                        {maintenancePieData.map((entry, index) => (
+                        {maintenancePieData.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                         ))}
                       </Pie>
