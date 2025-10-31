@@ -89,14 +89,20 @@ const AssignmentsPage = () => {
           {isLoadingFleetData ? ( // Show skeleton loader when data is loading
             <DataTableSkeleton columns={6} />
           ) : filteredAssignments.length === 0 && assignments.length > 0 ? (
-            <p className="text-muted-foreground">
-              Aucune affectation ne correspond à votre recherche.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <Link className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucune affectation ne correspond à votre recherche.
+              </p>
+            </div>
           ) : assignments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <Link className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
-                Aucune affectation enregistrée pour le moment. Cliquez sur "Ajouter une affectation" pour commencer.
+              <Link className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucune affectation enregistrée pour le moment.
+              </p>
+              <p className="text-md text-muted-foreground text-center mt-2">
+                Cliquez sur "Ajouter une affectation" pour lier véhicules et conducteurs.
               </p>
             </div>
           ) : (

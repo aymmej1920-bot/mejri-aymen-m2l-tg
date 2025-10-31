@@ -75,14 +75,20 @@ const DriversPage = () => {
           {isLoadingFleetData ? ( // Show skeleton loader when data is loading
             <DataTableSkeleton columns={5} />
           ) : filteredDrivers.length === 0 && drivers.length > 0 ? (
-            <p className="text-muted-foreground">
-              Aucun conducteur ne correspond à votre recherche.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <Users className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucun conducteur ne correspond à votre recherche.
+              </p>
+            </div>
           ) : drivers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <Users className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
-                Aucun conducteur enregistré pour le moment. Cliquez sur "Ajouter un conducteur" pour commencer.
+              <Users className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucun conducteur enregistré pour le moment.
+              </p>
+              <p className="text-md text-muted-foreground text-center mt-2">
+                Cliquez sur "Ajouter un conducteur" pour commencer à gérer vos conducteurs.
               </p>
             </div>
           ) : (

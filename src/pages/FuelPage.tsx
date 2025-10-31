@@ -116,14 +116,20 @@ const FuelPage = () => {
           {isLoadingFleetData ? ( // Show skeleton loader when data is loading
             <DataTableSkeleton columns={7} />
           ) : filteredFuelEntries.length === 0 && fuelEntries.length > 0 ? (
-            <p className="text-muted-foreground">
-              Aucun ravitaillement ne correspond à votre recherche.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <FuelIcon className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucun ravitaillement ne correspond à votre recherche.
+              </p>
+            </div>
           ) : fuelEntries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <FuelIcon className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
-                Aucun ravitaillement enregistré pour le moment. Cliquez sur "Ajouter un ravitaillement" pour commencer.
+              <FuelIcon className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucun ravitaillement enregistré pour le moment.
+              </p>
+              <p className="text-md text-muted-foreground text-center mt-2">
+                Cliquez sur "Ajouter un ravitaillement" pour commencer à suivre la consommation de carburant.
               </p>
             </div>
           ) : (

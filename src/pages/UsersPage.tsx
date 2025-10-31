@@ -32,12 +32,12 @@ const UsersPage = () => {
     user.role?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!can('manage_users')) {
+  if (!can('users.view')) { // Using a more specific permission key
     return (
       <div className="flex flex-col items-center justify-center h-full p-4">
         <Card className="glass rounded-2xl animate-fadeIn text-center p-8">
           <CardTitle className="text-2xl font-bold mb-4">Accès Refusé</CardTitle>
-          <p className="text-muted-foreground">Vous n'avez pas les permissions nécessaires pour gérer les utilisateurs.</p>
+          <p className="text-lg text-muted-foreground">Vous n'avez pas les permissions nécessaires pour gérer les utilisateurs.</p>
         </Card>
       </div>
     );
@@ -69,14 +69,20 @@ const UsersPage = () => {
           {isLoadingFleetData ? ( // Show skeleton loader when data is loading
             <DataTableSkeleton columns={5} />
           ) : filteredUsers.length === 0 && users.length > 0 ? (
-            <p className="text-muted-foreground">
-              Aucun utilisateur ne correspond à votre recherche.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <User className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucun utilisateur ne correspond à votre recherche.
+              </p>
+            </div>
           ) : users.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <User className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
+              <User className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
                 Aucun utilisateur enregistré pour le moment.
+              </p>
+              <p className="text-md text-muted-foreground text-center mt-2">
+                Invitez ou créez de nouveaux utilisateurs pour commencer à gérer les accès.
               </p>
             </div>
           ) : (

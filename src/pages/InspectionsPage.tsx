@@ -113,14 +113,20 @@ const InspectionsPage = () => {
           {isLoadingFleetData ? ( // Show skeleton loader when data is loading
             <DataTableSkeleton columns={5} />
           ) : filteredInspections.length === 0 && inspections.length > 0 ? (
-            <p className="text-muted-foreground">
-              Aucune inspection ne correspond à votre recherche.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <ClipboardCheck className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucune inspection ne correspond à votre recherche.
+              </p>
+            </div>
           ) : inspections.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <ClipboardCheck className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
-                Aucune inspection enregistrée pour le moment. Cliquez sur "Ajouter une inspection" pour commencer.
+              <ClipboardCheck className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucune inspection enregistrée pour le moment.
+              </p>
+              <p className="text-md text-muted-foreground text-center mt-2">
+                Cliquez sur "Ajouter une inspection" pour évaluer l'état de vos véhicules.
               </p>
             </div>
           ) : (

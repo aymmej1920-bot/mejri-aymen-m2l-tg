@@ -77,14 +77,20 @@ const MaintenancePage = () => {
           {isLoadingFleetData ? ( // Show skeleton loader when data is loading
             <DataTableSkeleton columns={8} />
           ) : filteredMaintenances.length === 0 && maintenances.length > 0 ? (
-            <p className="text-muted-foreground">
-              Aucune maintenance ne correspond à votre recherche.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <Wrench className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucune maintenance ne correspond à votre recherche.
+              </p>
+            </div>
           ) : maintenances.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <Wrench className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
-                Aucune maintenance enregistrée pour le moment. Cliquez sur "Ajouter une maintenance" pour commencer.
+              <Wrench className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucune maintenance enregistrée pour le moment.
+              </p>
+              <p className="text-md text-muted-foreground text-center mt-2">
+                Cliquez sur "Ajouter une maintenance" pour commencer à suivre l'entretien de vos véhicules.
               </p>
             </div>
           ) : (

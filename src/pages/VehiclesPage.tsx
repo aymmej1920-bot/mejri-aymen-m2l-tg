@@ -75,14 +75,20 @@ const VehiclesPage = () => {
           {isLoadingFleetData ? ( // Show skeleton loader when data is loading
             <DataTableSkeleton columns={5} />
           ) : filteredVehicles.length === 0 && vehicles.length > 0 ? (
-            <p className="text-muted-foreground">
-              Aucun véhicule ne correspond à votre recherche.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <Car className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucun véhicule ne correspond à votre recherche.
+              </p>
+            </div>
           ) : vehicles.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <Car className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
-                Aucun véhicule enregistré pour le moment. Cliquez sur "Ajouter un véhicule" pour commencer.
+              <Car className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-lg text-muted-foreground text-center">
+                Aucun véhicule enregistré pour le moment.
+              </p>
+              <p className="text-md text-muted-foreground text-center mt-2">
+                Cliquez sur "Ajouter un véhicule" pour commencer à gérer votre flotte.
               </p>
             </div>
           ) : (
