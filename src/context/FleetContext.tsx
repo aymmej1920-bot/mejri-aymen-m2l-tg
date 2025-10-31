@@ -68,6 +68,8 @@ interface FleetContextType {
   clearAllAlerts: () => Promise<void>;
   clearAllData: () => Promise<void>;
   isLoadingFleetData: boolean;
+  getVehicleByLicensePlate: (licensePlate: string) => Vehicle | undefined;
+  getDriverByLicenseNumber: (licenseNumber: string) => Driver | undefined;
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
@@ -87,6 +89,41 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
   const [isLoadingFleetData, setIsLoadingFleetData] = useState(true);
 
+  // Memoized maps for quick lookups
+  const [vehicleMap, setVehicleMap] = useState<Record<string, Vehicle>>({});
+  const [driverMap, setDriverMap] = useState<Record<string, Driver>>({});
+
+  // Helper to map snake_case to camelCase for Supabase data (recursive for nested objects)
+  const mapToCamelCase = (obj: any): any => {
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(item => mapToCamelCase(item));
+    }
+    const newObj: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        newObj[camelKey] = mapToCamelCase(obj[key]); // Recursively map nested objects
+      }
+    }
+    return newObj;
+  };
+
+  // Helper to map camelCase to snake_case for Supabase inserts/updates
+  const mapToSnakeCase = (obj: any) => {
+    if (!obj) return obj;
+    const newObj: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+        newObj[snakeKey] = obj[key];
+      }
+    }
+    return newObj;
+  };
+
   const fetchFleetData = React.useCallback(async () => {
     if (!user) {
       setVehicles([]);
@@ -100,6 +137,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setInspections([]);
       setAlertRules([]);
       setActiveAlerts([]);
+      setVehicleMap({});
+      setDriverMap({});
       setIsLoadingFleetData(false);
       return;
     }
@@ -144,17 +183,33 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (alertRulesError) throw alertRulesError;
       if (activeAlertsError) throw activeAlertsError;
 
-      setVehicles(vehiclesData as Vehicle[]);
-      setDrivers(driversData as Driver[]);
-      setMaintenances(maintenancesData as Maintenance[]);
-      setFuelEntries(fuelEntriesData as FuelEntry[]);
-      setAssignments(assignmentsData as Assignment[]);
-      setMaintenancePlans(maintenancePlansData as MaintenancePlan[]);
-      setDocuments(documentsData as Document[]);
-      setTours(toursData as Tour[]);
-      setInspections(inspectionsData as Inspection[]);
-      setAlertRules(alertRulesData as AlertRule[]);
-      setActiveAlerts(activeAlertsData as Alert[]);
+      const camelCaseVehicles = mapToCamelCase(vehiclesData) as Vehicle[];
+      const camelCaseDrivers = mapToCamelCase(driversData) as Driver[];
+
+      setVehicles(camelCaseVehicles);
+      setDrivers(camelCaseDrivers);
+      setMaintenances(mapToCamelCase(maintenancesData));
+      setFuelEntries(mapToCamelCase(fuelEntriesData));
+      setAssignments(mapToCamelCase(assignmentsData));
+      setMaintenancePlans(mapToCamelCase(maintenancePlansData));
+      setDocuments(mapToCamelCase(documentsData));
+      setTours(mapToCamelCase(toursData));
+      setInspections(mapToCamelCase(inspectionsData));
+      setAlertRules(mapToCamelCase(alertRulesData));
+      setActiveAlerts(mapToCamelCase(activeAlertsData));
+
+      // Populate maps for quick lookups
+      const newVehicleMap = camelCaseVehicles.reduce((acc, v) => {
+        acc[v.licensePlate] = v;
+        return acc;
+      }, {} as Record<string, Vehicle>);
+      setVehicleMap(newVehicleMap);
+
+      const newDriverMap = camelCaseDrivers.reduce((acc, d) => {
+        acc[d.licenseNumber] = d;
+        return acc;
+      }, {} as Record<string, Driver>);
+      setDriverMap(newDriverMap);
 
     } catch (error: any) {
       showError("Erreur lors du chargement des données de la flotte : " + error.message);
@@ -170,31 +225,9 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [user, isLoadingSession, fetchFleetData]);
 
-  // Helper to map snake_case to camelCase for Supabase data
-  const mapToCamelCase = (obj: any) => {
-    if (!obj) return obj;
-    const newObj: any = {};
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-        newObj[camelKey] = obj[key];
-      }
-    }
-    return newObj;
-  };
-
-  // Helper to map camelCase to snake_case for Supabase inserts/updates
-  const mapToSnakeCase = (obj: any) => {
-    if (!obj) return obj;
-    const newObj: any = {};
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-        newObj[snakeKey] = obj[key];
-      }
-    }
-    return newObj;
-  };
+  // Optimized getter functions
+  const getVehicleByLicensePlate = React.useCallback((licensePlate: string) => vehicleMap[licensePlate], [vehicleMap]);
+  const getDriverByLicenseNumber = React.useCallback((licenseNumber: string) => driverMap[licenseNumber], [driverMap]);
 
   // --- Vehicles ---
   const addVehicle = async (newVehicle: Omit<Vehicle, 'id'>) => {
@@ -202,7 +235,9 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const { data, error } = await supabase.from('vehicles').insert({ ...mapToSnakeCase(newVehicle), user_id: user.id }).select();
       if (error) throw error;
-      setVehicles((prev) => [...prev, mapToCamelCase(data[0])]);
+      const addedVehicle = mapToCamelCase(data[0]);
+      setVehicles((prev) => [...prev, addedVehicle]);
+      setVehicleMap((prev) => ({ ...prev, [addedVehicle.licensePlate]: addedVehicle }));
       showSuccess("Véhicule ajouté avec succès !");
     } catch (error: any) {
       showError("Échec de l'ajout du véhicule : " + error.message);
@@ -215,7 +250,16 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const { data, error } = await supabase.from('vehicles').update(mapToSnakeCase(updatedVehicle)).eq('id', originalVehicle.id).select();
       if (error) throw error;
-      setVehicles((prev) => prev.map((item) => (item.id === originalVehicle.id ? mapToCamelCase(data[0]) : item)));
+      const editedVehicle = mapToCamelCase(data[0]);
+      setVehicles((prev) => prev.map((item) => (item.id === originalVehicle.id ? editedVehicle : item)));
+      setVehicleMap((prev) => {
+        const newMap = { ...prev };
+        if (originalVehicle.licensePlate !== editedVehicle.licensePlate) {
+          delete newMap[originalVehicle.licensePlate];
+        }
+        newMap[editedVehicle.licensePlate] = editedVehicle;
+        return newMap;
+      });
       showSuccess("Véhicule modifié avec succès !");
     } catch (error: any) {
       showError("Échec de la modification du véhicule : " + error.message);
@@ -229,6 +273,11 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const { error } = await supabase.from('vehicles').delete().eq('id', vehicleToDelete.id);
       if (error) throw error;
       setVehicles((prev) => prev.filter((item) => item.id !== vehicleToDelete.id));
+      setVehicleMap((prev) => {
+        const newMap = { ...prev };
+        delete newMap[vehicleToDelete.licensePlate];
+        return newMap;
+      });
       showSuccess("Véhicule supprimé avec succès !");
     } catch (error: any) {
       showError("Échec de la suppression du véhicule : " + error.message);
@@ -242,7 +291,9 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const { data, error } = await supabase.from('drivers').insert({ ...mapToSnakeCase(newDriver), user_id: user.id }).select();
       if (error) throw error;
-      setDrivers((prev) => [...prev, mapToCamelCase(data[0])]);
+      const addedDriver = mapToCamelCase(data[0]);
+      setDrivers((prev) => [...prev, addedDriver]);
+      setDriverMap((prev) => ({ ...prev, [addedDriver.licenseNumber]: addedDriver }));
       showSuccess("Conducteur ajouté avec succès !");
     } catch (error: any) {
       showError("Échec de l'ajout du conducteur : " + error.message);
@@ -255,7 +306,16 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const { data, error } = await supabase.from('drivers').update(mapToSnakeCase(updatedDriver)).eq('id', originalDriver.id).select();
       if (error) throw error;
-      setDrivers((prev) => prev.map((item) => (item.id === originalDriver.id ? mapToCamelCase(data[0]) : item)));
+      const editedDriver = mapToCamelCase(data[0]);
+      setDrivers((prev) => prev.map((item) => (item.id === originalDriver.id ? editedDriver : item)));
+      setDriverMap((prev) => {
+        const newMap = { ...prev };
+        if (originalDriver.licenseNumber !== editedDriver.licenseNumber) {
+          delete newMap[originalDriver.licenseNumber];
+        }
+        newMap[editedDriver.licenseNumber] = editedDriver;
+        return newMap;
+      });
       showSuccess("Conducteur modifié avec succès !");
     } catch (error: any) {
       showError("Échec de la modification du conducteur : " + error.message);
@@ -269,6 +329,11 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const { error } = await supabase.from('drivers').delete().eq('id', driverToDelete.id);
       if (error) throw error;
       setDrivers((prev) => prev.filter((item) => item.id !== driverToDelete.id));
+      setDriverMap((prev) => {
+        const newMap = { ...prev };
+        delete newMap[driverToDelete.licenseNumber];
+        return newMap;
+      });
       showSuccess("Conducteur supprimé avec succès !");
     } catch (error: any) {
       showError("Échec de la suppression du conducteur : " + error.message);
@@ -753,6 +818,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setInspections([]);
       setAlertRules([]);
       setActiveAlerts([]);
+      setVehicleMap({});
+      setDriverMap({});
       showSuccess("Toutes les données de la flotte ont été effacées !");
     } catch (error: any) {
       showError("Échec de l'effacement de toutes les données : " + error.message);
@@ -821,6 +888,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         clearAllAlerts,
         clearAllData,
         isLoadingFleetData,
+        getVehicleByLicensePlate,
+        getDriverByLicenseNumber,
       }}
     >
       {children}

@@ -32,19 +32,19 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const DocumentsPage = () => {
-  const { documents, deleteDocument, vehicles, drivers } = useFleet();
+  const { documents, deleteDocument, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingDocumentId, setDeletingDocumentId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string | undefined) => {
     if (!licensePlate) return "N/A";
-    const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
+    const vehicle = getVehicleByLicensePlate(licensePlate);
     return vehicle ? `${vehicle.make} ${vehicle.model} (${licensePlate})` : licensePlate;
   };
 
   const getDriverDetails = (licenseNumber: string | undefined) => {
     if (!licenseNumber) return "N/A";
-    const driver = drivers.find(d => d.licenseNumber === licenseNumber);
+    const driver = getDriverByLicenseNumber(licenseNumber);
     return driver ? `${driver.firstName} ${driver.lastName} (${licenseNumber})` : licenseNumber;
   };
 

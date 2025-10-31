@@ -23,7 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Car, Wrench, Fuel, Factory, TrendingUp } from "lucide-react"; // Import TrendingUp icon
 
 const ReportsPage = () => {
-  const { vehicles, fuelEntries, maintenances } = useFleet();
+  const { vehicles, fuelEntries, maintenances, getVehicleByLicensePlate } = useFleet();
 
   // 1. Coût du carburant par mois (Bar Chart)
   const fuelCostsByMonth = fuelEntries.reduce((acc, entry) => {

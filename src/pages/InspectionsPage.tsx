@@ -34,13 +34,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { CustomBadge } from "@/components/CustomBadge";
 
 const InspectionsPage = () => {
-  const { inspections, deleteInspection, vehicles } = useFleet();
+  const { inspections, deleteInspection, getVehicleByLicensePlate } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [viewingInspection, setViewingInspection] = React.useState<Inspection | null>(null);
   const [deletingInspectionId, setDeletingInspectionId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string) => {
-    const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
+    const vehicle = getVehicleByLicensePlate(licensePlate);
     return vehicle ? `${vehicle.make} ${vehicle.model} (${licensePlate})` : licensePlate;
   };
 

@@ -32,13 +32,13 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const MaintenancePlansPage = () => {
-  const { maintenancePlans, deleteMaintenancePlan, generateMaintenanceFromPlan, vehicles } = useFleet();
+  const { maintenancePlans, deleteMaintenancePlan, generateMaintenanceFromPlan, getVehicleByLicensePlate } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingPlanId, setDeletingPlanId] = React.useState<string | null>(null); // Add deleting state
   const [generatingPlanId, setGeneratingPlanId] = React.useState<string | null>(null); // Add generating state
 
   const getVehicleDetails = (licensePlate: string) => {
-    const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
+    const vehicle = getVehicleByLicensePlate(licensePlate);
     return vehicle ? `${vehicle.make} ${vehicle.model} (${licensePlate})` : licensePlate;
   };
 

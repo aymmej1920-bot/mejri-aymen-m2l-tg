@@ -32,17 +32,17 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const AssignmentsPage = () => {
-  const { assignments, deleteAssignment, vehicles, drivers } = useFleet();
+  const { assignments, deleteAssignment, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingAssignmentId, setDeletingAssignmentId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string) => {
-    const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
+    const vehicle = getVehicleByLicensePlate(licensePlate);
     return vehicle ? `${vehicle.make} ${vehicle.model} (${licensePlate})` : licensePlate;
   };
 
   const getDriverDetails = (licenseNumber: string) => {
-    const driver = drivers.find(d => d.licenseNumber === licenseNumber);
+    const driver = getDriverByLicenseNumber(licenseNumber);
     return driver ? `${driver.firstName} ${driver.lastName} (${licenseNumber})` : licenseNumber;
   };
 

@@ -33,29 +33,29 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const AlertsPage = () => {
-  const { alertRules, deleteAlertRule, vehicles, drivers } = useFleet();
+  const { alertRules, deleteAlertRule, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingAlertRuleId, setDeletingAlertRuleId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string | undefined) => {
     if (!licensePlate) return "N/A";
-    const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
+    const vehicle = getVehicleByLicensePlate(licensePlate);
     return vehicle ? `${vehicle.make} ${vehicle.model} (${licensePlate})` : licensePlate;
   };
 
   const getDriverDetails = (licenseNumber: string | undefined) => {
     if (!licenseNumber) return "N/A";
-    const driver = drivers.find(d => d.licenseNumber === licenseNumber);
+    const driver = getDriverByLicenseNumber(licenseNumber);
     return driver ? `${driver.firstName} ${driver.lastName} (${licenseNumber})` : licenseNumber;
   };
 
   const getCriteriaSummary = (rule: AlertRule) => {
     let summary = "";
     if (rule.criteria.vehicleLicensePlate) {
-      summary += `Véhicule: ${rule.criteria.vehicleLicensePlate} `;
+      summary += `Véhicule: ${getVehicleDetails(rule.criteria.vehicleLicensePlate)} `;
     }
     if (rule.criteria.driverLicenseNumber) {
-      summary += `Conducteur: ${rule.criteria.driverLicenseNumber} `;
+      summary += `Conducteur: ${getDriverDetails(rule.criteria.driverLicenseNumber)} `;
     }
     if (rule.criteria.maintenanceType) {
       summary += `Type maintenance: ${rule.criteria.maintenanceType} `;
