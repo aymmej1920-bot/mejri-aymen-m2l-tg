@@ -32,7 +32,6 @@ const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const { clearAllData } = useFleet();
   const [isClearingData, setIsClearingData] = React.useState(false); // Add loading state for clearing data
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false); // Add loading state for logout
 
   const handleClearAllData = async () => { // Make async
     setIsClearingData(true); // Set loading to true
@@ -42,20 +41,6 @@ const SettingsPage = () => {
       console.error("Failed to clear all data:", error);
     } finally {
       setIsClearingData(false); // Set loading to false
-    }
-  };
-
-  const handleLogout = async () => { // Make async
-    setIsLoggingOut(true); // Set loading to true
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        showError("Échec de la déconnexion : " + error.message);
-      }
-    } catch (error) {
-      console.error("Failed to logout:", error);
-    } finally {
-      setIsLoggingOut(false); // Set loading to false
     }
   };
 
@@ -121,19 +106,6 @@ const SettingsPage = () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-2">Authentification</h3>
-            <p className="text-muted-foreground mb-4">
-              Déconnectez-vous de votre compte.
-            </p>
-            <Button variant="outline" onClick={handleLogout} className="hover:animate-hover-lift" disabled={isLoggingOut}>
-              {isLoggingOut ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                "Déconnexion"
-              )}
-            </Button>
           </div>
         </CardContent>
       </Card>

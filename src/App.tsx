@@ -17,7 +17,8 @@ import ToursPage from "./pages/ToursPage";
 import InspectionsPage from "./pages/InspectionsPage";
 import AlertsPage from "./pages/AlertsPage";
 import LoginPage from "./pages/LoginPage";
-import ReportsPage from "./pages/ReportsPage"; // Importez la nouvelle page
+import ReportsPage from "./pages/ReportsPage";
+import ProfilePage from "./pages/ProfilePage"; // Import ProfilePage
 import { FleetProvider } from "@/context/FleetContext";
 import { SessionContextProvider, useSession } from "@/context/SessionContext";
 
@@ -59,6 +60,11 @@ const router = createBrowserRouter([
         index: true,
         element: <Index />,
         handle: { title: "Accueil" },
+      },
+      {
+        path: "/profile", // New route for profile page
+        element: <ProfilePage />,
+        handle: { title: "Mon Profil" },
       },
       {
         path: "/vehicles",
@@ -111,7 +117,7 @@ const router = createBrowserRouter([
         handle: { title: "Gestion des Alertes" },
       },
       {
-        path: "/reports", // Nouvelle route pour les rapports
+        path: "/reports",
         element: <ReportsPage />,
         handle: { title: "Rapports & Analyses" },
       },
@@ -132,7 +138,7 @@ const router = createBrowserRouter([
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Sonner position="top-right" /> {/* Positionnement en haut à droite */}
+      <Sonner position="top-right" />
       <SessionContextProvider>
         <FleetProvider>
           <RouterProvider router={router} />

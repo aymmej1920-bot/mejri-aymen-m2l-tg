@@ -12,6 +12,7 @@ import { Tour } from "@/types/tour";
 import { Inspection } from "@/types/inspection";
 import { AlertRule } from "@/types/alertRule";
 import { Alert } from "@/types/alert";
+import { Profile } from "@/types/profile"; // Import Profile type
 import { showSuccess, showError } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
 import { addMonths, format, parseISO, differenceInDays } from "date-fns";
@@ -70,6 +71,8 @@ interface FleetContextType {
   isLoadingFleetData: boolean;
   getVehicleByLicensePlate: (licensePlate: string) => Vehicle | undefined;
   getDriverByLicenseNumber: (licenseNumber: string) => Driver | undefined;
+  profile: Profile | null; // Add profile to context type
+  updateProfile: (updatedProfile: Omit<Profile, 'id' | 'updatedAt'>) => Promise<void>; // Add updateProfile
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
@@ -87,6 +90,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null); // Add profile state
   const [isLoadingFleetData, setIsLoadingFleetData] = useState(true);
 
   // Memoized maps for quick lookups
@@ -145,6 +149,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setInspections([]);
       setAlertRules([]);
       setActiveAlerts([]);
+      setProfile(null); // Clear profile
       setVehicleMap({});
       setDriverMap({});
       setIsLoadingFleetData(false);
@@ -165,18 +170,20 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         { data: inspectionsData, error: inspectionsError },
         { data: alertRulesData, error: alertRulesError },
         { data: activeAlertsData, error: activeAlertsError },
+        { data: profileData, error: profileError }, // Fetch profile data
       ] = await Promise.all([
-        supabase.from('vehicles').select('*'),
-        supabase.from('drivers').select('*'),
-        supabase.from('maintenances').select('*'),
-        supabase.from('fuel_entries').select('*'),
-        supabase.from('assignments').select('*'),
-        supabase.from('maintenance_plans').select('*'),
-        supabase.from('documents').select('*'),
-        supabase.from('tours').select('*'),
-        supabase.from('inspections').select('*, checkpoints'),
-        supabase.from('alert_rules').select('*, criteria'),
-        supabase.from('alerts').select('*'),
+        supabase.from('vehicles').select('*').eq('user_id', user.id),
+        supabase.from('drivers').select('*').eq('user_id', user.id),
+        supabase.from('maintenances').select('*').eq('user_id', user.id),
+        supabase.from('fuel_entries').select('*').eq('user_id', user.id),
+        supabase.from('assignments').select('*').eq('user_id', user.id),
+        supabase.from('maintenance_plans').select('*').eq('user_id', user.id),
+        supabase.from('documents').select('*').eq('user_id', user.id),
+        supabase.from('tours').select('*').eq('user_id', user.id),
+        supabase.from('inspections').select('*, checkpoints').eq('user_id', user.id),
+        supabase.from('alert_rules').select('*, criteria').eq('user_id', user.id),
+        supabase.from('alerts').select('*').eq('user_id', user.id),
+        supabase.from('profiles').select('*').eq('id', user.id).single(), // Fetch single profile
       ]);
 
       if (vehiclesError) throw vehiclesError;
@@ -190,6 +197,17 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (inspectionsError) throw inspectionsError;
       if (alertRulesError) throw alertRulesError;
       if (activeAlertsError) throw activeAlertsError;
+      // Handle profile error separately, as it might not exist initially
+      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+        console.warn("No profile found for user, creating one.", profileError);
+        // If no profile exists, create a basic one
+        const { data: newProfileData, error: newProfileError } = await supabase.from('profiles').insert({ id: user.id }).select().single();
+        if (newProfileError) throw newProfileError;
+        setProfile(mapToCamelCase(newProfileData));
+      } else if (profileData) {
+        setProfile(mapToCamelCase(profileData));
+      }
+
 
       const camelCaseVehicles = mapToCamelCase(vehiclesData) as Vehicle[];
       const camelCaseDrivers = mapToCamelCase(driversData) as Driver[];
@@ -233,9 +251,50 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [user, isLoadingSession, fetchFleetData]);
 
+  // Real-time subscription for alerts
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('public:alerts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts', filter: `user_id=eq.${user.id}` }, (payload) => {
+        const camelCasePayload = mapToCamelCase(payload.new);
+        if (payload.eventType === 'INSERT') {
+          setActiveAlerts((prev) => [...prev, camelCasePayload]);
+          showSuccess("Nouvelle alerte reçue !");
+        } else if (payload.eventType === 'UPDATE') {
+          setActiveAlerts((prev) =>
+            prev.map((alert) => (alert.id === camelCasePayload.id ? camelCasePayload : alert))
+          );
+        } else if (payload.eventType === 'DELETE') {
+          setActiveAlerts((prev) => prev.filter((alert) => alert.id !== camelCasePayload.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+
   // Optimized getter functions
   const getVehicleByLicensePlate = React.useCallback((licensePlate: string) => vehicleMap[licensePlate], [vehicleMap]);
   const getDriverByLicenseNumber = React.useCallback((licenseNumber: string) => driverMap[licenseNumber], [driverMap]);
+
+  // --- Profile ---
+  const updateProfile = async (updatedProfile: Omit<Profile, 'id' | 'updatedAt'>) => {
+    if (!user) { showError("Vous devez être connecté pour modifier votre profil."); return; }
+    try {
+      const { data, error } = await supabase.from('profiles').update(mapToSnakeCase(updatedProfile)).eq('id', user.id).select().single();
+      if (error) throw error;
+      setProfile(mapToCamelCase(data));
+      showSuccess("Profil mis à jour avec succès !");
+    } catch (error: any) {
+      showError("Échec de la mise à jour du profil : " + error.message);
+      console.error("Error updating profile:", error);
+    }
+  };
 
   // --- Vehicles ---
   const addVehicle = async (newVehicle: Omit<Vehicle, 'id'>) => {
@@ -818,7 +877,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
       const { data, error } = await supabase.from('alerts').insert(alertToInsert).select();
       if (error) throw error;
-      setActiveAlerts((prev) => [...prev, mapToCamelCase(data[0])]);
+      // Realtime subscription will handle updating the state, no need to do it here
+      // setActiveAlerts((prev) => [...prev, mapToCamelCase(data[0])]);
     } catch (error: any) {
       showError("Échec de l'ajout de l'alerte : " + error.message);
       console.error("Error adding active alert:", error);
@@ -830,9 +890,10 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const { data, error } = await supabase.from('alerts').update({ is_read: true }).eq('id', alertId).select();
       if (error) throw error;
-      setActiveAlerts(prev => prev.map(alert =>
-        alert.id === alertId ? { ...alert, isRead: true } : alert
-      ));
+      // Realtime subscription will handle updating the state, no need to do it here
+      // setActiveAlerts(prev => prev.map(alert =>
+      //   alert.id === alertId ? { ...alert, isRead: true } : alert
+      // ));
       showSuccess("Alerte marquée comme lue !");
     } catch (error: any) {
       showError("Échec de la mise à jour de l'alerte : " + error.message);
@@ -868,6 +929,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const { error: inspectionsError } = await supabase.from('inspections').delete().eq('user_id', user.id);
       const { error: alertRulesError } = await supabase.from('alert_rules').delete().eq('user_id', user.id);
       const { error: alertsError } = await supabase.from('alerts').delete().eq('user_id', user.id);
+      const { error: profilesError } = await supabase.from('profiles').delete().eq('id', user.id); // Delete profile
 
       if (vehiclesError) throw vehiclesError;
       if (driversError) throw driversError;
@@ -880,6 +942,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (inspectionsError) throw inspectionsError;
       if (alertRulesError) throw alertRulesError;
       if (alertsError) throw alertsError;
+      if (profilesError) throw profilesError;
 
       // Reset local states
       setVehicles([]);
@@ -893,6 +956,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setInspections([]);
       setAlertRules([]);
       setActiveAlerts([]);
+      setProfile(null); // Clear profile state
       setVehicleMap({});
       setDriverMap({});
       showSuccess("Toutes les données de la flotte ont été effacées !");
@@ -965,6 +1029,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         isLoadingFleetData,
         getVehicleByLicensePlate,
         getDriverByLicenseNumber,
+        profile, // Provide profile
+        updateProfile, // Provide updateProfile
       }}
     >
       {children}
