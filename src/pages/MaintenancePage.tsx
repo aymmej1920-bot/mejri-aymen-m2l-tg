@@ -30,9 +30,10 @@ import { useFleet } from "@/context/FleetContext";
 import { Maintenance } from "@/types/maintenance";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const MaintenancePage = () => {
-  const { maintenances, deleteMaintenance } = useFleet();
+  const { maintenances, deleteMaintenance, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingMaintenanceId, setDeletingMaintenanceId] = React.useState<string | null>(null); // Add deleting state
 
@@ -73,12 +74,13 @@ const MaintenancePage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredMaintenances.length === 0 && maintenances.length > 0 && (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={8} />
+          ) : filteredMaintenances.length === 0 && maintenances.length > 0 ? (
             <p className="text-muted-foreground">
               Aucune maintenance ne correspond à votre recherche.
             </p>
-          )}
-          {maintenances.length === 0 ? (
+          ) : maintenances.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <Wrench className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">

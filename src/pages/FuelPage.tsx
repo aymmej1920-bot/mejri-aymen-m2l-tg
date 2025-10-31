@@ -30,9 +30,10 @@ import { useFleet } from "@/context/FleetContext";
 import { FuelEntry } from "@/types/fuel";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const FuelPage = () => {
-  const { fuelEntries, deleteFuelEntry } = useFleet();
+  const { fuelEntries, deleteFuelEntry, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingFuelEntryId, setDeletingFuelEntryId] = React.useState<string | null>(null); // Add deleting state
 
@@ -112,12 +113,13 @@ const FuelPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredFuelEntries.length === 0 && fuelEntries.length > 0 && (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={7} />
+          ) : filteredFuelEntries.length === 0 && fuelEntries.length > 0 ? (
             <p className="text-muted-foreground">
               Aucun ravitaillement ne correspond à votre recherche.
             </p>
-          )}
-          {fuelEntries.length === 0 ? (
+          ) : fuelEntries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <FuelIcon className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">

@@ -30,9 +30,10 @@ import { useFleet } from "@/context/FleetContext";
 import { Tour } from "@/types/tour";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const ToursPage = () => {
-  const { tours, deleteTour, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
+  const { tours, deleteTour, getVehicleByLicensePlate, getDriverByLicenseNumber, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingTourId, setDeletingTourId] = React.useState<string | null>(null); // Add deleting state
 
@@ -124,12 +125,13 @@ const ToursPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredTours.length === 0 && tours.length > 0 && (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={9} />
+          ) : filteredTours.length === 0 && tours.length > 0 ? (
             <p className="text-muted-foreground">
               Aucune tournée ne correspond à votre recherche.
             </p>
-          )}
-          {tours.length === 0 ? (
+          ) : tours.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <Route className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">

@@ -28,9 +28,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useFleet } from "@/context/FleetContext";
 import { Driver } from "@/types/driver";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const DriversPage = () => {
-  const { drivers, deleteDriver } = useFleet();
+  const { drivers, deleteDriver, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingDriverId, setDeletingDriverId] = React.useState<string | null>(null); // Add deleting state
 
@@ -71,7 +72,9 @@ const DriversPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredDrivers.length === 0 && drivers.length > 0 ? (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={5} />
+          ) : filteredDrivers.length === 0 && drivers.length > 0 ? (
             <p className="text-muted-foreground">
               Aucun conducteur ne correspond à votre recherche.
             </p>

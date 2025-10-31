@@ -30,9 +30,10 @@ import { useFleet } from "@/context/FleetContext";
 import { MaintenancePlan } from "@/types/maintenancePlan";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const MaintenancePlansPage = () => {
-  const { maintenancePlans, deleteMaintenancePlan, generateMaintenanceFromPlan, getVehicleByLicensePlate } = useFleet();
+  const { maintenancePlans, deleteMaintenancePlan, generateMaintenanceFromPlan, getVehicleByLicensePlate, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingPlanId, setDeletingPlanId] = React.useState<string | null>(null); // Add deleting state
   const [generatingPlanId, setGeneratingPlanId] = React.useState<string | null>(null); // Add generating state
@@ -91,12 +92,13 @@ const MaintenancePlansPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredMaintenancePlans.length === 0 && maintenancePlans.length > 0 && (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={10} />
+          ) : filteredMaintenancePlans.length === 0 && maintenancePlans.length > 0 ? (
             <p className="text-muted-foreground">
               Aucun plan de maintenance ne correspond à votre recherche.
             </p>
-          )}
-          {maintenancePlans.length === 0 ? (
+          ) : maintenancePlans.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <CalendarCheck className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">

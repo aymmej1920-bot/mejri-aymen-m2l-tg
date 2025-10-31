@@ -30,9 +30,10 @@ import { useFleet } from "@/context/FleetContext";
 import { Assignment } from "@/types/assignment";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const AssignmentsPage = () => {
-  const { assignments, deleteAssignment, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
+  const { assignments, deleteAssignment, getVehicleByLicensePlate, getDriverByLicenseNumber, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingAssignmentId, setDeletingAssignmentId] = React.useState<string | null>(null); // Add deleting state
 
@@ -85,12 +86,13 @@ const AssignmentsPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredAssignments.length === 0 && assignments.length > 0 && (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={6} />
+          ) : filteredAssignments.length === 0 && assignments.length > 0 ? (
             <p className="text-muted-foreground">
               Aucune affectation ne correspond à votre recherche.
             </p>
-          )}
-          {assignments.length === 0 ? (
+          ) : assignments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <Link className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">

@@ -31,9 +31,10 @@ import { AlertRule } from "@/types/alertRule";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const AlertsPage = () => {
-  const { alertRules, deleteAlertRule, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
+  const { alertRules, deleteAlertRule, getVehicleByLicensePlate, getDriverByLicenseNumber, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingAlertRuleId, setDeletingAlertRuleId] = React.useState<string | null>(null); // Add deleting state
 
@@ -107,12 +108,13 @@ const AlertsPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredAlertRules.length === 0 && alertRules.length > 0 && (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={7} />
+          ) : filteredAlertRules.length === 0 && alertRules.length > 0 ? (
             <p className="text-muted-foreground">
               Aucune règle d'alerte ne correspond à votre recherche.
             </p>
-          )}
-          {alertRules.length === 0 ? (
+          ) : alertRules.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <BellRing className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">

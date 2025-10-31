@@ -32,9 +32,10 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CustomBadge } from "@/components/CustomBadge";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const InspectionsPage = () => {
-  const { inspections, deleteInspection, getVehicleByLicensePlate } = useFleet();
+  const { inspections, deleteInspection, getVehicleByLicensePlate, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [viewingInspection, setViewingInspection] = React.useState<Inspection | null>(null);
   const [deletingInspectionId, setDeletingInspectionId] = React.useState<string | null>(null); // Add deleting state
@@ -109,12 +110,13 @@ const InspectionsPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredInspections.length === 0 && inspections.length > 0 && (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={5} />
+          ) : filteredInspections.length === 0 && inspections.length > 0 ? (
             <p className="text-muted-foreground">
               Aucune inspection ne correspond à votre recherche.
             </p>
-          )}
-          {inspections.length === 0 ? (
+          ) : inspections.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <ClipboardCheck className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">

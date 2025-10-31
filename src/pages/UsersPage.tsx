@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useFleet } from "@/context/FleetContext";
 import InviteUserDialog from "@/components/users/InviteUserDialog";
@@ -18,6 +18,7 @@ import CreateUserDialog from "@/components/users/CreateUserDialog";
 import EditUserRoleDialog from "@/components/users/EditUserRoleDialog";
 import ToggleUserStatusButton from "@/components/users/ToggleUserStatusButton";
 import { CustomBadge } from "@/components/CustomBadge";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const UsersPage = () => {
   const { users, isLoadingFleetData, can } = useFleet();
@@ -30,15 +31,6 @@ const UsersPage = () => {
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.role?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (isLoadingFleetData) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2 text-muted-foreground">Chargement des utilisateurs...</p>
-      </div>
-    );
-  }
 
   if (!can('manage_users')) {
     return (
@@ -74,7 +66,9 @@ const UsersPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredUsers.length === 0 && users.length > 0 ? (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={5} />
+          ) : filteredUsers.length === 0 && users.length > 0 ? (
             <p className="text-muted-foreground">
               Aucun utilisateur ne correspond à votre recherche.
             </p>
