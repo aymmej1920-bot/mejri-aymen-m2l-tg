@@ -27,14 +27,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateRange } from "react-day-picker"; // Import DateRange type
 
 const ReportsPage = () => {
   const { vehicles, fuelEntries, maintenances, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
 
-  const [dateRange, setDateRange] = React.useState<{ from?: Date; to?: Date }>({
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() => ({
     from: subMonths(new Date(), 6), // Default to last 6 months
     to: new Date(),
-  });
+  }));
   const [selectedVehicleLicensePlate, setSelectedVehicleLicensePlate] = React.useState<string | undefined>(undefined);
   const [selectedDriverLicenseNumber, setSelectedDriverLicenseNumber] = React.useState<string | undefined>(undefined);
 
@@ -42,7 +43,7 @@ const ReportsPage = () => {
   const filteredFuelEntries = React.useMemo(() => {
     return fuelEntries.filter(entry => {
       const entryDate = parseISO(entry.date);
-      const isDateMatch = dateRange.from && dateRange.to
+      const isDateMatch = dateRange?.from && dateRange?.to
         ? isWithinInterval(entryDate, { start: dateRange.from, end: dateRange.to })
         : true;
       const isVehicleMatch = selectedVehicleLicensePlate
@@ -55,7 +56,7 @@ const ReportsPage = () => {
   const filteredMaintenances = React.useMemo(() => {
     return maintenances.filter(maintenance => {
       const maintenanceDate = parseISO(maintenance.date);
-      const isDateMatch = dateRange.from && dateRange.to
+      const isDateMatch = dateRange?.from && dateRange?.to
         ? isWithinInterval(maintenanceDate, { start: dateRange.from, end: dateRange.to })
         : true;
       const isVehicleMatch = selectedVehicleLicensePlate
@@ -108,7 +109,7 @@ const ReportsPage = () => {
   // 3. Coût de maintenance par véhicule (Bar Chart)
   const maintenanceCostByVehicle = filteredMaintenances.reduce((acc, maintenance) => {
     const vehicle = getVehicleByLicensePlate(maintenance.vehicleLicensePlate);
-    const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})` : maintenance.vehicleLicensePlate;
+    const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model} (${maintenance.vehicleLicensePlate})` : maintenance.vehicleLicensePlate;
     if (!acc[vehicleName]) {
       acc[vehicleName] = 0;
     }
@@ -167,7 +168,7 @@ const ReportsPage = () => {
   // NEW CHART: Fuel Consumption by Vehicle (Bar Chart)
   const fuelConsumptionByVehicle = filteredFuelEntries.reduce((acc, entry) => {
     const vehicle = getVehicleByLicensePlate(entry.vehicleLicensePlate);
-    const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})` : entry.vehicleLicensePlate;
+    const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model} (${entry.vehicleLicensePlate})` : entry.vehicleLicensePlate;
     if (!acc[vehicleName]) {
       acc[vehicleName] = 0;
     }
@@ -269,11 +270,11 @@ const ReportsPage = () => {
                   variant={"outline"}
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !dateRange.from && "text-muted-foreground"
+                    !dateRange?.from && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
+                  {dateRange?.from ? (
                     dateRange.to ? (
                       <>
                         {format(dateRange.from, "LLL dd, y", { locale: fr })} -{" "}
@@ -291,9 +292,16 @@ const ReportsPage = () => {
                 <Calendar
                   initialFocus
                   mode="range"
-                  defaultMonth={dateRange.from}
+                  defaultMonth={dateRange?.from}
                   selected={dateRange}
-                  onSelect={setDateRange}
+                  onSelect={(range) => {
+                    // Ensure that if 'from' is undefined, the whole range is undefined
+                    if (range && range.from) {
+                      setDateRange(range);
+                    } else {
+                      setDateRange(undefined);
+                    }
+                  }}
                   numberOfMonths={2}
                   locale={fr}
                 />
