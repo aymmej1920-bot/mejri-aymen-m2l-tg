@@ -137,6 +137,38 @@ serve(async (req) => {
         responseMessage = `Compte utilisateur ${userId} ${suspend ? 'suspendu' : 'activé'} avec succès.`;
         break;
       }
+      case 'listUsers': {
+        const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
+        if (authUsersError) throw authUsersError;
+
+        const userIds = authUsers.users.map(u => u.id);
+        const { data: profilesData, error: profilesError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url, updated_at, role_id, roles(id, name, description)')
+          .in('id', userIds);
+
+        if (profilesError) throw profilesError;
+
+        const usersList = authUsers.users.map(authUser => {
+          const profile = profilesData.find(p => p.id === authUser.id);
+          return {
+            id: authUser.id,
+            email: authUser.email,
+            firstName: profile?.first_name || null,
+            lastName: profile?.last_name || null,
+            avatarUrl: profile?.avatar_url || null,
+            updatedAt: profile?.updated_at || null,
+            roleId: profile?.role_id || null,
+            role: profile?.roles || null,
+            is_suspended: authUser.app_metadata?.is_suspended || false,
+          };
+        }).filter(u => u.id !== user.id); // Exclude the current admin user
+
+        return new Response(JSON.stringify({ users: usersList }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        });
+      }
       default:
         throw new Error('Invalid action specified.');
     }

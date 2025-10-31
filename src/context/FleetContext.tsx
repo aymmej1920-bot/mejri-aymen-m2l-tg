@@ -285,25 +285,18 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Fetch all users for Admin if current user is Admin
       const currentUserProfile = mapToCamelCase(profileData) as Profile;
       if (currentUserProfile?.role?.name === 'Admin') {
-        const { data: usersWithRolesData, error: usersError } = await supabase
-          .from('profiles')
-          .select('*, auth_users:id(email, raw_app_meta_data)') // Join with auth.users to get email and app_meta_data
-          .not('id', 'eq', user.id); // Exclude current user from the list
+        const { data: edgeFunctionUsersData, error: edgeFunctionUsersError } = await supabase.functions.invoke('admin-user-management', {
+            body: { action: 'listUsers' },
+            headers: {
+              'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`,
+              'Content-Type': 'application/json',
+            },
+          });
 
-        if (usersError) throw usersError;
+          if (edgeFunctionUsersError) throw edgeFunctionUsersError;
+          if (edgeFunctionUsersData?.error) throw new Error(edgeFunctionUsersData.error);
 
-        const mappedUsers = usersWithRolesData.map((p: any) => ({
-          id: p.id,
-          firstName: p.first_name,
-          lastName: p.last_name,
-          avatarUrl: p.avatar_url,
-          updatedAt: p.updated_at,
-          roleId: p.role_id,
-          role: rolesData.find((r: any) => r.id === p.role_id), // Manually attach role object
-          email: p.auth_users?.email,
-          is_suspended: p.auth_users?.raw_app_meta_data?.is_suspended || false,
-        })) as (Profile & { email: string; is_suspended: boolean })[];
-        setUsers(mappedUsers);
+          setUsers(edgeFunctionUsersData.users);
       }
 
 
