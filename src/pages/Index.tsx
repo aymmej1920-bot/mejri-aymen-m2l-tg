@@ -17,7 +17,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Car, Users, Wrench } from "lucide-react";
+import { Car, Users, Wrench, Fuel as FuelIcon } from "lucide-react"; // Import FuelIcon
 import { useFleet } from "@/context/FleetContext";
 
 const Index = () => {
@@ -138,8 +138,14 @@ const Index = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Aucune donnée de carburant disponible.
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <FuelIcon className="h-16 w-16 text-muted-foreground mb-4" />
+                    <p className="text-lg text-muted-foreground text-center">
+                      Aucune donnée de carburant disponible.
+                    </p>
+                    <p className="text-md text-muted-foreground text-center mt-2">
+                      Ajoutez des ravitaillements pour voir les tendances des coûts.
+                    </p>
                   </div>
                 )}
 
@@ -165,8 +171,14 @@ const Index = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Aucune donnée de maintenance disponible.
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <Wrench className="h-16 w-16 text-muted-foreground mb-4" />
+                    <p className="text-lg text-muted-foreground text-center">
+                      Aucune donnée de maintenance disponible.
+                    </p>
+                    <p className="text-md text-muted-foreground text-center mt-2">
+                      Ajoutez des maintenances pour voir la répartition des statuts.
+                    </p>
                   </div>
                 )}
               </div>
