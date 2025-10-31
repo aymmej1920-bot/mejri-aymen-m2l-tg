@@ -17,10 +17,10 @@ import {
   Line,
 } from "recharts";
 import { useFleet } from "@/context/FleetContext";
-import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { format, parseISO, isWithinInterval, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Car, Wrench, Fuel, Factory, TrendingUp, Download, CalendarIcon, Users } from "lucide-react";
+import { Car, Wrench, Fuel, TrendingUp, Download, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToXlsx } from "@/utils/export-xlsx"; // Import the new XLSX export utility
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -30,7 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DateRange } from "react-day-picker"; // Import DateRange type
 
 const ReportsPage = () => {
-  const { vehicles, fuelEntries, maintenances, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
+  const { vehicles, fuelEntries, maintenances, getVehicleByLicensePlate } = useFleet();
 
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() => ({
     from: subMonths(new Date(), 6), // Default to last 6 months

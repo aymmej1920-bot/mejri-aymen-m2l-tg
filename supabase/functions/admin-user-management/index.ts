@@ -9,14 +9,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+serve(async (req: Request) => { // Explicitly type req as Request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const supabaseAdmin = createClient(
+      // @ts-ignore
       Deno.env.get('SUPABASE_URL') ?? '',
+      // @ts-ignore
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
@@ -56,12 +58,13 @@ serve(async (req) => {
 
         if (roleError || !roleData) throw new Error(`Role '${roleName}' not found.`);
 
-        const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
           data: {
             first_name: firstName,
             last_name: lastName,
             role_id: roleData.id,
           },
+          // @ts-ignore
           redirectTo: Deno.env.get('SUPABASE_URL') + '/login',
         });
 
@@ -141,7 +144,7 @@ serve(async (req) => {
         const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
         if (authUsersError) throw authUsersError;
 
-        const userIds = authUsers.users.map(u => u.id);
+        const userIds = authUsers.users.map((u: any) => u.id); // Explicitly type u
         const { data: profilesData, error: profilesError } = await supabaseAdmin
           .from('profiles')
           .select('id, first_name, last_name, avatar_url, updated_at, role_id, roles(id, name, description)')
@@ -149,8 +152,8 @@ serve(async (req) => {
 
         if (profilesError) throw profilesError;
 
-        const usersList = authUsers.users.map(authUser => {
-          const profile = profilesData.find(p => p.id === authUser.id);
+        const usersList = authUsers.users.map((authUser: any) => { // Explicitly type authUser
+          const profile = profilesData.find((p: any) => p.id === authUser.id); // Explicitly type p
           return {
             id: authUser.id,
             email: authUser.email,
@@ -162,7 +165,7 @@ serve(async (req) => {
             role: profile?.roles || null,
             is_suspended: authUser.app_metadata?.is_suspended || false,
           };
-        }).filter(u => u.id !== user.id);
+        }).filter((u: any) => u.id !== user.id); // Exclude the current admin user, explicitly type u
 
         return new Response(JSON.stringify({ users: usersList }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -178,9 +181,9 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
+  } catch (error: any) { // Cast error to any
     console.error("Edge Function error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: (error as Error).message }), { // Cast error to Error
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });

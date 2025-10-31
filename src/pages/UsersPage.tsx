@@ -11,10 +11,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { User, PlusCircle, Mail, Loader2 } from "lucide-react";
+import { User, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useFleet } from "@/context/FleetContext";
-import { Profile } from "@/types/profile";
 import InviteUserDialog from "@/components/users/InviteUserDialog";
 import CreateUserDialog from "@/components/users/CreateUserDialog";
 import EditUserRoleDialog from "@/components/users/EditUserRoleDialog";

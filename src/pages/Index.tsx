@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
 import AddDriverDialog from "@/components/drivers/AddDriverDialog";
 import AddTourDialog from "@/components/tours/AddTourDialog";
-import { format, isSameMonth, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
   ResponsiveContainer,
@@ -17,13 +17,11 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Car, Users, Wrench, Fuel } from "lucide-react"; // Retirez BellRing
+import { Car, Users, Wrench, Fuel } from "lucide-react";
 import { useFleet } from "@/context/FleetContext";
 
 const Index = () => {
-  const { vehicles, drivers, fuelEntries, maintenances, tours, inspections } = useFleet();
-
-  const currentMonth = new Date();
+  const { vehicles, drivers, fuelEntries, maintenances } = useFleet();
 
   // Calculer le nombre de maintenances planifiées (statut "Planifiée")
   const upcomingMaintenancesCount = maintenances.filter(m => m.status === "Planifiée").length;

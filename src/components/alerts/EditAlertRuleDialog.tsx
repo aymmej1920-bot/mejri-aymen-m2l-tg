@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Pencil, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
-import { AlertRule, AlertRuleType, AlertRuleStatus } from "@/types/alertRule";
+import { AlertRule } from "@/types/alertRule";
 import {
   Select,
   SelectContent,
@@ -214,7 +214,7 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
   }, [alertRule, form]);
 
   const selectedType = form.watch("type");
-  const selectedThresholdUnit = form.watch("thresholdUnit");
+  // const selectedThresholdUnit = form.watch("thresholdUnit"); // Removed unused variable
 
   const onSubmit = async (values: EditAlertRuleFormValues) => { // Make onSubmit async
     setIsSubmitting(true); // Set loading to true

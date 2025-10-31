@@ -10,7 +10,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Input } from "@/components/ui/input";
 import { InspectionCheckpoint } from "@/types/inspection";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,19 +20,6 @@ interface InspectionCheckpointFormProps {
   checkpoint: InspectionCheckpoint;
   onRemove?: (index: number) => void; // Optionnel si on ne permet pas de supprimer des checkpoints prédéfinis
 }
-
-const predefinedCheckpoints = [
-  "Pneus (état, pression)",
-  "Freins (plaquettes, disques, liquide)",
-  "Niveaux (huile, liquide de refroidissement, lave-glace)",
-  "Éclairage (phares, feux stop, clignotants)",
-  "Pare-brise et essuie-glaces",
-  "Rétroviseurs",
-  "Ceintures de sécurité",
-  "Klaxon",
-  "Extincteur et trousse de secours",
-  "Documents du véhicule (carte grise, assurance)",
-];
 
 const InspectionCheckpointForm: React.FC<InspectionCheckpointFormProps> = ({ index }) => {
   const { control, watch } = useFormContext();

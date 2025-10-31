@@ -14,7 +14,7 @@ import { AlertRule } from "@/types/alertRule";
 import { Alert } from "@/types/alert";
 import { Profile, Role } from "@/types/profile";
 import { showSuccess, showError } from "@/utils/toast";
-import { addMonths, format, parseISO, differenceInDays } from "date-fns";
+import { addMonths, format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useAlertChecker } from "@/hooks/use-alert-checker";
 import { supabase } from '@/integrations/supabase/client';
@@ -1024,7 +1024,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         created_at: new Date().toISOString(),
         is_read: false,
       };
-      const { data, error } = await supabase.from('alerts').insert(alertToInsert).select();
+      const { error } = await supabase.from('alerts').insert(alertToInsert).select();
       if (error) throw error;
       // Realtime subscription will handle updating the state, no need to do it here
       // setActiveAlerts((prev) => [...prev, mapToCamelCase(data[0])]);
@@ -1037,7 +1037,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const markAlertAsRead = async (alertId: string) => {
     if (!user) { showError("Vous devez être connecté pour marquer une alerte comme lue."); return; }
     try {
-      const { data, error } = await supabase.from('alerts').update({ is_read: true }).eq('id', alertId).select();
+      const { error } = await supabase.from('alerts').update({ is_read: true }).eq('id', alertId).select();
       if (error) throw error;
       // Realtime subscription will handle updating the state, no need to do it here
       // setActiveAlerts(prev => prev.map(alert =>

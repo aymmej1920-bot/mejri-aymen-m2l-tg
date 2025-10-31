@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
-import { AlertRule, AlertRuleType, AlertRuleStatus } from "@/types/alertRule";
+import { AlertRule } from "@/types/alertRule";
 import {
   Select,
   SelectContent,
@@ -192,7 +192,7 @@ const AddAlertRuleDialog: React.FC = () => {
   });
 
   const selectedType = form.watch("type");
-  const selectedThresholdUnit = form.watch("thresholdUnit");
+  // const selectedThresholdUnit = form.watch("thresholdUnit"); // Removed unused variable
 
   const onSubmit = async (values: AddAlertRuleFormValues) => { // Make onSubmit async
     setIsSubmitting(true); // Set loading to true
