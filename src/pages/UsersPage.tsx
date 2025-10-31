@@ -48,8 +48,8 @@ const UsersPage = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gestion des Utilisateurs</h1>
         <div className="flex space-x-2">
-          {can('users.invite') && <InviteUserDialog />}
-          {can('users.create') && <CreateUserDialog />}
+          <InviteUserDialog />
+          <CreateUserDialog />
         </div>
       </div>
 
@@ -115,8 +115,8 @@ const UsersPage = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        {can('users.edit_role') && <EditUserRoleDialog userProfile={userProfile} />}
-                        {can('users.toggle_status') && <ToggleUserStatusButton userProfile={userProfile} />}
+                        <EditUserRoleDialog userProfile={userProfile} />
+                        <ToggleUserStatusButton userProfile={userProfile} />
                       </div>
                     </TableCell>
                   </TableRow>
