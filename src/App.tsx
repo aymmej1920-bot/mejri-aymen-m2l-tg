@@ -132,7 +132,7 @@ const router = createBrowserRouter([
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Sonner />
+      <Sonner position="top-right" /> {/* Positionnement en haut à droite */}
       <SessionContextProvider>
         <FleetProvider>
           <RouterProvider router={router} />

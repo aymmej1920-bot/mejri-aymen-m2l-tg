@@ -115,6 +115,11 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37); /* Ombre plus sombre pour le mode sombre */
 }
 
+/* Apply glass effect to Sonner toasts */
+[data-sonner-toast] {
+  @apply glass;
+}
+
 /* Global background gradient */
 .app-background-gradient {
   background: linear-gradient(to bottom right, #eff6ff, #eef2ff, #f5f3ff);
