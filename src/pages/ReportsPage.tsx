@@ -269,7 +269,7 @@ const ReportsPage = () => {
                   id="date"
                   variant={"outline"}
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full pl-3 text-left font-normal",
                     !dateRange?.from && "text-muted-foreground"
                   )}
                 >
@@ -317,261 +317,261 @@ const ReportsPage = () => {
             >
               <SelectTrigger>
                 <SelectValue placeholder="Tous les véhicules" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__ALL__">Tous les véhicules</SelectItem>
-                {vehicles.map((vehicle) => (
-                  <SelectItem key={vehicle.licensePlate} value={vehicle.licensePlate}>
-                    {vehicle.make} {vehicle.model} ({vehicle.licensePlate})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__ALL__">Tous les véhicules</SelectItem>
+                        {vehicles.map((vehicle) => (
+                          <SelectItem key={vehicle.licensePlate} value={vehicle.licensePlate}>
+                            {vehicle.make} {vehicle.model} ({vehicle.licensePlate})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-          {/* Driver filter (optional, as not all reports are driver-specific) */}
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium">Filtrer par conducteur</label>
-            <Select
-              value={selectedDriverLicenseNumber}
-              onValueChange={(value) => setSelectedDriverLicenseNumber(value === "__ALL__" ? undefined : value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Tous les conducteurs" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__ALL__">Tous les conducteurs</SelectItem>
-                {/* Assuming you have a drivers array in useFleet context */}
-                {/* {drivers.map((driver) => (
-                  <SelectItem key={driver.licenseNumber} value={driver.licenseNumber}>
-                    {driver.firstName} {driver.lastName} ({driver.licenseNumber})
-                  </SelectItem>
-                ))} */}
-                <SelectItem value="N/A" disabled>Fonctionnalité à venir</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+                  {/* Driver filter (optional, as not all reports are driver-specific) */}
+                  <div className="flex flex-col space-y-2">
+                    <label className="text-sm font-medium">Filtrer par conducteur</label>
+                    <Select
+                      value={selectedDriverLicenseNumber}
+                      onValueChange={(value) => setSelectedDriverLicenseNumber(value === "__ALL__" ? undefined : value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tous les conducteurs" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__ALL__">Tous les conducteurs</SelectItem>
+                        {/* Assuming you have a drivers array in useFleet context */}
+                        {/* {drivers.map((driver) => (
+                          <SelectItem key={driver.licenseNumber} value={driver.licenseNumber}>
+                            {driver.firstName} {driver.lastName} ({driver.licenseNumber})
+                          </SelectItem>
+                        ))} */}
+                        <SelectItem value="N/A" disabled>Fonctionnalité à venir</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card className="glass rounded-2xl animate-fadeIn">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold">Coût du carburant par mois</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleExportFuelCosts} disabled={fuelChartData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> XLSX
-              </Button>
-              <Fuel className="h-5 w-5 text-muted-foreground" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <Card className="glass rounded-2xl animate-fadeIn">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-bold">Coût du carburant par mois</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={handleExportFuelCosts} disabled={fuelChartData.length === 0}>
+                        <Download className="h-4 w-4 mr-2" /> XLSX
+                      </Button>
+                      <Fuel className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    {fuelChartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={fuelChartData}>
+                          <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
+                          <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
+                          <Legend />
+                          <Bar dataKey="Coût (TND)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center mt-10">Aucune donnée de carburant disponible pour la période sélectionnée.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="glass rounded-2xl animate-fadeIn">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-bold">Répartition des types de maintenance</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={handleExportMaintenanceTypes} disabled={maintenancePieData.length === 0}>
+                        <Download className="h-4 w-4 mr-2" /> XLSX
+                      </Button>
+                      <Wrench className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    {maintenancePieData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={maintenancePieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            fill="hsl(var(--primary))"
+                            dataKey="value"
+                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          >
+                            {maintenancePieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => `${value} maintenances`} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible pour la période sélectionnée.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="glass rounded-2xl animate-fadeIn">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-bold">Coût de maintenance par véhicule</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={handleExportMaintenanceCostByVehicle} disabled={maintenanceCostByVehicleData.length === 0}>
+                        <Download className="h-4 w-4 mr-2" /> XLSX
+                      </Button>
+                      <Car className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    {maintenanceCostByVehicleData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={maintenanceCostByVehicleData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
+                          <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
+                          <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
+                          <Legend />
+                          <Bar dataKey="Coût Maintenance (TND)" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance par véhicule disponible pour la période sélectionnée.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="glass rounded-2xl animate-fadeIn">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-bold">Tendance des coûts de maintenance</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={handleExportMaintenanceCosts} disabled={maintenanceLineData.length === 0}>
+                        <Download className="h-4 w-4 mr-2" /> XLSX
+                      </Button>
+                      <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    {maintenanceLineData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={maintenanceLineData}>
+                          <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
+                          <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
+                          <Legend />
+                          <Line type="monotone" dataKey="Coût Maintenance (TND)" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible pour la tendance et la période sélectionnée.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* New Chart: Fuel Consumption by Vehicle */}
+                <Card className="glass rounded-2xl animate-fadeIn">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-bold">Consommation de carburant par véhicule</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={handleExportFuelConsumptionByVehicle} disabled={fuelConsumptionData.length === 0}>
+                        <Download className="h-4 w-4 mr-2" /> XLSX
+                      </Button>
+                      <Fuel className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    {fuelConsumptionData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={fuelConsumptionData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
+                          <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} L`} />
+                          <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} L`} />
+                          <Legend />
+                          <Bar dataKey="Volume Carburant (L)" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center mt-10">Aucune donnée de consommation de carburant disponible pour la période sélectionnée.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* New Chart: Total Cost by Maintenance Type */}
+                <Card className="glass rounded-2xl animate-fadeIn">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-bold">Coût total par type de maintenance</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={handleExportTotalCostByMaintenanceType} disabled={totalCostByMaintenanceTypeData.length === 0}>
+                        <Download className="h-4 w-4 mr-2" /> XLSX
+                      </Button>
+                      <Wrench className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    {totalCostByMaintenanceTypeData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={totalCostByMaintenanceTypeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
+                          <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
+                          <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
+                          <Legend />
+                          <Bar dataKey="Coût Total (TND)" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground text-center mt-10">Aucune donnée de coût par type de maintenance disponible pour la période sélectionnée.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="glass rounded-2xl animate-fadeIn">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-bold">Derniers relevés kilométriques</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" onClick={handleExportOdometerReadings} disabled={latestOdometerReadings.length === 0}>
+                      <Download className="h-4 w-4 mr-2" /> XLSX
+                    </Button>
+                    <Car className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {latestOdometerReadings.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Plaque</TableHead>
+                          <TableHead>Marque</TableHead>
+                          <TableHead>Modèle</TableHead>
+                          <TableHead>Dernier Km</TableHead>
+                          <TableHead>Date du relevé</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {latestOdometerReadings.map((data, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{data.licensePlate}</TableCell>
+                            <TableCell>{data.make}</TableCell>
+                            <TableCell>{data.model}</TableCell>
+                            <TableCell>{data.latestOdometer} Km</TableCell>
+                            <TableCell>{data.lastReadingDate}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <p className="text-muted-foreground text-center mt-10">Aucun relevé kilométrique disponible.</p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
-          </CardHeader>
-          <CardContent className="h-80">
-            {fuelChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={fuelChartData}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
-                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
-                  <Legend />
-                  <Bar dataKey="Coût (TND)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de carburant disponible pour la période sélectionnée.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="glass rounded-2xl animate-fadeIn">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold">Répartition des types de maintenance</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleExportMaintenanceTypes} disabled={maintenancePieData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> XLSX
-              </Button>
-              <Wrench className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent className="h-80">
-            {maintenancePieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={maintenancePieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    fill="hsl(var(--primary))"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  >
-                    {maintenancePieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => `${value} maintenances`} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible pour la période sélectionnée.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="glass rounded-2xl animate-fadeIn">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold">Coût de maintenance par véhicule</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleExportMaintenanceCostByVehicle} disabled={maintenanceCostByVehicleData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> XLSX
-              </Button>
-              <Car className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent className="h-80">
-            {maintenanceCostByVehicleData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={maintenanceCostByVehicleData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
-                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
-                  <Legend />
-                  <Bar dataKey="Coût Maintenance (TND)" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance par véhicule disponible pour la période sélectionnée.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="glass rounded-2xl animate-fadeIn">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold">Tendance des coûts de maintenance</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleExportMaintenanceCosts} disabled={maintenanceLineData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> XLSX
-              </Button>
-              <TrendingUp className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent className="h-80">
-            {maintenanceLineData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={maintenanceLineData}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
-                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
-                  <Legend />
-                  <Line type="monotone" dataKey="Coût Maintenance (TND)" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible pour la tendance et la période sélectionnée.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* New Chart: Fuel Consumption by Vehicle */}
-        <Card className="glass rounded-2xl animate-fadeIn">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold">Consommation de carburant par véhicule</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleExportFuelConsumptionByVehicle} disabled={fuelConsumptionData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> XLSX
-              </Button>
-              <Fuel className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent className="h-80">
-            {fuelConsumptionData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={fuelConsumptionData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} L`} />
-                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} L`} />
-                  <Legend />
-                  <Bar dataKey="Volume Carburant (L)" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de consommation de carburant disponible pour la période sélectionnée.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* New Chart: Total Cost by Maintenance Type */}
-        <Card className="glass rounded-2xl animate-fadeIn">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-bold">Coût total par type de maintenance</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleExportTotalCostByMaintenanceType} disabled={totalCostByMaintenanceTypeData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> XLSX
-              </Button>
-              <Wrench className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent className="h-80">
-            {totalCostByMaintenanceTypeData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={totalCostByMaintenanceTypeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
-                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
-                  <Legend />
-                  <Bar dataKey="Coût Total (TND)" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de coût par type de maintenance disponible pour la période sélectionnée.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="glass rounded-2xl animate-fadeIn">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-bold">Derniers relevés kilométriques</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={handleExportOdometerReadings} disabled={latestOdometerReadings.length === 0}>
-              <Download className="h-4 w-4 mr-2" /> XLSX
-            </Button>
-            <Car className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          {latestOdometerReadings.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Plaque</TableHead>
-                  <TableHead>Marque</TableHead>
-                  <TableHead>Modèle</TableHead>
-                  <TableHead>Dernier Km</TableHead>
-                  <TableHead>Date du relevé</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {latestOdometerReadings.map((data, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{data.licensePlate}</TableCell>
-                    <TableCell>{data.make}</TableCell>
-                    <TableCell>{data.model}</TableCell>
-                    <TableCell>{data.latestOdometer} Km</TableCell>
-                    <TableCell>{data.lastReadingDate}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-muted-foreground text-center mt-10">Aucun relevé kilométrique disponible.</p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+          );
+        };
 
 export default ReportsPage;

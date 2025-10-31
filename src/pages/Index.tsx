@@ -1,7 +1,7 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
-import AddDriverDialog from from "@/components/drivers/AddDriverDialog";
+import AddDriverDialog from "@/components/drivers/AddDriverDialog";
 import AddTourDialog from "@/components/tours/AddTourDialog";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
