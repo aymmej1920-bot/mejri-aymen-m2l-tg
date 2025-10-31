@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Vehicle } from "@/types/vehicle";
 
@@ -45,6 +45,7 @@ interface AddVehicleDialogProps {}
 
 const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { addVehicle } = useFleet();
   const form = useForm<Vehicle>({
     resolver: zodResolver(formSchema),
@@ -56,13 +57,16 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
     },
   });
 
-  const onSubmit = (values: Vehicle) => {
+  const onSubmit = async (values: Vehicle) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      addVehicle(values);
+      await addVehicle(values); // Await the async operation
       form.reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to add vehicle:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -135,7 +139,14 @@ const AddVehicleDialog: React.FC<AddVehicleDialogProps> = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white">Ajouter</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

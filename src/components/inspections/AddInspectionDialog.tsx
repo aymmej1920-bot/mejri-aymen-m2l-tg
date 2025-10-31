@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, CalendarIcon } from "lucide-react";
+import { PlusCircle, CalendarIcon, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Inspection, InspectionCheckpoint } from "@/types/inspection";
 import {
@@ -82,6 +82,7 @@ type AddInspectionFormValues = z.infer<typeof formSchema>;
 
 const AddInspectionDialog: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { addInspection, vehicles } = useFleet();
 
   const defaultCheckpoints: InspectionCheckpoint[] = predefinedCheckpoints.map(name => ({
@@ -100,7 +101,8 @@ const AddInspectionDialog: React.FC = () => {
     },
   });
 
-  const onSubmit = (values: AddInspectionFormValues) => {
+  const onSubmit = async (values: AddInspectionFormValues) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
       const overallStatus: Inspection['overallStatus'] = values.checkpoints.some(cp => cp.status === "NOK")
         ? "Non conforme"
@@ -113,7 +115,7 @@ const AddInspectionDialog: React.FC = () => {
         checkpoints: values.checkpoints as InspectionCheckpoint[],
         overallStatus: overallStatus,
       };
-      addInspection(newInspection);
+      await addInspection(newInspection); // Await the async operation
       form.reset({
         vehicleLicensePlate: "",
         date: format(new Date(), "yyyy-MM-dd"),
@@ -123,6 +125,8 @@ const AddInspectionDialog: React.FC = () => {
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to add inspection:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -241,7 +245,14 @@ const AddInspectionDialog: React.FC = () => {
               ))}
             </div>
 
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white">Ajouter l'inspection</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter l'inspection"}
+            </Button>
           </form>
         </FormProvider>
       </DialogContent>

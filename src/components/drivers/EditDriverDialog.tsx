@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Driver } from "@/types/driver";
 
@@ -47,6 +47,7 @@ interface EditDriverDialogProps {
 
 const EditDriverDialog: React.FC<EditDriverDialogProps> = ({ driver }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { editDriver } = useFleet();
   const form = useForm<Driver>({
     resolver: zodResolver(formSchema),
@@ -57,12 +58,15 @@ const EditDriverDialog: React.FC<EditDriverDialogProps> = ({ driver }) => {
     form.reset(driver);
   }, [driver, form]);
 
-  const onSubmit = (values: Driver) => {
+  const onSubmit = async (values: Driver) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      editDriver(driver, values);
+      await editDriver(driver, values); // Await the async operation
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to edit driver:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -134,7 +138,14 @@ const EditDriverDialog: React.FC<EditDriverDialogProps> = ({ driver }) => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Pencil className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil, CalendarIcon } from "lucide-react";
+import { Pencil, CalendarIcon, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import {
   Select,
@@ -76,6 +76,7 @@ interface EditDocumentDialogProps {
 
 const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { editDocument, vehicles, drivers } = useFleet();
   const form = useForm<EditDocumentFormValues>({
     resolver: zodResolver(formSchema),
@@ -94,7 +95,8 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
     });
   }, [document, form]);
 
-  const onSubmit = (values: EditDocumentFormValues) => {
+  const onSubmit = async (values: EditDocumentFormValues) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
       const updatedDocument: Document = {
         id: values.id,
@@ -107,10 +109,12 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
         vehicleLicensePlate: values.vehicleLicensePlate === "" ? undefined : values.vehicleLicensePlate,
         driverLicenseNumber: values.driverLicenseNumber === "" ? undefined : values.driverLicenseNumber,
       };
-      editDocument(document, updatedDocument);
+      await editDocument(document, updatedDocument); // Await the async operation
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to edit document:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -309,7 +313,14 @@ const EditDocumentDialog: React.FC<EditDocumentDialogProps> = ({ document }) => 
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Pencil className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

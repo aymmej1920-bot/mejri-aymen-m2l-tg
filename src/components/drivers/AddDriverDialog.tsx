@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Driver } from "@/types/driver";
 
@@ -45,6 +45,7 @@ interface AddDriverDialogProps {}
 
 const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { addDriver } = useFleet();
   const form = useForm<Driver>({
     resolver: zodResolver(formSchema),
@@ -56,13 +57,16 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
     },
   });
 
-  const onSubmit = (values: Driver) => {
+  const onSubmit = async (values: Driver) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      addDriver(values);
+      await addDriver(values); // Await the async operation
       form.reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to add driver:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -135,7 +139,14 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white">Ajouter</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

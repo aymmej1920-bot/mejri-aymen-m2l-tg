@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, PlayCircle } from "lucide-react";
+import { Trash2, PlayCircle, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +34,8 @@ import { fr } from "date-fns/locale";
 const MaintenancePlansPage = () => {
   const { maintenancePlans, deleteMaintenancePlan, generateMaintenanceFromPlan, vehicles } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingPlanId, setDeletingPlanId] = React.useState<string | null>(null); // Add deleting state
+  const [generatingPlanId, setGeneratingPlanId] = React.useState<string | null>(null); // Add generating state
 
   const getVehicleDetails = (licensePlate: string) => {
     const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
@@ -46,6 +48,28 @@ const MaintenancePlansPage = () => {
     ) ||
     getVehicleDetails(plan.vehicleLicensePlate).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDelete = async (plan: MaintenancePlan) => {
+    setDeletingPlanId(plan.id); // Set deleting item ID
+    try {
+      await deleteMaintenancePlan(plan);
+    } catch (error) {
+      console.error("Failed to delete maintenance plan:", error);
+    } finally {
+      setDeletingPlanId(null); // Reset deleting item ID
+    }
+  };
+
+  const handleGenerateMaintenance = async (plan: MaintenancePlan) => {
+    setGeneratingPlanId(plan.id); // Set generating item ID
+    try {
+      await generateMaintenanceFromPlan(plan);
+    } catch (error) {
+      console.error("Failed to generate maintenance from plan:", error);
+    } finally {
+      setGeneratingPlanId(null); // Reset generating item ID
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -114,10 +138,15 @@ const MaintenancePlansPage = () => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 p-0 text-green-600 hover:bg-green-100"
-                          onClick={() => generateMaintenanceFromPlan(plan)}
+                          onClick={() => handleGenerateMaintenance(plan)}
                           title="Générer maintenance"
+                          disabled={generatingPlanId === plan.id} // Disable if currently generating
                         >
-                          <PlayCircle className="h-4 w-4" />
+                          {generatingPlanId === plan.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <PlayCircle className="h-4 w-4" />
+                          )}
                         </Button>
                         <EditMaintenancePlanDialog
                           plan={plan}
@@ -137,8 +166,15 @@ const MaintenancePlansPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteMaintenancePlan(plan)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(plan)}
+                                disabled={deletingPlanId === plan.id} // Disable if currently deleting this item
+                              >
+                                {deletingPlanId === plan.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

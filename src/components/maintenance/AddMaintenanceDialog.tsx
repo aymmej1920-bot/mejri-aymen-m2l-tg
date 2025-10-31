@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, CalendarIcon } from "lucide-react";
+import { PlusCircle, CalendarIcon, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Maintenance } from "@/types/maintenance";
 import {
@@ -64,6 +64,7 @@ const formSchema = z.object({
 
 const AddMaintenanceDialog: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { addMaintenance, vehicles } = useFleet();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -78,13 +79,16 @@ const AddMaintenanceDialog: React.FC = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      addMaintenance(values as Omit<Maintenance, 'id'>);
+      await addMaintenance(values as Omit<Maintenance, 'id'>); // Await the async operation
       form.reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to add maintenance:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -253,7 +257,14 @@ const AddMaintenanceDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white">Ajouter la maintenance</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter la maintenance"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

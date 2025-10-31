@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { AlertRule, AlertRuleType, AlertRuleStatus } from "@/types/alertRule";
 import {
@@ -177,6 +177,7 @@ interface EditAlertRuleDialogProps {
 
 const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { editAlertRule, vehicles, drivers } = useFleet();
 
   const form = useForm<EditAlertRuleFormValues>({
@@ -215,7 +216,8 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
   const selectedType = form.watch("type");
   const selectedThresholdUnit = form.watch("thresholdUnit");
 
-  const onSubmit = (values: EditAlertRuleFormValues) => {
+  const onSubmit = async (values: EditAlertRuleFormValues) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
       const updatedAlertRule: AlertRule = {
         id: values.id,
@@ -233,10 +235,12 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
         },
         lastTriggered: alertRule.lastTriggered,
       };
-      editAlertRule(alertRule, updatedAlertRule);
+      await editAlertRule(alertRule, updatedAlertRule); // Await the async operation
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to edit alert rule:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -452,7 +456,7 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
                     <FormItem>
                       <FormLabel>Valeur du seuil</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        <Input type="number" placeholder="7" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -483,7 +487,14 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
               </>
             )}
 
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Pencil className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

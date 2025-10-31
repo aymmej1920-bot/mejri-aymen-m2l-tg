@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { AlertRule, AlertRuleType, AlertRuleStatus } from "@/types/alertRule";
 import {
@@ -172,6 +172,7 @@ type AddAlertRuleFormValues = z.infer<typeof formSchema>;
 
 const AddAlertRuleDialog: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { addAlertRule, vehicles, drivers } = useFleet();
 
   const form = useForm<AddAlertRuleFormValues>({
@@ -193,7 +194,8 @@ const AddAlertRuleDialog: React.FC = () => {
   const selectedType = form.watch("type");
   const selectedThresholdUnit = form.watch("thresholdUnit");
 
-  const onSubmit = (values: AddAlertRuleFormValues) => {
+  const onSubmit = async (values: AddAlertRuleFormValues) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
       const newAlertRule: Omit<AlertRule, 'id' | 'lastTriggered'> = {
         name: values.name,
@@ -209,11 +211,13 @@ const AddAlertRuleDialog: React.FC = () => {
           documentType: values.documentType,
         },
       };
-      addAlertRule(newAlertRule);
+      await addAlertRule(newAlertRule); // Await the async operation
       form.reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to add alert rule:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -461,7 +465,14 @@ const AddAlertRuleDialog: React.FC = () => {
               </>
             )}
 
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white">Ajouter la règle</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter la règle"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

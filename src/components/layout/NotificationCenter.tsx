@@ -1,13 +1,13 @@
 "use client";
 
 import React from "react";
-import { Bell, XCircle } from "lucide-react";
+import { Bell, XCircle, Loader2 } from "lucide-react"; // Import Loader2
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger, // Added SheetTrigger import
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,19 @@ import { cn } from "@/lib/utils";
 
 const NotificationCenter: React.FC = () => {
   const { activeAlerts, markAlertAsRead, clearAllAlerts } = useFleet();
+  const [isClearingAllAlerts, setIsClearingAllAlerts] = React.useState(false); // Add loading state
   const unreadAlerts = activeAlerts.filter(alert => !alert.isRead);
+
+  const handleClearAllAlerts = async () => { // Make async
+    setIsClearingAllAlerts(true); // Set loading to true
+    try {
+      await clearAllAlerts(); // Await the async operation
+    } catch (error) {
+      console.error("Failed to clear all alerts:", error);
+    } finally {
+      setIsClearingAllAlerts(false); // Set loading to false
+    }
+  };
 
   return (
     <Sheet>
@@ -79,8 +91,17 @@ const NotificationCenter: React.FC = () => {
         </div>
         {activeAlerts.length > 0 && (
           <div className="mt-4 pt-4 border-t">
-            <Button variant="outline" className="w-full" onClick={clearAllAlerts}>
-              Effacer toutes les notifications
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleClearAllAlerts}
+              disabled={isClearingAllAlerts}
+            >
+              {isClearingAllAlerts ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Effacer toutes les notifications"
+              )}
             </Button>
           </div>
         )}

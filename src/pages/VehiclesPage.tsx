@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,20 +25,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input"; // Importez le composant Input
+import { Input } from "@/components/ui/input";
 import { useFleet } from "@/context/FleetContext";
 import { Vehicle } from "@/types/vehicle";
 
 const VehiclesPage = () => {
   const { vehicles, deleteVehicle } = useFleet();
-  const [searchTerm, setSearchTerm] = React.useState(""); // État pour le terme de recherche
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingVehicleId, setDeletingVehicleId] = React.useState<string | null>(null); // Add deleting state
 
-  // Filtrer les véhicules en fonction du terme de recherche
   const filteredVehicles = vehicles.filter((vehicle) =>
     Object.values(vehicle).some((value) =>
       String(value).toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+
+  const handleDelete = async (vehicle: Vehicle) => {
+    setDeletingVehicleId(vehicle.id); // Set deleting item ID
+    try {
+      await deleteVehicle(vehicle);
+    } catch (error) {
+      console.error("Failed to delete vehicle:", error);
+    } finally {
+      setDeletingVehicleId(null); // Reset deleting item ID
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -81,8 +92,8 @@ const VehiclesPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredVehicles.map((vehicle, index) => (
-                  <TableRow key={index}>
+                {filteredVehicles.map((vehicle) => (
+                  <TableRow key={vehicle.id}>
                     <TableCell className="font-medium">{vehicle.make}</TableCell>
                     <TableCell>{vehicle.model}</TableCell>
                     <TableCell>{vehicle.year}</TableCell>
@@ -107,8 +118,15 @@ const VehiclesPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteVehicle(vehicle)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(vehicle)}
+                                disabled={deletingVehicleId === vehicle.id} // Disable if currently deleting this item
+                              >
+                                {deletingVehicleId === vehicle.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

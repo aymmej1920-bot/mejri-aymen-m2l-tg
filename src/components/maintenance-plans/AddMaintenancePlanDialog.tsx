@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import {
   Select,
@@ -62,6 +62,7 @@ const formSchema = z.object({
 
 const AddMaintenancePlanDialog: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { addMaintenancePlan, vehicles } = useFleet();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,13 +78,16 @@ const AddMaintenancePlanDialog: React.FC = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      addMaintenancePlan(values as Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>);
+      await addMaintenancePlan(values as Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>); // Await the async operation
       form.reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to add maintenance plan:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -246,7 +250,14 @@ const AddMaintenancePlanDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white">Ajouter le plan</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter le plan"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

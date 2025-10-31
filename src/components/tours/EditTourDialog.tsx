@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil, CalendarIcon } from "lucide-react";
+import { Pencil, CalendarIcon, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Tour } from "@/types/tour";
 import {
@@ -94,6 +94,7 @@ interface EditTourDialogProps {
 
 const EditTourDialog: React.FC<EditTourDialogProps> = ({ tour }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { editTour, vehicles, drivers } = useFleet();
   const form = useForm<EditTourFormValues>({
     resolver: zodResolver(formSchema),
@@ -104,12 +105,15 @@ const EditTourDialog: React.FC<EditTourDialogProps> = ({ tour }) => {
     form.reset(tour);
   }, [tour, form]);
 
-  const onSubmit = (values: EditTourFormValues) => {
+  const onSubmit = async (values: EditTourFormValues) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      editTour(tour, values as Tour);
+      await editTour(tour, values as Tour); // Await the async operation
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to edit tour:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -338,7 +342,14 @@ const EditTourDialog: React.FC<EditTourDialogProps> = ({ tour }) => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Pencil className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil, CalendarIcon } from "lucide-react";
+import { Pencil, CalendarIcon, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Inspection, InspectionCheckpoint } from "@/types/inspection";
 import {
@@ -74,6 +74,7 @@ interface EditInspectionDialogProps {
 
 const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { editInspection, vehicles } = useFleet();
 
   const form = useForm<EditInspectionFormValues>({
@@ -85,7 +86,8 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
     form.reset(inspection);
   }, [inspection, form]);
 
-  const onSubmit = (values: EditInspectionFormValues) => {
+  const onSubmit = async (values: EditInspectionFormValues) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
       const overallStatus: Inspection['overallStatus'] = values.checkpoints.some(cp => cp.status === "NOK")
         ? "Non conforme"
@@ -99,10 +101,12 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
         checkpoints: values.checkpoints as InspectionCheckpoint[],
         overallStatus: overallStatus,
       };
-      editInspection(inspection, updatedInspection);
+      await editInspection(inspection, updatedInspection); // Await the async operation
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to edit inspection:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -220,7 +224,14 @@ const EditInspectionDialog: React.FC<EditInspectionDialogProps> = ({ inspection 
               ))}
             </div>
 
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Pencil className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </form>
         </FormProvider>
       </DialogContent>

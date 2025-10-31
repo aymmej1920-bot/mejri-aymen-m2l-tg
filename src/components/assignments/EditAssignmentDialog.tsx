@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil, CalendarIcon } from "lucide-react";
+import { Pencil, CalendarIcon, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Assignment } from "@/types/assignment";
 import {
@@ -66,6 +66,7 @@ interface EditAssignmentDialogProps {
 
 const EditAssignmentDialog: React.FC<EditAssignmentDialogProps> = ({ assignment }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { editAssignment, vehicles, drivers } = useFleet();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -76,12 +77,15 @@ const EditAssignmentDialog: React.FC<EditAssignmentDialogProps> = ({ assignment 
     form.reset(assignment);
   }, [assignment, form]);
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      editAssignment(assignment, values as Assignment);
+      await editAssignment(assignment, values as Assignment); // Await the async operation
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to edit assignment:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -252,7 +256,14 @@ const EditAssignmentDialog: React.FC<EditAssignmentDialogProps> = ({ assignment 
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Pencil className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

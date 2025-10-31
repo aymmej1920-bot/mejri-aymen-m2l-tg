@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Users } from "lucide-react";
+import { Trash2, Users, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +34,7 @@ import { fr } from "date-fns/locale";
 const AssignmentsPage = () => {
   const { assignments, deleteAssignment, vehicles, drivers } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingAssignmentId, setDeletingAssignmentId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string) => {
     const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
@@ -52,6 +53,17 @@ const AssignmentsPage = () => {
     getVehicleDetails(assignment.vehicleLicensePlate).toLowerCase().includes(searchTerm.toLowerCase()) ||
     getDriverDetails(assignment.driverLicenseNumber).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDelete = async (assignment: Assignment) => {
+    setDeletingAssignmentId(assignment.id); // Set deleting item ID
+    try {
+      await deleteAssignment(assignment);
+    } catch (error) {
+      console.error("Failed to delete assignment:", error);
+    } finally {
+      setDeletingAssignmentId(null); // Reset deleting item ID
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -122,8 +134,15 @@ const AssignmentsPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteAssignment(assignment)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(assignment)}
+                                disabled={deletingAssignmentId === assignment.id} // Disable if currently deleting this item
+                              >
+                                {deletingAssignmentId === assignment.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

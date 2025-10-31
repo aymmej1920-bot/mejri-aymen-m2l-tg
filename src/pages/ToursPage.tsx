@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Route, Car, Users } from "lucide-react";
+import { Trash2, Route, Car, Users, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +34,7 @@ import { fr } from "date-fns/locale";
 const ToursPage = () => {
   const { tours, deleteTour, vehicles, drivers } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingTourId, setDeletingTourId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string) => {
     const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
@@ -52,6 +53,17 @@ const ToursPage = () => {
     getVehicleDetails(tour.vehicleLicensePlate).toLowerCase().includes(searchTerm.toLowerCase()) ||
     getDriverDetails(tour.driverLicenseNumber).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDelete = async (tour: Tour) => {
+    setDeletingTourId(tour.id); // Set deleting item ID
+    try {
+      await deleteTour(tour);
+    } catch (error) {
+      console.error("Failed to delete tour:", error);
+    } finally {
+      setDeletingTourId(null); // Reset deleting item ID
+    }
+  };
 
   // Calculer les statistiques de résumé
   const totalTours = tours.length;
@@ -167,8 +179,15 @@ const ToursPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteTour(tour)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(tour)}
+                                disabled={deletingTourId === tour.id} // Disable if currently deleting this item
+                              >
+                                {deletingTourId === tour.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

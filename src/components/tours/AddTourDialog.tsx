@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, CalendarIcon } from "lucide-react";
+import { PlusCircle, CalendarIcon, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Tour } from "@/types/tour";
 import {
@@ -71,6 +71,7 @@ const formSchema = z.object({
 
 const AddTourDialog: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { addTour, vehicles, drivers } = useFleet();
   const form = useForm<Omit<Tour, 'id'>>({
     resolver: zodResolver(formSchema),
@@ -87,13 +88,16 @@ const AddTourDialog: React.FC = () => {
     },
   });
 
-  const onSubmit = (values: Omit<Tour, 'id'>) => {
+  const onSubmit = async (values: Omit<Tour, 'id'>) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      addTour(values);
+      await addTour(values); // Await the async operation
       form.reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to add tour:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -305,7 +309,14 @@ const AddTourDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white">Ajouter la tournée</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter la tournée"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, BellRing } from "lucide-react";
+import { Trash2, BellRing, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +35,7 @@ import { fr } from "date-fns/locale";
 const AlertsPage = () => {
   const { alertRules, deleteAlertRule, vehicles, drivers } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingAlertRuleId, setDeletingAlertRuleId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string | undefined) => {
     if (!licensePlate) return "N/A";
@@ -74,6 +75,17 @@ const AlertsPage = () => {
     ) ||
     getCriteriaSummary(rule).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDelete = async (rule: AlertRule) => {
+    setDeletingAlertRuleId(rule.id); // Set deleting item ID
+    try {
+      await deleteAlertRule(rule);
+    } catch (error) {
+      console.error("Failed to delete alert rule:", error);
+    } finally {
+      setDeletingAlertRuleId(null); // Reset deleting item ID
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -152,8 +164,15 @@ const AlertsPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteAlertRule(rule)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(rule)}
+                                disabled={deletingAlertRuleId === rule.id} // Disable if currently deleting this item
+                              >
+                                {deletingAlertRuleId === rule.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

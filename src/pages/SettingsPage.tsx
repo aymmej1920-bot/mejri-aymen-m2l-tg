@@ -24,21 +24,38 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useFleet } from "@/context/FleetContext";
-import { supabase } from "@/integrations/supabase/client"; // Importez le client Supabase
-import { showError } from "@/utils/toast"; // Importez showError
+import { supabase } from "@/integrations/supabase/client";
+import { showError } from "@/utils/toast";
+import { Loader2 } from "lucide-react"; // Import Loader2
 
 const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const { clearAllData } = useFleet();
+  const [isClearingData, setIsClearingData] = React.useState(false); // Add loading state for clearing data
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false); // Add loading state for logout
 
-  const handleClearAllData = () => {
-    clearAllData();
+  const handleClearAllData = async () => { // Make async
+    setIsClearingData(true); // Set loading to true
+    try {
+      await clearAllData(); // Await the async operation
+    } catch (error) {
+      console.error("Failed to clear all data:", error);
+    } finally {
+      setIsClearingData(false); // Set loading to false
+    }
   };
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      showError("Échec de la déconnexion : " + error.message);
+  const handleLogout = async () => { // Make async
+    setIsLoggingOut(true); // Set loading to true
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        showError("Échec de la déconnexion : " + error.message);
+      }
+    } catch (error) {
+      console.error("Failed to logout:", error);
+    } finally {
+      setIsLoggingOut(false); // Set loading to false
     }
   };
 
@@ -74,7 +91,13 @@ const SettingsPage = () => {
             </p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="hover:animate-hover-lift">Effacer toutes les données</Button>
+                <Button variant="destructive" className="hover:animate-hover-lift" disabled={isClearingData}>
+                  {isClearingData ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    "Effacer toutes les données"
+                  )}
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -85,8 +108,15 @@ const SettingsPage = () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleClearAllData}>
-                    Effacer tout
+                  <AlertDialogAction
+                    onClick={handleClearAllData}
+                    disabled={isClearingData}
+                  >
+                    {isClearingData ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      "Effacer tout"
+                    )}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -97,8 +127,12 @@ const SettingsPage = () => {
             <p className="text-muted-foreground mb-4">
               Déconnectez-vous de votre compte.
             </p>
-            <Button variant="outline" onClick={handleLogout} className="hover:animate-hover-lift">
-              Déconnexion
+            <Button variant="outline" onClick={handleLogout} className="hover:animate-hover-lift" disabled={isLoggingOut}>
+              {isLoggingOut ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Déconnexion"
+              )}
             </Button>
           </div>
         </CardContent>

@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,20 +25,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input"; // Importez le composant Input
+import { Input } from "@/components/ui/input";
 import { useFleet } from "@/context/FleetContext";
 import { Driver } from "@/types/driver";
 
 const DriversPage = () => {
   const { drivers, deleteDriver } = useFleet();
-  const [searchTerm, setSearchTerm] = React.useState(""); // État pour le terme de recherche
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingDriverId, setDeletingDriverId] = React.useState<string | null>(null); // Add deleting state
 
-  // Filtrer les conducteurs en fonction du terme de recherche
   const filteredDrivers = drivers.filter((driver) =>
     Object.values(driver).some((value) =>
       String(value).toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+
+  const handleDelete = async (driver: Driver) => {
+    setDeletingDriverId(driver.id); // Set deleting item ID
+    try {
+      await deleteDriver(driver);
+    } catch (error) {
+      console.error("Failed to delete driver:", error);
+    } finally {
+      setDeletingDriverId(null); // Reset deleting item ID
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -80,8 +91,8 @@ const DriversPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredDrivers.map((driver, index) => (
-                  <TableRow key={index}>
+                {filteredDrivers.map((driver) => (
+                  <TableRow key={driver.id}>
                     <TableCell className="font-medium">{driver.firstName}</TableCell>
                     <TableCell>{driver.lastName}</TableCell>
                     <TableCell>{driver.licenseNumber}</TableCell>
@@ -106,8 +117,15 @@ const DriversPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteDriver(driver)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(driver)}
+                                disabled={deletingDriverId === driver.id} // Disable if currently deleting this item
+                              >
+                                {deletingDriverId === driver.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

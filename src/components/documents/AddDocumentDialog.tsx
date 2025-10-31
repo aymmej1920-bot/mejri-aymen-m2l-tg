@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, CalendarIcon } from "lucide-react";
+import { PlusCircle, CalendarIcon, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import {
   Select,
@@ -70,6 +70,7 @@ type AddDocumentFormValues = z.infer<typeof formSchema>;
 
 const AddDocumentDialog: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { addDocument, vehicles, drivers } = useFleet();
   const form = useForm<AddDocumentFormValues>({
     resolver: zodResolver(formSchema),
@@ -84,7 +85,8 @@ const AddDocumentDialog: React.FC = () => {
     },
   });
 
-  const onSubmit = (values: AddDocumentFormValues) => {
+  const onSubmit = async (values: AddDocumentFormValues) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
       const newDocument: Omit<Document, 'id'> = {
         name: values.name,
@@ -96,11 +98,13 @@ const AddDocumentDialog: React.FC = () => {
         vehicleLicensePlate: values.vehicleLicensePlate === "" ? undefined : values.vehicleLicensePlate,
         driverLicenseNumber: values.driverLicenseNumber === "" ? undefined : values.driverLicenseNumber,
       };
-      addDocument(newDocument);
+      await addDocument(newDocument); // Await the async operation
       form.reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to add document:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -300,7 +304,14 @@ const AddDocumentDialog: React.FC = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white">Ajouter le document</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-warning text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Ajout en cours..." : "Ajouter le document"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

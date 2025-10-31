@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, FileText } from "lucide-react";
+import { Trash2, FileText, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +34,7 @@ import { fr } from "date-fns/locale";
 const DocumentsPage = () => {
   const { documents, deleteDocument, vehicles, drivers } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingDocumentId, setDeletingDocumentId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string | undefined) => {
     if (!licensePlate) return "N/A";
@@ -54,6 +55,17 @@ const DocumentsPage = () => {
     getVehicleDetails(doc.vehicleLicensePlate).toLowerCase().includes(searchTerm.toLowerCase()) ||
     getDriverDetails(doc.driverLicenseNumber).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDelete = async (doc: Document) => {
+    setDeletingDocumentId(doc.id); // Set deleting item ID
+    try {
+      await deleteDocument(doc);
+    } catch (error) {
+      console.error("Failed to delete document:", error);
+    } finally {
+      setDeletingDocumentId(null); // Reset deleting item ID
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -133,8 +145,15 @@ const DocumentsPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteDocument(doc)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(doc)}
+                                disabled={deletingDocumentId === doc.id} // Disable if currently deleting this item
+                              >
+                                {deletingDocumentId === doc.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

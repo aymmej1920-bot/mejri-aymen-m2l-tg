@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import {
   Select,
@@ -69,6 +69,7 @@ interface EditMaintenancePlanDialogProps {
 
 const EditMaintenancePlanDialog: React.FC<EditMaintenancePlanDialogProps> = ({ plan }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { editMaintenancePlan, vehicles } = useFleet();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,12 +80,15 @@ const EditMaintenancePlanDialog: React.FC<EditMaintenancePlanDialogProps> = ({ p
     form.reset(plan);
   }, [plan, form]);
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      editMaintenancePlan(plan, values as MaintenancePlan);
+      await editMaintenancePlan(plan, values as MaintenancePlan); // Await the async operation
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to edit maintenance plan:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -246,7 +250,14 @@ const EditMaintenancePlanDialog: React.FC<EditMaintenancePlanDialogProps> = ({ p
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Pencil className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

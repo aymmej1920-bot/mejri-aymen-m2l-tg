@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, ClipboardCheck, Eye } from "lucide-react";
+import { Trash2, ClipboardCheck, Eye, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,12 +31,13 @@ import { Inspection, InspectionCheckpoint } from "@/types/inspection";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CustomBadge } from "@/components/CustomBadge"; // Import CustomBadge
+import { CustomBadge } from "@/components/CustomBadge";
 
 const InspectionsPage = () => {
   const { inspections, deleteInspection, vehicles } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [viewingInspection, setViewingInspection] = React.useState<Inspection | null>(null);
+  const [deletingInspectionId, setDeletingInspectionId] = React.useState<string | null>(null); // Add deleting state
 
   const getVehicleDetails = (licensePlate: string) => {
     const vehicle = vehicles.find(v => v.licensePlate === licensePlate);
@@ -54,17 +55,17 @@ const InspectionsPage = () => {
   const getOverallStatusBadgeVariant = (status: Inspection['overallStatus']) => {
     switch (status) {
       case "Conforme":
-        return "success"; // Using new success variant
+        return "success";
       case "Non conforme":
         return "destructive";
       case "En cours":
-        return "warning"; // Using new warning variant
+        return "warning";
       default:
         return "outline";
     }
   };
 
-  const getCheckpointStatusBadgeVariant = (status: InspectionCheckpoint['status']) => { // Corrected type here
+  const getCheckpointStatusBadgeVariant = (status: InspectionCheckpoint['status']) => {
     switch (status) {
       case "OK":
         return "success";
@@ -74,6 +75,17 @@ const InspectionsPage = () => {
         return "secondary";
       default:
         return "outline";
+    }
+  };
+
+  const handleDelete = async (inspection: Inspection) => {
+    setDeletingInspectionId(inspection.id); // Set deleting item ID
+    try {
+      await deleteInspection(inspection);
+    } catch (error) {
+      console.error("Failed to delete inspection:", error);
+    } finally {
+      setDeletingInspectionId(null); // Reset deleting item ID
     }
   };
 
@@ -151,8 +163,15 @@ const InspectionsPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteInspection(inspection)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(inspection)}
+                                disabled={deletingInspectionId === inspection.id} // Disable if currently deleting this item
+                              >
+                                {deletingInspectionId === inspection.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

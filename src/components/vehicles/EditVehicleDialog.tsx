@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react"; // Import Loader2
 import { useFleet } from "@/context/FleetContext";
 import { Vehicle } from "@/types/vehicle";
 
@@ -47,6 +47,7 @@ interface EditVehicleDialogProps {
 
 const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // Add loading state
   const { editVehicle } = useFleet();
   const form = useForm<Vehicle>({
     resolver: zodResolver(formSchema),
@@ -57,12 +58,15 @@ const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle }) => {
     form.reset(vehicle);
   }, [vehicle, form]);
 
-  const onSubmit = (values: Vehicle) => {
+  const onSubmit = async (values: Vehicle) => { // Make onSubmit async
+    setIsSubmitting(true); // Set loading to true
     try {
-      editVehicle(vehicle, values);
+      await editVehicle(vehicle, values); // Await the async operation
       setIsOpen(false);
     } catch (error) {
       console.error("Failed to edit vehicle:", error);
+    } finally {
+      setIsSubmitting(false); // Set loading to false
     }
   };
 
@@ -134,7 +138,14 @@ const EditVehicleDialog: React.FC<EditVehicleDialogProps> = ({ vehicle }) => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground">Enregistrer les modifications</Button>
+            <Button type="submit" className="w-full mt-4 hover:animate-hover-lift gradient-brand text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Pencil className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </form>
         </Form>
       </DialogContent>

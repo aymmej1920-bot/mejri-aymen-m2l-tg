@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Fuel as FuelIcon, DollarSign, Gauge } from "lucide-react";
+import { Trash2, Fuel as FuelIcon, DollarSign, Gauge, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,12 +34,24 @@ import { fr } from "date-fns/locale";
 const FuelPage = () => {
   const { fuelEntries, deleteFuelEntry } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingFuelEntryId, setDeletingFuelEntryId] = React.useState<string | null>(null); // Add deleting state
 
   const filteredFuelEntries = fuelEntries.filter((entry) =>
     Object.values(entry).some((value) =>
       String(value).toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+
+  const handleDelete = async (entry: FuelEntry) => {
+    setDeletingFuelEntryId(entry.id); // Set deleting item ID
+    try {
+      await deleteFuelEntry(entry);
+    } catch (error) {
+      console.error("Failed to delete fuel entry:", error);
+    } finally {
+      setDeletingFuelEntryId(null); // Reset deleting item ID
+    }
+  };
 
   // Calculer les statistiques de résumé
   const totalFuelEntries = fuelEntries.length;
@@ -151,8 +163,15 @@ const FuelPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteFuelEntry(entry)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(entry)}
+                                disabled={deletingFuelEntryId === entry.id} // Disable if currently deleting this item
+                              >
+                                {deletingFuelEntryId === entry.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

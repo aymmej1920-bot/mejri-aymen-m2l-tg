@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react"; // Import Loader2
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,12 +34,24 @@ import { fr } from "date-fns/locale";
 const MaintenancePage = () => {
   const { maintenances, deleteMaintenance } = useFleet();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [deletingMaintenanceId, setDeletingMaintenanceId] = React.useState<string | null>(null); // Add deleting state
 
   const filteredMaintenances = maintenances.filter((maintenance) =>
     Object.values(maintenance).some((value) =>
       String(value).toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+
+  const handleDelete = async (maintenance: Maintenance) => {
+    setDeletingMaintenanceId(maintenance.id); // Set deleting item ID
+    try {
+      await deleteMaintenance(maintenance);
+    } catch (error) {
+      console.error("Failed to delete maintenance:", error);
+    } finally {
+      setDeletingMaintenanceId(null); // Reset deleting item ID
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -114,8 +126,15 @@ const MaintenancePage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteMaintenance(maintenance)}>
-                                Supprimer
+                              <AlertDialogAction
+                                onClick={() => handleDelete(maintenance)}
+                                disabled={deletingMaintenanceId === maintenance.id} // Disable if currently deleting this item
+                              >
+                                {deletingMaintenanceId === maintenance.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  "Supprimer"
+                                )}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
