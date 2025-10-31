@@ -10,8 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { User, Loader2 } from "lucide-react";
+import { Loader2, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useFleet } from "@/context/FleetContext";
 import InviteUserDialog from "@/components/users/InviteUserDialog";

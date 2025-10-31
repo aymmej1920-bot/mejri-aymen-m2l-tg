@@ -21,10 +21,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useFleet } from "@/context/FleetContext";
-import { Profile } from "@/types/profile";
 import AvatarUpload from "@/components/profile/AvatarUpload"; // Import the new component
 import { useSession } from "@/context/SessionContext"; // Import useSession
 

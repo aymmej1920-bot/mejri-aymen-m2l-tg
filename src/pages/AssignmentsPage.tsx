@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Users, Loader2, Link } from "lucide-react"; // Import Link icon
+import { Trash2, Loader2, Link } from "lucide-react"; // Import Link icon
 import {
   AlertDialog,
   AlertDialogAction,

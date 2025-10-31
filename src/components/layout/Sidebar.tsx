@@ -9,7 +9,7 @@ import { showError } from "@/utils/toast";
 import { useFleet } from "@/context/FleetContext";
 
 const Sidebar = () => {
-  const { can, profile } = useFleet(); // Get profile to check role directly
+  const { profile } = useFleet(); // Get profile to check role directly
   const navLinkClasses = "flex items-center px-3 py-2 rounded-md transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
   const activeNavLinkClasses = "gradient-brand text-white";
 

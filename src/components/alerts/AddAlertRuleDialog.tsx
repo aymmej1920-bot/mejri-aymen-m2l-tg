@@ -217,7 +217,7 @@ const AddAlertRuleDialog: React.FC = () => {
     } catch (error) {
       console.error("Failed to add alert rule:", error);
     } finally {
-      setIsSubmitting(false); // Set loading to false
+      setIsSubmitting(false);
     }
   };
 

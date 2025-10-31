@@ -439,10 +439,11 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
-  const updateRolePermissions = async (updates: any[]) => {
-    showError("La gestion des permissions de rôle n'est plus disponible.");
-    throw new Error("Role permission management is disabled.");
-  };
+  // This function is no longer used and was causing a TS6133 error.
+  // const updateRolePermissions = async (updates: any[]) => {
+  //   showError("La gestion des permissions de rôle n'est plus disponible.");
+  //   throw new Error("Role permission management is disabled.");
+  // };
 
 
   // --- Vehicles ---

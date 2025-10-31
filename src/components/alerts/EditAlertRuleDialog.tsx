@@ -240,7 +240,7 @@ const EditAlertRuleDialog: React.FC<EditAlertRuleDialogProps> = ({ alertRule }) 
     } catch (error) {
       console.error("Failed to edit alert rule:", error);
     } finally {
-      setIsSubmitting(false); // Set loading to false
+      setIsSubmitting(false);
     }
   };
 

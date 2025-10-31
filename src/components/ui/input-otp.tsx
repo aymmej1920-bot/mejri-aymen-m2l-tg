@@ -3,6 +3,7 @@
 import * as React from "react";
 import { OTPInput, OTPInputContext } from "input-otp";
 import { Slot } from "@radix-ui/react-slot";
+import { Dot } from "lucide-react"; // Added Dot import
 import { cn } from "@/lib/utils";
 
 const InputOTP = React.forwardRef<
