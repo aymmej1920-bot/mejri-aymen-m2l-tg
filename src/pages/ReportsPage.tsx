@@ -248,7 +248,7 @@ const ReportsPage = () => {
   const handleExportTotalCostByMaintenanceType = () => {
     exportToXlsx("rapport_cout_total_par_type_maintenance", totalCostByMaintenanceTypeData, "Coût Total Type Maintenance", [
       { key: "name", label: "Type de Maintenance" },
-      { key: "value", label: "Coût Total (TND)" },
+      { key: "Coût Total (TND)", label: "Coût Total (TND)" },
     ]);
   };
 
