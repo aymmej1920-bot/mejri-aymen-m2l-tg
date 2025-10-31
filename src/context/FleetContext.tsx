@@ -645,15 +645,20 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       newInspection.checkpoints.forEach(async cp => {
         if (cp.status === "NOK") {
-          await addMaintenance({ // Use the Supabase-enabled addMaintenance
-            vehicleLicensePlate: newInspection.vehicleLicensePlate,
-            type: "Corrective",
-            description: `Maintenance corrective requise suite à l'inspection du ${format(new Date(newInspection.date), "PPP", { locale: fr })} - Point: ${cp.name}. Observation: ${cp.observation || "Aucune"}.`,
-            cost: 0,
-            date: format(new Date(), "yyyy-MM-dd"),
-            provider: "À définir",
-            status: "Planifiée",
-          });
+          try {
+            await addMaintenance({ // Use the Supabase-enabled addMaintenance
+              vehicleLicensePlate: newInspection.vehicleLicensePlate,
+              type: "Corrective",
+              description: `Maintenance corrective requise suite à l'inspection du ${format(new Date(newInspection.date), "PPP", { locale: fr })} - Point: ${cp.name}. Observation: ${cp.observation || "Aucune"}.`,
+              cost: 0,
+              date: format(new Date(), "yyyy-MM-dd"),
+              provider: "À définir",
+              status: "Planifiée",
+            });
+          } catch (maintenanceError: any) {
+            showError("Échec de la génération de la maintenance corrective : " + maintenanceError.message);
+            console.error("Error generating corrective maintenance:", maintenanceError);
+          }
         }
       });
     } catch (error: any) {
@@ -672,15 +677,20 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       updatedInspection.checkpoints.forEach(async cp => {
         if (cp.status === "NOK") {
-          await addMaintenance({ // Use the Supabase-enabled addMaintenance
-            vehicleLicensePlate: updatedInspection.vehicleLicensePlate,
-            type: "Corrective",
-            description: `Maintenance corrective requise suite à la modification de l'inspection du ${format(new Date(updatedInspection.date), "PPP", { locale: fr })} - Point: ${cp.name}. Observation: ${cp.observation || "Aucune"}.`,
-            cost: 0,
-            date: format(new Date(), "yyyy-MM-dd"),
-            provider: "À définir",
-            status: "Planifiée",
-          });
+          try {
+            await addMaintenance({ // Use the Supabase-enabled addMaintenance
+              vehicleLicensePlate: updatedInspection.vehicleLicensePlate,
+              type: "Corrective",
+              description: `Maintenance corrective requise suite à la modification de l'inspection du ${format(new Date(updatedInspection.date), "PPP", { locale: fr })} - Point: ${cp.name}. Observation: ${cp.observation || "Aucune"}.`,
+              cost: 0,
+              date: format(new Date(), "yyyy-MM-dd"),
+              provider: "À définir",
+              status: "Planifiée",
+            });
+          } catch (maintenanceError: any) {
+            showError("Échec de la génération de la maintenance corrective : " + maintenanceError.message);
+            console.error("Error generating corrective maintenance on edit:", maintenanceError);
+          }
         }
       });
     } catch (error: any) {
@@ -793,19 +803,30 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!user) { showError("Vous devez être connecté pour effacer toutes les données."); return; }
     try {
       // Delete from all tables for the current user
-      await Promise.all([
-        supabase.from('vehicles').delete().eq('user_id', user.id),
-        supabase.from('drivers').delete().eq('user_id', user.id),
-        supabase.from('maintenances').delete().eq('user_id', user.id),
-        supabase.from('fuel_entries').delete().eq('user_id', user.id),
-        supabase.from('assignments').delete().eq('user_id', user.id),
-        supabase.from('maintenance_plans').delete().eq('user_id', user.id),
-        supabase.from('documents').delete().eq('user_id', user.id),
-        supabase.from('tours').delete().eq('user_id', user.id),
-        supabase.from('inspections').delete().eq('user_id', user.id),
-        supabase.from('alert_rules').delete().eq('user_id', user.id),
-        supabase.from('alerts').delete().eq('user_id', user.id),
-      ]);
+      const { error: vehiclesError } = await supabase.from('vehicles').delete().eq('user_id', user.id);
+      const { error: driversError } = await supabase.from('drivers').delete().eq('user_id', user.id);
+      const { error: maintenancesError } = await supabase.from('maintenances').delete().eq('user_id', user.id);
+      const { error: fuelEntriesError } = await supabase.from('fuel_entries').delete().eq('user_id', user.id);
+      const { error: assignmentsError } = await supabase.from('assignments').delete().eq('user_id', user.id);
+      const { error: maintenancePlansError } = await supabase.from('maintenance_plans').delete().eq('user_id', user.id);
+      const { error: documentsError } = await supabase.from('documents').delete().eq('user_id', user.id);
+      const { error: toursError } = await supabase.from('tours').delete().eq('user_id', user.id);
+      const { error: inspectionsError } = await supabase.from('inspections').delete().eq('user_id', user.id);
+      const { error: alertRulesError } = await supabase.from('alert_rules').delete().eq('user_id', user.id);
+      const { error: alertsError } = await supabase.from('alerts').delete().eq('user_id', user.id);
+
+      if (vehiclesError) throw vehiclesError;
+      if (driversError) throw driversError;
+      if (maintenancesError) throw maintenancesError;
+      if (fuelEntriesError) throw fuelEntriesError;
+      if (assignmentsError) throw assignmentsError;
+      if (maintenancePlansError) throw maintenancePlansError;
+      if (documentsError) throw documentsError;
+      if (toursError) throw toursError;
+      if (inspectionsError) throw inspectionsError;
+      if (alertRulesError) throw alertRulesError;
+      if (alertsError) throw alertsError;
+
       // Reset local states
       setVehicles([]);
       setDrivers([]);
