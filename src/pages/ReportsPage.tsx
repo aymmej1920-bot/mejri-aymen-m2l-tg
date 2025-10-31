@@ -269,7 +269,7 @@ const ReportsPage = () => {
                   id="date"
                   variant={"outline"}
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full pl-3 text-left font-normal",
                     !dateRange?.from && "text-muted-foreground"
                   )}
                 >
@@ -406,7 +406,7 @@ const ReportsPage = () => {
                             dataKey="value"
                             label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                           >
-                            {maintenancePieData.map(({ name }, index) => (
+                            {maintenancePieData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                             ))}
                           </Pie>
