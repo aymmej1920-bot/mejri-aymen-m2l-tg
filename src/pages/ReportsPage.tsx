@@ -17,18 +17,56 @@ import {
   Line,
 } from "recharts";
 import { useFleet } from "@/context/FleetContext";
-import { format, parseISO, getMonth, getYear, isSameMonth } from "date-fns";
+import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Car, Wrench, Fuel, Factory, TrendingUp, Download } from "lucide-react";
+import { Car, Wrench, Fuel, Factory, TrendingUp, Download, CalendarIcon, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { exportToCsv } from "@/utils/export";
+import { exportToXlsx } from "@/utils/export-xlsx"; // Import the new XLSX export utility
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ReportsPage = () => {
-  const { vehicles, fuelEntries, maintenances, getVehicleByLicensePlate } = useFleet();
+  const { vehicles, fuelEntries, maintenances, getVehicleByLicensePlate, getDriverByLicenseNumber } = useFleet();
+
+  const [dateRange, setDateRange] = React.useState<{ from?: Date; to?: Date }>({
+    from: subMonths(new Date(), 6), // Default to last 6 months
+    to: new Date(),
+  });
+  const [selectedVehicleLicensePlate, setSelectedVehicleLicensePlate] = React.useState<string | undefined>(undefined);
+  const [selectedDriverLicenseNumber, setSelectedDriverLicenseNumber] = React.useState<string | undefined>(undefined);
+
+  // Filtered data based on selected criteria
+  const filteredFuelEntries = React.useMemo(() => {
+    return fuelEntries.filter(entry => {
+      const entryDate = parseISO(entry.date);
+      const isDateMatch = dateRange.from && dateRange.to
+        ? isWithinInterval(entryDate, { start: dateRange.from, end: dateRange.to })
+        : true;
+      const isVehicleMatch = selectedVehicleLicensePlate
+        ? entry.vehicleLicensePlate === selectedVehicleLicensePlate
+        : true;
+      return isDateMatch && isVehicleMatch;
+    });
+  }, [fuelEntries, dateRange, selectedVehicleLicensePlate]);
+
+  const filteredMaintenances = React.useMemo(() => {
+    return maintenances.filter(maintenance => {
+      const maintenanceDate = parseISO(maintenance.date);
+      const isDateMatch = dateRange.from && dateRange.to
+        ? isWithinInterval(maintenanceDate, { start: dateRange.from, end: dateRange.to })
+        : true;
+      const isVehicleMatch = selectedVehicleLicensePlate
+        ? maintenance.vehicleLicensePlate === selectedVehicleLicensePlate
+        : true;
+      return isDateMatch && isVehicleMatch;
+    });
+  }, [maintenances, dateRange, selectedVehicleLicensePlate]);
 
   // 1. Coût du carburant par mois (Bar Chart)
-  const fuelCostsByMonth = fuelEntries.reduce((acc, entry) => {
+  const fuelCostsByMonth = filteredFuelEntries.reduce((acc, entry) => {
     const date = parseISO(entry.date);
     const monthYear = format(date, "MMM yyyy", { locale: fr });
     if (!acc[monthYear]) {
@@ -52,7 +90,7 @@ const ReportsPage = () => {
     });
 
   // 2. Répartition des types de maintenance (Doughnut Chart)
-  const maintenanceTypeCounts = maintenances.reduce((acc, maintenance) => {
+  const maintenanceTypeCounts = filteredMaintenances.reduce((acc, maintenance) => {
     if (!acc[maintenance.type]) {
       acc[maintenance.type] = 0;
     }
@@ -65,11 +103,10 @@ const ReportsPage = () => {
     value: maintenanceTypeCounts[type],
   }));
 
-  // Using Tailwind CSS colors directly or CSS variables
   const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))", "hsl(var(--secondary))"];
 
-  // 3. Coût de maintenance par véhicule (Bar Chart - NEW)
-  const maintenanceCostByVehicle = maintenances.reduce((acc, maintenance) => {
+  // 3. Coût de maintenance par véhicule (Bar Chart)
+  const maintenanceCostByVehicle = filteredMaintenances.reduce((acc, maintenance) => {
     const vehicle = getVehicleByLicensePlate(maintenance.vehicleLicensePlate);
     const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})` : maintenance.vehicleLicensePlate;
     if (!acc[vehicleName]) {
@@ -84,13 +121,13 @@ const ReportsPage = () => {
       name: vehicleName,
       "Coût Maintenance (TND)": maintenanceCostByVehicle[vehicleName],
     }))
-    .sort((a, b) => b["Coût Maintenance (TND)"] - a["Coût Maintenance (TND)"]); // Sort descending by cost
+    .sort((a, b) => b["Coût Maintenance (TND)"] - a["Coût Maintenance (TND)"]);
 
   // 4. Derniers relevés kilométriques par véhicule (Table)
   const latestOdometerReadings = vehicles.map(vehicle => {
-    const vehicleFuelEntries = fuelEntries
+    const vehicleFuelEntries = fuelEntries // Use unfiltered fuelEntries for latest odometer regardless of date range
       .filter(entry => entry.vehicleLicensePlate === vehicle.licensePlate)
-      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()); // Sort by date descending
+      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
 
     const latestEntry = vehicleFuelEntries.length > 0 ? vehicleFuelEntries[0] : null;
 
@@ -101,10 +138,10 @@ const ReportsPage = () => {
       latestOdometer: latestEntry ? latestEntry.odometerReading : "N/A",
       lastReadingDate: latestEntry ? format(parseISO(latestEntry.date), "PPP", { locale: fr }) : "N/A",
     };
-  });
+  }).filter(data => selectedVehicleLicensePlate ? data.licensePlate === selectedVehicleLicensePlate : true); // Filter by selected vehicle
 
   // 5. Coût des maintenances par mois (Line Chart)
-  const maintenanceCostsOverTime = maintenances.reduce((acc, maintenance) => {
+  const maintenanceCostsOverTime = filteredMaintenances.reduce((acc, maintenance) => {
     const date = parseISO(maintenance.date);
     const monthYear = format(date, "MMM yyyy", { locale: fr });
     if (!acc[monthYear]) {
@@ -127,36 +164,71 @@ const ReportsPage = () => {
       return dateA.getTime() - dateB.getTime();
     });
 
+  // NEW CHART: Fuel Consumption by Vehicle (Bar Chart)
+  const fuelConsumptionByVehicle = filteredFuelEntries.reduce((acc, entry) => {
+    const vehicle = getVehicleByLicensePlate(entry.vehicleLicensePlate);
+    const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})` : entry.vehicleLicensePlate;
+    if (!acc[vehicleName]) {
+      acc[vehicleName] = 0;
+    }
+    acc[vehicleName] += entry.volume;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const fuelConsumptionData = Object.keys(fuelConsumptionByVehicle)
+    .map((vehicleName) => ({
+      name: vehicleName,
+      "Volume Carburant (L)": fuelConsumptionByVehicle[vehicleName],
+    }))
+    .sort((a, b) => b["Volume Carburant (L)"] - a["Volume Carburant (L)"]);
+
+  // NEW CHART: Total Cost by Maintenance Type (Bar Chart)
+  const totalCostByMaintenanceType = filteredMaintenances.reduce((acc, maintenance) => {
+    if (!acc[maintenance.type]) {
+      acc[maintenance.type] = 0;
+    }
+    acc[maintenance.type] += maintenance.cost;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalCostByMaintenanceTypeData = Object.keys(totalCostByMaintenanceType)
+    .map((type) => ({
+      name: type,
+      "Coût Total (TND)": totalCostByMaintenanceType[type],
+    }))
+    .sort((a, b) => b["Coût Total (TND)"] - a["Coût Total (TND)"]);
+
+
   const handleExportFuelCosts = () => {
-    exportToCsv("rapport_couts_carburant", fuelChartData, [
+    exportToXlsx("rapport_couts_carburant", fuelChartData, "Coûts Carburant", [
       { key: "name", label: "Mois" },
       { key: "Coût (TND)", label: "Coût (TND)" },
     ]);
   };
 
   const handleExportMaintenanceTypes = () => {
-    exportToCsv("rapport_types_maintenance", maintenancePieData, [
+    exportToXlsx("rapport_types_maintenance", maintenancePieData, "Types Maintenance", [
       { key: "name", label: "Type de Maintenance" },
       { key: "value", label: "Nombre" },
     ]);
   };
 
   const handleExportMaintenanceCostByVehicle = () => {
-    exportToCsv("rapport_cout_maintenance_par_vehicule", maintenanceCostByVehicleData, [
+    exportToXlsx("rapport_cout_maintenance_par_vehicule", maintenanceCostByVehicleData, "Coût Maintenance Véhicule", [
       { key: "name", label: "Véhicule" },
       { key: "Coût Maintenance (TND)", label: "Coût Maintenance (TND)" },
     ]);
   };
 
   const handleExportMaintenanceCosts = () => {
-    exportToCsv("rapport_tendance_couts_maintenance", maintenanceLineData, [
+    exportToXlsx("rapport_tendance_couts_maintenance", maintenanceLineData, "Tendance Coûts Maintenance", [
       { key: "name", label: "Mois" },
       { key: "Coût Maintenance (TND)", label: "Coût Maintenance (TND)" },
     ]);
   };
 
   const handleExportOdometerReadings = () => {
-    exportToCsv("rapport_releves_kilometriques", latestOdometerReadings, [
+    exportToXlsx("rapport_releves_kilometriques", latestOdometerReadings, "Relevés Kilométriques", [
       { key: "licensePlate", label: "Plaque d'immatriculation" },
       { key: "make", label: "Marque" },
       { key: "model", label: "Modèle" },
@@ -165,9 +237,114 @@ const ReportsPage = () => {
     ]);
   };
 
+  const handleExportFuelConsumptionByVehicle = () => {
+    exportToXlsx("rapport_consommation_carburant_par_vehicule", fuelConsumptionData, "Conso Carburant Véhicule", [
+      { key: "name", label: "Véhicule" },
+      { key: "Volume Carburant (L)", label: "Volume Carburant (L)" },
+    ]);
+  };
+
+  const handleExportTotalCostByMaintenanceType = () => {
+    exportToXlsx("rapport_cout_total_par_type_maintenance", totalCostByMaintenanceTypeData, "Coût Total Type Maintenance", [
+      { key: "name", label: "Type de Maintenance" },
+      { key: "Coût Total (TND)", label: "Coût Total (TND)" },
+    ]);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Rapports & Analyses</h1>
+
+      <Card className="glass rounded-2xl animate-fadeIn mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">Filtres de Rapport</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium">Plage de dates</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dateRange.from && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "LLL dd, y", { locale: fr })} -{" "}
+                        {format(dateRange.to, "LLL dd, y", { locale: fr })}
+                      </>
+                    ) : (
+                      format(dateRange.from, "LLL dd, y", { locale: fr })
+                    )
+                  ) : (
+                    <span>Sélectionner une date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  locale={fr}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium">Filtrer par véhicule</label>
+            <Select
+              value={selectedVehicleLicensePlate}
+              onValueChange={(value) => setSelectedVehicleLicensePlate(value === "__ALL__" ? undefined : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tous les véhicules" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__ALL__">Tous les véhicules</SelectItem>
+                {vehicles.map((vehicle) => (
+                  <SelectItem key={vehicle.licensePlate} value={vehicle.licensePlate}>
+                    {vehicle.make} {vehicle.model} ({vehicle.licensePlate})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Driver filter (optional, as not all reports are driver-specific) */}
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium">Filtrer par conducteur</label>
+            <Select
+              value={selectedDriverLicenseNumber}
+              onValueChange={(value) => setSelectedDriverLicenseNumber(value === "__ALL__" ? undefined : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tous les conducteurs" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__ALL__">Tous les conducteurs</SelectItem>
+                {/* Assuming you have a drivers array in useFleet context */}
+                {/* {drivers.map((driver) => (
+                  <SelectItem key={driver.licenseNumber} value={driver.licenseNumber}>
+                    {driver.firstName} {driver.lastName} ({driver.licenseNumber})
+                  </SelectItem>
+                ))} */}
+                <SelectItem value="N/A" disabled>Fonctionnalité à venir</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card className="glass rounded-2xl animate-fadeIn">
@@ -175,7 +352,7 @@ const ReportsPage = () => {
             <CardTitle className="text-lg font-bold">Coût du carburant par mois</CardTitle>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" onClick={handleExportFuelCosts} disabled={fuelChartData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> CSV
+                <Download className="h-4 w-4 mr-2" /> XLSX
               </Button>
               <Fuel className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -192,7 +369,7 @@ const ReportsPage = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de carburant disponible.</p>
+              <p className="text-muted-foreground text-center mt-10">Aucune donnée de carburant disponible pour la période sélectionnée.</p>
             )}
           </CardContent>
         </Card>
@@ -202,7 +379,7 @@ const ReportsPage = () => {
             <CardTitle className="text-lg font-bold">Répartition des types de maintenance</CardTitle>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" onClick={handleExportMaintenanceTypes} disabled={maintenancePieData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> CSV
+                <Download className="h-4 w-4 mr-2" /> XLSX
               </Button>
               <Wrench className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -230,7 +407,7 @@ const ReportsPage = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible.</p>
+              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible pour la période sélectionnée.</p>
             )}
           </CardContent>
         </Card>
@@ -240,7 +417,7 @@ const ReportsPage = () => {
             <CardTitle className="text-lg font-bold">Coût de maintenance par véhicule</CardTitle>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" onClick={handleExportMaintenanceCostByVehicle} disabled={maintenanceCostByVehicleData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> CSV
+                <Download className="h-4 w-4 mr-2" /> XLSX
               </Button>
               <Car className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -257,7 +434,7 @@ const ReportsPage = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance par véhicule disponible.</p>
+              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance par véhicule disponible pour la période sélectionnée.</p>
             )}
           </CardContent>
         </Card>
@@ -267,7 +444,7 @@ const ReportsPage = () => {
             <CardTitle className="text-lg font-bold">Tendance des coûts de maintenance</CardTitle>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" onClick={handleExportMaintenanceCosts} disabled={maintenanceLineData.length === 0}>
-                <Download className="h-4 w-4 mr-2" /> CSV
+                <Download className="h-4 w-4 mr-2" /> XLSX
               </Button>
               <TrendingUp className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -284,7 +461,63 @@ const ReportsPage = () => {
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible pour la tendance.</p>
+              <p className="text-muted-foreground text-center mt-10">Aucune donnée de maintenance disponible pour la tendance et la période sélectionnée.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* New Chart: Fuel Consumption by Vehicle */}
+        <Card className="glass rounded-2xl animate-fadeIn">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-bold">Consommation de carburant par véhicule</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={handleExportFuelConsumptionByVehicle} disabled={fuelConsumptionData.length === 0}>
+                <Download className="h-4 w-4 mr-2" /> XLSX
+              </Button>
+              <Fuel className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent className="h-80">
+            {fuelConsumptionData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={fuelConsumptionData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} L`} />
+                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} L`} />
+                  <Legend />
+                  <Bar dataKey="Volume Carburant (L)" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-muted-foreground text-center mt-10">Aucune donnée de consommation de carburant disponible pour la période sélectionnée.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* New Chart: Total Cost by Maintenance Type */}
+        <Card className="glass rounded-2xl animate-fadeIn">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-bold">Coût total par type de maintenance</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={handleExportTotalCostByMaintenanceType} disabled={totalCostByMaintenanceTypeData.length === 0}>
+                <Download className="h-4 w-4 mr-2" /> XLSX
+              </Button>
+              <Wrench className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent className="h-80">
+            {totalCostByMaintenanceTypeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={totalCostByMaintenanceTypeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={60} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
+                  <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
+                  <Legend />
+                  <Bar dataKey="Coût Total (TND)" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-muted-foreground text-center mt-10">Aucune donnée de coût par type de maintenance disponible pour la période sélectionnée.</p>
             )}
           </CardContent>
         </Card>
@@ -295,7 +528,7 @@ const ReportsPage = () => {
           <CardTitle className="text-lg font-bold">Derniers relevés kilométriques</CardTitle>
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={handleExportOdometerReadings} disabled={latestOdometerReadings.length === 0}>
-              <Download className="h-4 w-4 mr-2" /> CSV
+              <Download className="h-4 w-4 mr-2" /> XLSX
             </Button>
             <Car className="h-5 w-5 text-muted-foreground" />
           </div>
