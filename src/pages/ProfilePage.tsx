@@ -25,6 +25,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Loader2 } from "lucide-react";
 import { useFleet } from "@/context/FleetContext";
 import { Profile } from "@/types/profile";
+import AvatarUpload from "@/components/profile/AvatarUpload"; // Import the new component
+import { useSession } from "@/context/SessionContext"; // Import useSession
 
 const formSchema = z.object({
   firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères." }).nullable(),
@@ -36,6 +38,7 @@ type ProfileFormValues = z.infer<typeof formSchema>;
 
 const ProfilePage: React.FC = () => {
   const { profile, updateProfile, isLoadingFleetData } = useFleet();
+  const { user } = useSession(); // Get user from SessionContext
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<ProfileFormValues>({
@@ -73,7 +76,27 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  if (isLoadingFleetData) {
+  const handleAvatarUploadSuccess = async (url: string) => {
+    // Update the form's avatarUrl field and then submit the form
+    form.setValue("avatarUrl", url, { shouldDirty: true, shouldValidate: true });
+    await updateProfile({
+      firstName: form.getValues("firstName") === "" ? null : form.getValues("firstName"),
+      lastName: form.getValues("lastName") === "" ? null : form.getValues("lastName"),
+      avatarUrl: url,
+    });
+  };
+
+  const handleAvatarRemove = async () => {
+    // Clear the form's avatarUrl field and then submit the form
+    form.setValue("avatarUrl", null, { shouldDirty: true, shouldValidate: true });
+    await updateProfile({
+      firstName: form.getValues("firstName") === "" ? null : form.getValues("firstName"),
+      lastName: form.getValues("lastName") === "" ? null : form.getValues("lastName"),
+      avatarUrl: null,
+    });
+  };
+
+  if (isLoadingFleetData || !user) { // Ensure user is loaded before rendering AvatarUpload
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -91,19 +114,12 @@ const ProfilePage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center mb-6">
-            <Avatar className="h-24 w-24 mb-4 border-2 border-primary">
-              {profile?.avatarUrl ? (
-                <AvatarImage src={profile.avatarUrl} alt="Avatar" />
-              ) : (
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                  {profile?.firstName ? profile.firstName[0] : <User className="h-12 w-12" />}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <h3 className="text-xl font-semibold">
-              {profile?.firstName || "Utilisateur"} {profile?.lastName || ""}
-            </h3>
-            <p className="text-sm text-muted-foreground">ID: {profile?.id}</p>
+            <AvatarUpload
+              currentAvatarUrl={profile?.avatarUrl}
+              onUploadSuccess={handleAvatarUploadSuccess}
+              onRemove={handleAvatarRemove}
+              userId={user.id} // Pass the user ID to the upload component
+            />
           </div>
 
           <Form {...form}>
@@ -134,14 +150,15 @@ const ProfilePage: React.FC = () => {
                   </FormItem>
                 )}
               />
+              {/* The avatarUrl field is now managed by AvatarUpload, but we keep it in the schema for validation */}
               <FormField
                 control={form.control}
                 name="avatarUrl"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="hidden"> {/* Hide the input field */}
                     <FormLabel>URL de l'Avatar</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://example.com/avatar.jpg" {...field} value={field.value || ""} />
+                      <Input {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
