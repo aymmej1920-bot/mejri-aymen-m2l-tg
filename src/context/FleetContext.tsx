@@ -21,6 +21,20 @@ import { useAlertChecker } from "@/hooks/use-alert-checker";
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/context/SessionContext';
 
+// New types for permissions
+export interface Permission {
+  id: string;
+  key: string;
+  description: string;
+  category: string;
+}
+
+export interface RolePermission {
+  roleId: string;
+  permissionKey: string;
+  enabled: boolean;
+}
+
 interface FleetContextType {
   vehicles: Vehicle[];
   addVehicle: (vehicle: Omit<Vehicle, 'id'>) => Promise<void>;
@@ -80,6 +94,9 @@ interface FleetContextType {
   createUser: (email: string, password: string, roleName: string, firstName?: string, lastName?: string) => Promise<void>;
   updateUserRole: (userId: string, roleName: string) => Promise<void>;
   updateUserStatus: (userId: string, suspend: boolean) => Promise<void>;
+  permissions: Permission[]; // All available permissions
+  rolePermissions: RolePermission[]; // Permissions assigned to roles
+  updateRolePermissions: (updates: { roleId: string; permissionKey: string; enabled: boolean }[]) => Promise<void>;
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
@@ -100,6 +117,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<Role[]>([]); // New state for roles
   const [users, setUsers] = useState<(Profile & { email: string; is_suspended: boolean })[]>([]); // New state for users
+  const [permissions, setPermissions] = useState<Permission[]>([]); // All available permissions
+  const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]); // Permissions assigned to roles
   const [isLoadingFleetData, setIsLoadingFleetData] = useState(true);
 
   // Memoized maps for quick lookups
@@ -161,6 +180,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setProfile(null);
       setRoles([]);
       setUsers([]);
+      setPermissions([]);
+      setRolePermissions([]);
       setVehicleMap({});
       setDriverMap({});
       setIsLoadingFleetData(false);
@@ -183,6 +204,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         { data: activeAlertsData, error: activeAlertsError },
         { data: profileData, error: profileError },
         { data: rolesData, error: rolesError }, // Fetch roles
+        { data: permissionsData, error: permissionsError }, // Fetch all permissions
+        { data: rolePermissionsData, error: rolePermissionsError }, // Fetch role permissions
       ] = await Promise.all([
         supabase.from('vehicles').select('*').eq('user_id', user.id),
         supabase.from('drivers').select('*').eq('user_id', user.id),
@@ -197,6 +220,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         supabase.from('alerts').select('*').eq('user_id', user.id),
         supabase.from('profiles').select('*, role:role_id(*)').eq('id', user.id).single(), // Fetch profile with nested role
         supabase.from('roles').select('*'), // Fetch all roles
+        supabase.from('permissions').select('*'), // Fetch all permissions
+        supabase.from('role_permissions').select('*'), // Fetch role permissions
       ]);
 
       if (vehiclesError) throw vehiclesError;
@@ -211,6 +236,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (alertRulesError) throw alertRulesError;
       if (activeAlertsError) throw activeAlertsError;
       if (rolesError) throw rolesError;
+      if (permissionsError) throw permissionsError;
+      if (rolePermissionsError) throw rolePermissionsError;
 
       // Handle profile error separately, as it might not exist initially
       if (profileError && profileError.code !== 'PGRST116') {
@@ -224,6 +251,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
 
       setRoles(mapToCamelCase(rolesData));
+      setPermissions(mapToCamelCase(permissionsData));
+      setRolePermissions(mapToCamelCase(rolePermissionsData));
 
       const camelCaseVehicles = mapToCamelCase(vehiclesData) as Vehicle[];
       const camelCaseDrivers = mapToCamelCase(driversData) as Driver[];
@@ -319,19 +348,20 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [user]);
 
   // Permissions logic
-  const userRole = profile?.role?.name;
+  const userRole = profile?.role; // Get the full role object
+  const userRolePermissions = React.useMemo(() => {
+    if (!userRole) return new Set<string>();
+    return new Set(rolePermissions
+      .filter(rp => rp.roleId === userRole.id && rp.enabled)
+      .map(rp => rp.permissionKey));
+  }, [userRole, rolePermissions]);
 
-  const permissions: Record<string, string[]> = {
-    Admin: ["manage_users", "manage_roles", "full_access"],
-    Direction: ["view_reports", "view_all_data"],
-    Commercial: ["manage_vehicles", "manage_drivers", "manage_assignments", "manage_tours", "view_reports"],
-    Conducteur: ["view_assignments", "view_tours", "view_vehicles", "view_maintenances", "view_documents", "add_fuel_entry"],
-  };
-
-  const can = React.useCallback((permission: string): boolean => {
+  const can = React.useCallback((permissionKey: string): boolean => {
     if (!userRole) return false;
-    return permissions[userRole]?.includes(permission) || permissions[userRole]?.includes("full_access");
-  }, [userRole]);
+    // Admin has full access regardless of granular permissions
+    if (userRole.name === 'Admin') return true;
+    return userRolePermissions.has(permissionKey);
+  }, [userRole, userRolePermissions]);
 
 
   // Optimized getter functions
@@ -358,7 +388,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       showError("Vous devez être connecté pour effectuer cette action.");
       throw new Error("Unauthorized");
     }
-    if (!can('manage_users') && !can('manage_roles')) {
+    if (!can('users.edit_role') && !can('users.invite') && !can('users.create') && !can('users.toggle_status') && !can('roles.manage_permissions')) {
       showError("Vous n'avez pas la permission d'effectuer cette action.");
       throw new Error("Permission denied");
     }
@@ -385,6 +415,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const inviteUser = async (email: string, roleName: string, firstName?: string, lastName?: string) => {
+    if (!can('users.invite')) { showError("Vous n'avez pas la permission d'inviter des utilisateurs."); return; }
     await invokeAdminFunction('admin-user-management', {
       action: 'inviteUser',
       email,
@@ -395,6 +426,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const createUser = async (email: string, password: string, roleName: string, firstName?: string, lastName?: string) => {
+    if (!can('users.create')) { showError("Vous n'avez pas la permission de créer des utilisateurs."); return; }
     await invokeAdminFunction('admin-user-management', {
       action: 'createUser',
       email,
@@ -406,6 +438,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const updateUserRole = async (userId: string, roleName: string) => {
+    if (!can('users.edit_role')) { showError("Vous n'avez pas la permission de modifier les rôles des utilisateurs."); return; }
     await invokeAdminFunction('admin-user-management', {
       action: 'updateUserRole',
       userId,
@@ -414,6 +447,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const updateUserStatus = async (userId: string, suspend: boolean) => {
+    if (!can('users.toggle_status')) { showError("Vous n'avez pas la permission de suspendre/activer des comptes utilisateurs."); return; }
     await invokeAdminFunction('admin-user-management', {
       action: 'updateUserStatus',
       userId,
@@ -421,9 +455,17 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
+  const updateRolePermissions = async (updates: { roleId: string; permissionKey: string; enabled: boolean }[]) => {
+    if (!can('roles.manage_permissions')) { showError("Vous n'avez pas la permission de gérer les permissions des rôles."); return; }
+    await invokeAdminFunction('admin-role-permissions', {
+      action: 'updateRolePermissions',
+      updates,
+    });
+  };
+
   // --- Vehicles ---
   const addVehicle = async (newVehicle: Omit<Vehicle, 'id'>) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission d'ajouter un véhicule."); return; }
+    if (!user || !can('vehicles.add')) { showError("Vous n'avez pas la permission d'ajouter un véhicule."); return; }
     try {
       const { data, error } = await supabase.from('vehicles').insert({ ...mapToSnakeCase(newVehicle), user_id: user.id }).select();
       if (error) throw error;
@@ -438,7 +480,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editVehicle = async (originalVehicle: Vehicle, updatedVehicle: Vehicle) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de modifier un véhicule."); return; }
+    if (!user || !can('vehicles.edit')) { showError("Vous n'avez pas la permission de modifier un véhicule."); return; }
     try {
       const { data, error } = await supabase.from('vehicles').update(mapToSnakeCase(updatedVehicle)).eq('id', originalVehicle.id).select();
       if (error) throw error;
@@ -460,7 +502,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteVehicle = async (vehicleToDelete: Vehicle) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de supprimer un véhicule."); return; }
+    if (!user || !can('vehicles.delete')) { showError("Vous n'avez pas la permission de supprimer un véhicule."); return; }
     try {
       const { error } = await supabase.from('vehicles').delete().eq('id', vehicleToDelete.id);
       if (error) throw error;
@@ -479,7 +521,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Drivers ---
   const addDriver = async (newDriver: Omit<Driver, 'id'>) => {
-    if (!user || !can('manage_drivers')) { showError("Vous n'avez pas la permission d'ajouter un conducteur."); return; }
+    if (!user || !can('drivers.add')) { showError("Vous n'avez pas la permission d'ajouter un conducteur."); return; }
     try {
       const { data, error } = await supabase.from('drivers').insert({ ...mapToSnakeCase(newDriver), user_id: user.id }).select();
       if (error) throw error;
@@ -494,7 +536,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editDriver = async (originalDriver: Driver, updatedDriver: Driver) => {
-    if (!user || !can('manage_drivers')) { showError("Vous n'avez pas la permission de modifier un conducteur."); return; }
+    if (!user || !can('drivers.edit')) { showError("Vous n'avez pas la permission de modifier un conducteur."); return; }
     try {
       const { data, error } = await supabase.from('drivers').update(mapToSnakeCase(updatedDriver)).eq('id', originalDriver.id).select();
       if (error) throw error;
@@ -516,7 +558,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteDriver = async (driverToDelete: Driver) => {
-    if (!user || !can('manage_drivers')) { showError("Vous n'avez pas la permission de supprimer un conducteur."); return; }
+    if (!user || !can('drivers.delete')) { showError("Vous n'avez pas la permission de supprimer un conducteur."); return; }
     try {
       const { error } = await supabase.from('drivers').delete().eq('id', driverToDelete.id);
       if (error) throw error;
@@ -535,7 +577,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Maintenances ---
   const addMaintenance = async (newMaintenance: Omit<Maintenance, 'id'>) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission d'ajouter une maintenance."); return; }
+    if (!user || !can('maintenances.add')) { showError("Vous n'avez pas la permission d'ajouter une maintenance."); return; }
     try {
       const { data, error } = await supabase.from('maintenances').insert({ ...mapToSnakeCase(newMaintenance), user_id: user.id }).select();
       if (error) throw error;
@@ -548,7 +590,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editMaintenance = async (originalMaintenance: Maintenance, updatedMaintenance: Maintenance) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de modifier une maintenance."); return; }
+    if (!user || !can('maintenances.edit')) { showError("Vous n'avez pas la permission de modifier une maintenance."); return; }
     try {
       const { data, error } = await supabase.from('maintenances').update(mapToSnakeCase(updatedMaintenance)).eq('id', originalMaintenance.id).select();
       if (error) throw error;
@@ -561,7 +603,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteMaintenance = async (maintenanceToDelete: Maintenance) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de supprimer une maintenance."); return; }
+    if (!user || !can('maintenances.delete')) { showError("Vous n'avez pas la permission de supprimer une maintenance."); return; }
     try {
       const { error } = await supabase.from('maintenances').delete().eq('id', maintenanceToDelete.id);
       if (error) throw error;
@@ -575,7 +617,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Fuel Entries ---
   const addFuelEntry = async (newFuelEntry: Omit<FuelEntry, 'id'>) => {
-    if (!user || !can('add_fuel_entry')) { showError("Vous n'avez pas la permission d'ajouter une entrée de carburant."); return; }
+    if (!user || !can('fuel_entries.add')) { showError("Vous n'avez pas la permission d'ajouter une entrée de carburant."); return; }
     try {
       const { data, error } = await supabase.from('fuel_entries').insert({ ...mapToSnakeCase(newFuelEntry), user_id: user.id }).select();
       if (error) throw error;
@@ -588,7 +630,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editFuelEntry = async (originalFuelEntry: FuelEntry, updatedFuelEntry: FuelEntry) => {
-    if (!user || !can('add_fuel_entry')) { showError("Vous n'avez pas la permission de modifier une entrée de carburant."); return; }
+    if (!user || !can('fuel_entries.edit')) { showError("Vous n'avez pas la permission de modifier une entrée de carburant."); return; }
     try {
       const { data, error } = await supabase.from('fuel_entries').update(mapToSnakeCase(updatedFuelEntry)).eq('id', originalFuelEntry.id).select();
       if (error) throw error;
@@ -601,7 +643,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteFuelEntry = async (fuelEntryToDelete: FuelEntry) => {
-    if (!user || !can('add_fuel_entry')) { showError("Vous n'avez pas la permission de supprimer une entrée de carburant."); return; }
+    if (!user || !can('fuel_entries.delete')) { showError("Vous n'avez pas la permission de supprimer une entrée de carburant."); return; }
     try {
       const { error } = await supabase.from('fuel_entries').delete().eq('id', fuelEntryToDelete.id);
       if (error) throw error;
@@ -615,7 +657,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Assignments ---
   const addAssignment = async (newAssignment: Omit<Assignment, 'id'>) => {
-    if (!user || !can('manage_assignments')) { showError("Vous n'avez pas la permission d'ajouter une affectation."); return; }
+    if (!user || !can('assignments.add')) { showError("Vous n'avez pas la permission d'ajouter une affectation."); return; }
     try {
       const { data, error } = await supabase.from('assignments').insert({ ...mapToSnakeCase(newAssignment), user_id: user.id }).select();
       if (error) throw error;
@@ -628,7 +670,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editAssignment = async (originalAssignment: Assignment, updatedAssignment: Assignment) => {
-    if (!user || !can('manage_assignments')) { showError("Vous n'avez pas la permission de modifier une affectation."); return; }
+    if (!user || !can('assignments.edit')) { showError("Vous n'avez pas la permission de modifier une affectation."); return; }
     try {
       const { data, error } = await supabase.from('assignments').update(mapToSnakeCase(updatedAssignment)).eq('id', originalAssignment.id).select();
       if (error) throw error;
@@ -641,7 +683,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteAssignment = async (assignmentToDelete: Assignment) => {
-    if (!user || !can('manage_assignments')) { showError("Vous n'avez pas la permission de supprimer une affectation."); return; }
+    if (!user || !can('assignments.delete')) { showError("Vous n'avez pas la permission de supprimer une affectation."); return; }
     try {
       const { error } = await supabase.from('assignments').delete().eq('id', assignmentToDelete.id);
       if (error) throw error;
@@ -655,7 +697,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Maintenance Plans ---
   const addMaintenancePlan = async (newPlan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate' | 'nextDueOdometer'>) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission d'ajouter un plan de maintenance."); return; }
+    if (!user || !can('maintenance_plans.add')) { showError("Vous n'avez pas la permission d'ajouter un plan de maintenance."); return; }
     try {
       const today = format(new Date(), "yyyy-MM-dd");
       let nextDueDate: string | null = null;
@@ -692,7 +734,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editMaintenancePlan = async (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de modifier un plan de maintenance."); return; }
+    if (!user || !can('maintenance_plans.edit')) { showError("Vous n'avez pas la permission de modifier un plan de maintenance."); return; }
     try {
       let nextDueDate: string | null = updatedPlan.nextDueDate;
       let nextDueOdometer: number | null = updatedPlan.nextDueOdometer;
@@ -732,7 +774,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteMaintenancePlan = async (planToDelete: MaintenancePlan) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de supprimer un plan de maintenance."); return; }
+    if (!user || !can('maintenance_plans.delete')) { showError("Vous n'avez pas la permission de supprimer un plan de maintenance."); return; }
     try {
       const { error } = await supabase.from('maintenance_plans').delete().eq('id', planToDelete.id);
       if (error) throw error;
@@ -745,7 +787,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const generateMaintenanceFromPlan = async (plan: MaintenancePlan) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de générer une maintenance."); return; }
+    if (!user || !can('maintenance_plans.generate')) { showError("Vous n'avez pas la permission de générer une maintenance."); return; }
     try {
       const today = format(new Date(), "yyyy-MM-dd");
 
@@ -794,7 +836,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Documents ---
   const addDocument = async (newDocument: Omit<Document, 'id'>) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission d'ajouter un document."); return; }
+    if (!user || !can('documents.add')) { showError("Vous n'avez pas la permission d'ajouter un document."); return; }
     try {
       const { data, error } = await supabase.from('documents').insert({ ...mapToSnakeCase(newDocument), user_id: user.id }).select();
       if (error) throw error;
@@ -807,7 +849,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editDocument = async (originalDocument: Document, updatedDocument: Document) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de modifier un document."); return; }
+    if (!user || !can('documents.edit')) { showError("Vous n'avez pas la permission de modifier un document."); return; }
     try {
       const { data, error } = await supabase.from('documents').update(mapToSnakeCase(updatedDocument)).eq('id', originalDocument.id).select();
       if (error) throw error;
@@ -820,7 +862,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteDocument = async (documentToDelete: Document) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de supprimer un document."); return; }
+    if (!user || !can('documents.delete')) { showError("Vous n'avez pas la permission de supprimer un document."); return; }
     try {
       const { error } = await supabase.from('documents').delete().eq('id', documentToDelete.id);
       if (error) throw error;
@@ -834,7 +876,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Tours ---
   const addTour = async (newTour: Omit<Tour, 'id'>) => {
-    if (!user || !can('manage_tours')) { showError("Vous n'avez pas la permission d'ajouter une tournée."); return; }
+    if (!user || !can('tours.add')) { showError("Vous n'avez pas la permission d'ajouter une tournée."); return; }
     try {
       const { data, error } = await supabase.from('tours').insert({ ...mapToSnakeCase(newTour), user_id: user.id }).select();
       if (error) throw error;
@@ -847,7 +889,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editTour = async (originalTour: Tour, updatedTour: Tour) => {
-    if (!user || !can('manage_tours')) { showError("Vous n'avez pas la permission de modifier une tournée."); return; }
+    if (!user || !can('tours.edit')) { showError("Vous n'avez pas la permission de modifier une tournée."); return; }
     try {
       const { data, error } = await supabase.from('tours').update(mapToSnakeCase(updatedTour)).eq('id', originalTour.id).select();
       if (error) throw error;
@@ -860,7 +902,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteTour = async (tourToDelete: Tour) => {
-    if (!user || !can('manage_tours')) { showError("Vous n'avez pas la permission de supprimer une tournée."); return; }
+    if (!user || !can('tours.delete')) { showError("Vous n'avez pas la permission de supprimer une tournée."); return; }
     try {
       const { error } = await supabase.from('tours').delete().eq('id', tourToDelete.id);
       if (error) throw error;
@@ -874,7 +916,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Inspections ---
   const addInspection = async (newInspection: Omit<Inspection, 'id'>) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission d'ajouter une inspection."); return; }
+    if (!user || !can('inspections.add')) { showError("Vous n'avez pas la permission d'ajouter une inspection."); return; }
     try {
       const { data, error } = await supabase.from('inspections').insert({ ...mapToSnakeCase(newInspection), user_id: user.id }).select();
       if (error) throw error;
@@ -906,7 +948,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editInspection = async (originalInspection: Inspection, updatedInspection: Inspection) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de modifier une inspection."); return; }
+    if (!user || !can('inspections.edit')) { showError("Vous n'avez pas la permission de modifier une inspection."); return; }
     try {
       const { data, error } = await supabase.from('inspections').update(mapToSnakeCase(updatedInspection)).eq('id', originalInspection.id).select();
       if (error) throw error;
@@ -938,7 +980,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteInspection = async (inspectionToDelete: Inspection) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de supprimer une inspection."); return; }
+    if (!user || !can('inspections.delete')) { showError("Vous n'avez pas la permission de supprimer une inspection."); return; }
     try {
       const { error } = await supabase.from('inspections').delete().eq('id', inspectionToDelete.id);
       if (error) throw error;
@@ -952,7 +994,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Alert Rules ---
   const addAlertRule = async (newRule: Omit<AlertRule, 'id' | 'lastTriggered'>) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission d'ajouter une règle d'alerte."); return; }
+    if (!user || !can('alert_rules.add')) { showError("Vous n'avez pas la permission d'ajouter une règle d'alerte."); return; }
     try {
       const { data, error } = await supabase.from('alert_rules').insert({ ...mapToSnakeCase(newRule), user_id: user.id, last_triggered: null }).select();
       if (error) throw error;
@@ -965,7 +1007,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const editAlertRule = async (originalRule: AlertRule, updatedRule: AlertRule) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de modifier une règle d'alerte."); return; }
+    if (!user || !can('alert_rules.edit')) { showError("Vous n'avez pas la permission de modifier une règle d'alerte."); return; }
     try {
       const { data, error } = await supabase.from('alert_rules').update(mapToSnakeCase(updatedRule)).eq('id', originalRule.id).select();
       if (error) throw error;
@@ -978,7 +1020,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const deleteAlertRule = async (ruleToDelete: AlertRule) => {
-    if (!user || !can('manage_vehicles')) { showError("Vous n'avez pas la permission de supprimer une règle d'alerte."); return; }
+    if (!user || !can('alert_rules.delete')) { showError("Vous n'avez pas la permission de supprimer une règle d'alerte."); return; }
     try {
       const { error } = await supabase.from('alert_rules').delete().eq('id', ruleToDelete.id);
       if (error) throw error;
@@ -1040,7 +1082,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const clearAllData = async () => {
-    if (!user || !can('full_access')) { showError("Vous n'avez pas la permission d'effacer toutes les données."); return; }
+    if (!user || !can('settings.clear_data')) { showError("Vous n'avez pas la permission d'effacer toutes les données."); return; }
     try {
       // Delete from all tables for the current user
       const { error: vehiclesError } = await supabase.from('vehicles').delete().eq('user_id', user.id);
@@ -1084,6 +1126,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setProfile(null);
       setRoles([]);
       setUsers([]);
+      setPermissions([]);
+      setRolePermissions([]);
       setVehicleMap({});
       setDriverMap({});
       showSuccess("Toutes les données de la flotte ont été effacées !");
@@ -1165,6 +1209,9 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         createUser,
         updateUserRole,
         updateUserStatus,
+        permissions,
+        rolePermissions,
+        updateRolePermissions,
       }}
     >
       {children}
