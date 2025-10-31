@@ -20,7 +20,18 @@ import { useAlertChecker } from "@/hooks/use-alert-checker";
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/context/SessionContext';
 
-// Removed Permission and RolePermission types
+// Removed unused interface Permission
+// interface Permission {
+//   key: string;
+//   description: string | null;
+//   category: string | null;
+// }
+
+interface RolePermission {
+  roleId: string;
+  permissionKey: string;
+  enabled: boolean;
+}
 
 interface FleetContextType {
   vehicles: Vehicle[];
@@ -100,6 +111,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]); // New state for role permissions
   const [users, setUsers] = useState<(Profile & { email: string; is_suspended: boolean })[]>([]);
   const [isLoadingFleetData, setIsLoadingFleetData] = useState(true);
 
@@ -161,6 +173,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setActiveAlerts([]);
       setProfile(null);
       setRoles([]);
+      setRolePermissions([]);
       setUsers([]);
       setVehicleMap({});
       setDriverMap({});
@@ -184,12 +197,13 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         { data: activeAlertsData, error: activeAlertsError },
         { data: profileData, error: profileError },
         { data: rolesData, error: rolesError },
+        { data: rolePermissionsData, error: rolePermissionsError }, // Fetch role permissions
       ] = await Promise.all([
         supabase.from('vehicles').select('*').eq('user_id', user.id),
         supabase.from('drivers').select('*').eq('user_id', user.id),
         supabase.from('maintenances').select('*').eq('user_id', user.id),
         supabase.from('fuel_entries').select('*').eq('user_id', user.id),
-        supabase.from('assignments').select('*').eq('user_id', user.id),
+        supabase.from('assignments').select('*').eq('user.id', user.id),
         supabase.from('maintenance_plans').select('*').eq('user_id', user.id),
         supabase.from('documents').select('*').eq('user_id', user.id),
         supabase.from('tours').select('*').eq('user_id', user.id),
@@ -198,6 +212,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         supabase.from('alerts').select('*').eq('user_id', user.id),
         supabase.from('profiles').select('id, first_name, last_name, avatar_url, updated_at, role_id').eq('id', user.id).single(),
         supabase.from('roles').select('*'),
+        supabase.from('role_permissions').select('*'), // Select all role permissions
       ]);
 
       if (vehiclesError) throw vehiclesError;
@@ -212,18 +227,22 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (alertRulesError) throw alertRulesError;
       if (activeAlertsError) throw activeAlertsError;
       if (rolesError) throw rolesError;
+      if (rolePermissionsError) throw rolePermissionsError;
 
       const camelCaseRoles = mapToCamelCase(rolesData) as Role[];
       setRoles(camelCaseRoles);
+      setRolePermissions(mapToCamelCase(rolePermissionsData));
 
       // Handle profile data and attach role manually
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.warn("No profile found for user, creating one.", profileError);
+      if (profileError && profileError.code === 'PGRST116') { // No row found
+        console.warn("No profile found for user, creating one.");
         const { data: newProfileData, error: newProfileError } = await supabase.from('profiles').insert({ id: user.id }).select('id, first_name, last_name, avatar_url, updated_at, role_id').single();
         if (newProfileError) throw newProfileError;
         const mappedProfile = mapToCamelCase(newProfileData) as Profile;
         mappedProfile.role = camelCaseRoles.find(r => r.id === mappedProfile.roleId);
         setProfile(mappedProfile);
+      } else if (profileError) {
+        throw profileError;
       } else if (profileData) {
         const mappedProfile = mapToCamelCase(profileData) as Profile;
         mappedProfile.role = camelCaseRoles.find(r => r.id === mappedProfile.roleId);
@@ -324,25 +343,18 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   }, [user]);
 
-  // Simplified Permissions logic: only check if user is Admin for admin-level actions
+  // Granular Permissions logic
   const can = React.useCallback((permissionKey: string): boolean => {
-    // For now, only 'Admin' role has special permissions for user management and settings.
-    // Other permissions are implicitly granted by being logged in and having RLS set up.
-    const isAdmin = profile?.role?.name === 'Admin';
-
-    switch (permissionKey) {
-      case 'users.view':
-      case 'users.invite':
-      case 'users.create':
-      case 'users.edit_role':
-      case 'users.toggle_status':
-      case 'settings.clear_data':
-        return isAdmin;
-      // All other permissions are implicitly true for authenticated users based on RLS
-      default:
-        return !!user;
+    if (!user || !profile || !profile.roleId) {
+      return false; // Not authenticated or no role assigned
     }
-  }, [profile, user]);
+
+    // Find the role's permissions
+    const userRolePermissions = rolePermissions.filter(rp => rp.roleId === profile.roleId && rp.enabled);
+    const hasPermission = userRolePermissions.some(rp => rp.permissionKey === permissionKey);
+
+    return hasPermission;
+  }, [user, profile, rolePermissions]);
 
 
   // Optimized getter functions
@@ -351,7 +363,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Profile ---
   const updateProfile = async (updatedProfile: Omit<Profile, 'id' | 'updatedAt' | 'roleId' | 'role'>) => {
-    if (!user) { showError("Vous devez être connecté pour modifier votre profil."); return; }
+    if (!user || !can('profile.edit')) { showError("Vous n'avez pas la permission de modifier votre profil."); return; }
     try {
       const { data, error } = await supabase.from('profiles').update(mapToSnakeCase(updatedProfile)).eq('id', user.id).select('id, first_name, last_name, avatar_url, updated_at, role_id').single();
       if (error) throw error;
@@ -366,13 +378,12 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   // --- User Management (Admin only, via Edge Functions for security) ---
-  const invokeAdminFunction = async (functionName: string, payload: any) => {
+  const invokeAdminFunction = async (functionName: string, payload: any, permissionKey: string) => {
     if (!user) {
       showError("Vous devez être connecté pour effectuer cette action.");
       throw new Error("Unauthorized");
     }
-    // Simplified permission check: only Admin can invoke admin functions
-    if (!can('users.view')) { // Using a generic admin permission check
+    if (!can(permissionKey)) {
       showError("Vous n'avez pas la permission d'effectuer cette action.");
       throw new Error("Permission denied");
     }
@@ -399,18 +410,16 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const inviteUser = async (email: string, roleName: string, firstName?: string, lastName?: string) => {
-    if (!can('users.invite')) { showError("Vous n'avez pas la permission d'inviter des utilisateurs."); return; }
     await invokeAdminFunction('admin-user-management', {
       action: 'inviteUser',
       email,
       roleName,
       firstName,
       lastName,
-    });
+    }, 'users.invite');
   };
 
   const createUser = async (email: string, password: string, roleName: string, firstName?: string, lastName?: string) => {
-    if (!can('users.create')) { showError("Vous n'avez pas la permission de créer des utilisateurs."); return; }
     await invokeAdminFunction('admin-user-management', {
       action: 'createUser',
       email,
@@ -418,25 +427,23 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       roleName,
       firstName,
       lastName,
-    });
+    }, 'users.create');
   };
 
   const updateUserRole = async (userId: string, roleName: string) => {
-    if (!can('users.edit_role')) { showError("Vous n'avez pas la permission de modifier les rôles des utilisateurs."); return; }
     await invokeAdminFunction('admin-user-management', {
       action: 'updateUserRole',
       userId,
       roleName,
-    });
+    }, 'users.edit_role');
   };
 
   const updateUserStatus = async (userId: string, suspend: boolean) => {
-    if (!can('users.toggle_status')) { showError("Vous n'avez pas la permission de suspendre/activer des comptes utilisateurs."); return; }
     await invokeAdminFunction('admin-user-management', {
       action: 'updateUserStatus',
       userId,
       suspend,
-    });
+    }, 'users.toggle_status');
   };
 
   // This function is no longer used and was causing a TS6133 error.
@@ -1017,7 +1024,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- Active Alerts ---
   const addActiveAlert = async (newAlert: Omit<Alert, 'id' | 'createdAt' | 'isRead'>) => {
-    if (!user) { showError("Vous devez être connecté pour ajouter une alerte."); return; }
+    if (!user || !can('alerts.read')) { showError("Vous n'avez pas la permission d'ajouter une alerte."); return; } // Using alerts.read as a base permission for now
     try {
       const alertToInsert = {
         ...mapToSnakeCase(newAlert),
@@ -1036,7 +1043,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const markAlertAsRead = async (alertId: string) => {
-    if (!user) { showError("Vous devez être connecté pour marquer une alerte comme lue."); return; }
+    if (!user || !can('alerts.mark_as_read')) { showError("Vous n'avez pas la permission de marquer une alerte comme lue."); return; }
     try {
       const { error } = await supabase.from('alerts').update({ is_read: true }).eq('id', alertId).select();
       if (error) throw error;
@@ -1052,7 +1059,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const clearAllAlerts = async () => {
-    if (!user) { showError("Vous devez être connecté pour effacer les alertes."); return; }
+    if (!user || !can('alerts.clear_all')) { showError("Vous n'avez pas la permission d'effacer les alertes."); return; }
     try {
       const { error } = await supabase.from('alerts').delete().eq('user_id', user.id);
       if (error) throw error;
@@ -1108,6 +1115,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setActiveAlerts([]);
       setProfile(null);
       setRoles([]);
+      setRolePermissions([]);
       setUsers([]);
       setVehicleMap({});
       setDriverMap({});
