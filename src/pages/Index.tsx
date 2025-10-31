@@ -1,12 +1,9 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useFleet } from "@/context/FleetContext";
-import { Car, Users, PlusCircle, Wrench, Fuel, Link, Route, ClipboardCheck } from "lucide-react"; // Retirez BellRing
 import AddVehicleDialog from "@/components/vehicles/AddVehicleDialog";
 import AddDriverDialog from "@/components/drivers/AddDriverDialog";
 import AddTourDialog from "@/components/tours/AddTourDialog";
-import { format, isSameMonth, parseISO, getMonth, getYear } from "date-fns";
+import { format, isSameMonth, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
   ResponsiveContainer,
@@ -20,31 +17,16 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { Car, Users, Wrench, Fuel } from "lucide-react"; // Retirez BellRing
+import { useFleet } from "@/context/FleetContext";
 
 const Index = () => {
-  const { vehicles, drivers, fuelEntries, maintenances, assignments, tours, inspections, alertRules, activeAlerts } = useFleet();
+  const { vehicles, drivers, fuelEntries, maintenances, tours, inspections } = useFleet();
 
-  // Calculer le coût total du carburant pour le mois en cours
   const currentMonth = new Date();
-  const totalFuelCostThisMonth = fuelEntries.reduce((sum, entry) => {
-    const entryDate = parseISO(entry.date);
-    if (isSameMonth(entryDate, currentMonth)) {
-      return sum + entry.cost;
-    }
-    return sum;
-  }, 0);
 
   // Calculer le nombre de maintenances planifiées (statut "Planifiée")
   const upcomingMaintenancesCount = maintenances.filter(m => m.status === "Planifiée").length;
-
-  // Calculer le nombre d'affectations actives
-  const activeAssignmentsCount = assignments.filter(a => a.status === "Active").length;
-
-  // Calculer le nombre de tournées actives
-  const activeToursCount = tours.filter(t => t.status === "En cours").length;
-
-  // Calculer le nombre d'inspections non conformes
-  const nonConformInspectionsCount = inspections.filter(i => i.overallStatus === "Non conforme").length;
 
   // Préparer les données pour le graphique des coûts de carburant par mois
   const fuelCostsByMonth = fuelEntries.reduce((acc, entry) => {
@@ -147,36 +129,48 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={fuelChartData}>
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
-                    <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
-                    <Legend />
-                    <Bar dataKey="Coût (TND)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                {fuelChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={fuelChartData}>
+                      <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value} TND`} />
+                      <Tooltip cursor={{ fill: 'transparent' }} formatter={(value: number) => `${value.toFixed(2)} TND`} />
+                      <Legend />
+                      <Bar dataKey="Coût (TND)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Aucune donnée de carburant disponible.
+                  </div>
+                )}
 
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={maintenancePieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="hsl(var(--primary))"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    >
-                      {maintenancePieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => `${value} maintenances`} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                {maintenancePieData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={maintenancePieData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="hsl(var(--primary))"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      >
+                        {maintenancePieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => `${value} maintenances`} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Aucune donnée de maintenance disponible.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

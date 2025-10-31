@@ -1,7 +1,7 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck, FileText, Route, ClipboardCheck, BellRing, BarChart3, UserCircle, UserCog, ShieldCheck } from "lucide-react"; // Import ShieldCheck
+import { Home, Car, Users, Settings, Wrench, Fuel, Link, LogOut, CalendarCheck, FileText, Route, ClipboardCheck, BellRing, BarChart3, UserCircle, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,7 @@ import { showError } from "@/utils/toast";
 import { useFleet } from "@/context/FleetContext";
 
 const Sidebar = () => {
-  const { can } = useFleet();
+  const { can, profile } = useFleet(); // Get profile to check role directly
   const navLinkClasses = "flex items-center px-3 py-2 rounded-md transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
   const activeNavLinkClasses = "gradient-brand text-white";
 
@@ -19,6 +19,8 @@ const Sidebar = () => {
       showError("Échec de la déconnexion : " + error.message);
     }
   };
+
+  const isAdmin = profile?.role?.name === 'Admin';
 
   return (
     <div className="flex flex-col h-full p-4 glass rounded-2xl text-sidebar-foreground">
@@ -44,7 +46,7 @@ const Sidebar = () => {
           <UserCircle className="mr-2 h-4 w-4" />
           Mon Profil
         </NavLink>
-        {can('users.view') && ( // Show "Gestion des Utilisateurs" if user has 'users.view' permission
+        {isAdmin && ( // Show "Gestion des Utilisateurs" only if user is Admin
           <NavLink
             to="/users"
             className={({ isActive }) =>
@@ -53,17 +55,6 @@ const Sidebar = () => {
           >
             <UserCog className="mr-2 h-4 w-4" />
             Gestion des Utilisateurs
-          </NavLink>
-        )}
-        {can('roles.manage_permissions') && ( // Show "Droits d'Accès des Rôles" if user has 'roles.manage_permissions' permission
-          <NavLink
-            to="/role-permissions"
-            className={({ isActive }) =>
-              cn(navLinkClasses, isActive && activeNavLinkClasses)
-            }
-          >
-            <ShieldCheck className="mr-2 h-4 w-4" />
-            Droits d'Accès des Rôles
           </NavLink>
         )}
         <NavLink

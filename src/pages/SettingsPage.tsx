@@ -24,8 +24,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useFleet } from "@/context/FleetContext";
-import { supabase } from "@/integrations/supabase/client";
-import { showError } from "@/utils/toast";
 import { Loader2 } from "lucide-react"; // Import Loader2
 
 const SettingsPage = () => {

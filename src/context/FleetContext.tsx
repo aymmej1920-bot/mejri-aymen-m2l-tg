@@ -12,28 +12,15 @@ import { Tour } from "@/types/tour";
 import { Inspection } from "@/types/inspection";
 import { AlertRule } from "@/types/alertRule";
 import { Alert } from "@/types/alert";
-import { Profile, Role } from "@/types/profile"; // Import Profile and Role types
+import { Profile, Role } from "@/types/profile";
 import { showSuccess, showError } from "@/utils/toast";
-import { v4 as uuidv4 } from "uuid";
 import { addMonths, format, parseISO, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useAlertChecker } from "@/hooks/use-alert-checker";
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/context/SessionContext';
 
-// New types for permissions
-export interface Permission {
-  id: string;
-  key: string;
-  description: string;
-  category: string;
-}
-
-export interface RolePermission {
-  roleId: string;
-  permissionKey: string;
-  enabled: boolean;
-}
+// Removed Permission and RolePermission types
 
 interface FleetContextType {
   vehicles: Vehicle[];
@@ -86,17 +73,14 @@ interface FleetContextType {
   getVehicleByLicensePlate: (licensePlate: string) => Vehicle | undefined;
   getDriverByLicenseNumber: (licenseNumber: string) => Driver | undefined;
   profile: Profile | null;
-  updateProfile: (updatedProfile: Omit<Profile, 'id' | 'updatedAt' | 'roleId' | 'role'>) => Promise<void>; // Exclude role from direct profile update
-  roles: Role[]; // Add roles to context type
-  users: (Profile & { email: string; is_suspended: boolean })[]; // Add users list for admin
-  can: (permission: string) => boolean; // Permission check helper
+  updateProfile: (updatedProfile: Omit<Profile, 'id' | 'updatedAt' | 'roleId' | 'role'>) => Promise<void>;
+  roles: Role[];
+  users: (Profile & { email: string; is_suspended: boolean })[];
+  can: (permission: string) => boolean; // Simplified permission check
   inviteUser: (email: string, roleName: string, firstName?: string, lastName?: string) => Promise<void>;
   createUser: (email: string, password: string, roleName: string, firstName?: string, lastName?: string) => Promise<void>;
   updateUserRole: (userId: string, roleName: string) => Promise<void>;
   updateUserStatus: (userId: string, suspend: boolean) => Promise<void>;
-  permissions: Permission[]; // All available permissions
-  rolePermissions: RolePermission[]; // Permissions assigned to roles
-  updateRolePermissions: (updates: { roleId: string; permissionKey: string; enabled: boolean }[]) => Promise<void>;
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
@@ -115,10 +99,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [roles, setRoles] = useState<Role[]>([]); // New state for roles
-  const [users, setUsers] = useState<(Profile & { email: string; is_suspended: boolean })[]>([]); // New state for users
-  const [permissions, setPermissions] = useState<Permission[]>([]); // All available permissions
-  const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]); // Permissions assigned to roles
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [users, setUsers] = useState<(Profile & { email: string; is_suspended: boolean })[]>([]);
   const [isLoadingFleetData, setIsLoadingFleetData] = useState(true);
 
   // Memoized maps for quick lookups
@@ -180,8 +162,6 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setProfile(null);
       setRoles([]);
       setUsers([]);
-      setPermissions([]);
-      setRolePermissions([]);
       setVehicleMap({});
       setDriverMap({});
       setIsLoadingFleetData(false);
@@ -203,9 +183,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         { data: alertRulesData, error: alertRulesError },
         { data: activeAlertsData, error: activeAlertsError },
         { data: profileData, error: profileError },
-        { data: rolesData, error: rolesError }, // Fetch roles
-        { data: permissionsData, error: permissionsError }, // Fetch all permissions
-        { data: rolePermissionsData, error: rolePermissionsError }, // Fetch role permissions
+        { data: rolesData, error: rolesError },
       ] = await Promise.all([
         supabase.from('vehicles').select('*').eq('user_id', user.id),
         supabase.from('drivers').select('*').eq('user_id', user.id),
@@ -218,10 +196,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         supabase.from('inspections').select('*, checkpoints').eq('user_id', user.id),
         supabase.from('alert_rules').select('*, criteria').eq('user_id', user.id),
         supabase.from('alerts').select('*').eq('user_id', user.id),
-        supabase.from('profiles').select('id, first_name, last_name, avatar_url, updated_at, role_id').eq('id', user.id).single(), // Fetch profile without embedding role
-        supabase.from('roles').select('*'), // Fetch all roles
-        supabase.from('permissions').select('*'), // Fetch all permissions
-        supabase.from('role_permissions').select('*'), // Fetch role permissions
+        supabase.from('profiles').select('id, first_name, last_name, avatar_url, updated_at, role_id').eq('id', user.id).single(),
+        supabase.from('roles').select('*'),
       ]);
 
       if (vehiclesError) throw vehiclesError;
@@ -236,13 +212,9 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (alertRulesError) throw alertRulesError;
       if (activeAlertsError) throw activeAlertsError;
       if (rolesError) throw rolesError;
-      if (permissionsError) throw permissionsError;
-      if (rolePermissionsError) throw rolePermissionsError;
 
       const camelCaseRoles = mapToCamelCase(rolesData) as Role[];
       setRoles(camelCaseRoles);
-      setPermissions(mapToCamelCase(permissionsData));
-      setRolePermissions(mapToCamelCase(rolePermissionsData));
 
       // Handle profile data and attach role manually
       if (profileError && profileError.code !== 'PGRST116') {
@@ -288,7 +260,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       // Fetch all users for Admin if current user is Admin
       const currentUserProfile = profileData ? (mapToCamelCase(profileData) as Profile) : null;
-      if (currentUserProfile?.roleId) { // Check if roleId exists
+      if (currentUserProfile?.roleId) {
         const adminRole = camelCaseRoles.find(r => r.id === currentUserProfile.roleId && r.name === 'Admin');
         if (adminRole) {
           const { data: edgeFunctionUsersData, error: edgeFunctionUsersError } = await supabase.functions.invoke('admin-user-management', {
@@ -352,21 +324,25 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   }, [user]);
 
-  // Permissions logic
-  const userRole = profile?.role; // Get the full role object
-  const userRolePermissions = React.useMemo(() => {
-    if (!userRole) return new Set<string>();
-    return new Set(rolePermissions
-      .filter(rp => rp.roleId === userRole.id && rp.enabled)
-      .map(rp => rp.permissionKey));
-  }, [userRole, rolePermissions]);
-
+  // Simplified Permissions logic: only check if user is Admin for admin-level actions
   const can = React.useCallback((permissionKey: string): boolean => {
-    if (!userRole) return false;
-    // Admin has full access regardless of granular permissions
-    if (userRole.name === 'Admin') return true;
-    return userRolePermissions.has(permissionKey);
-  }, [userRole, userRolePermissions]);
+    // For now, only 'Admin' role has special permissions for user management and settings.
+    // Other permissions are implicitly granted by being logged in and having RLS set up.
+    const isAdmin = profile?.role?.name === 'Admin';
+
+    switch (permissionKey) {
+      case 'users.view':
+      case 'users.invite':
+      case 'users.create':
+      case 'users.edit_role':
+      case 'users.toggle_status':
+      case 'settings.clear_data':
+        return isAdmin;
+      // All other permissions are implicitly true for authenticated users based on RLS
+      default:
+        return !!user;
+    }
+  }, [profile, user]);
 
 
   // Optimized getter functions
@@ -395,7 +371,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       showError("Vous devez être connecté pour effectuer cette action.");
       throw new Error("Unauthorized");
     }
-    if (!can('users.edit_role') && !can('users.invite') && !can('users.create') && !can('users.toggle_status') && !can('roles.manage_permissions')) {
+    // Simplified permission check: only Admin can invoke admin functions
+    if (!can('users.view')) { // Using a generic admin permission check
       showError("Vous n'avez pas la permission d'effectuer cette action.");
       throw new Error("Permission denied");
     }
@@ -462,13 +439,11 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
-  const updateRolePermissions = async (updates: { roleId: string; permissionKey: string; enabled: boolean }[]) => {
-    if (!can('roles.manage_permissions')) { showError("Vous n'avez pas la permission de gérer les permissions des rôles."); return; }
-    await invokeAdminFunction('admin-role-permissions', {
-      action: 'updateRolePermissions',
-      updates,
-    });
+  const updateRolePermissions = async (updates: any[]) => {
+    showError("La gestion des permissions de rôle n'est plus disponible.");
+    throw new Error("Role permission management is disabled.");
   };
+
 
   // --- Vehicles ---
   const addVehicle = async (newVehicle: Omit<Vehicle, 'id'>) => {
@@ -1133,8 +1108,6 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setProfile(null);
       setRoles([]);
       setUsers([]);
-      setPermissions([]);
-      setRolePermissions([]);
       setVehicleMap({});
       setDriverMap({});
       showSuccess("Toutes les données de la flotte ont été effacées !");
@@ -1216,9 +1189,6 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         createUser,
         updateUserRole,
         updateUserStatus,
-        permissions,
-        rolePermissions,
-        updateRolePermissions,
       }}
     >
       {children}

@@ -20,7 +20,6 @@ import LoginPage from "./pages/LoginPage";
 import ReportsPage from "./pages/ReportsPage";
 import ProfilePage from "./pages/ProfilePage";
 import UsersPage from "./pages/UsersPage";
-import RolePermissionsPage from "./pages/RolePermissionsPage"; // Import RolePermissionsPage
 import { FleetProvider, useFleet } from "@/context/FleetContext";
 import { SessionContextProvider, useSession } from "@/context/SessionContext";
 
@@ -83,11 +82,6 @@ const AppRoutes = () => {
           path: "/users",
           element: <UsersPage />,
           handle: { title: "Gestion des Utilisateurs" },
-        },
-        {
-          path: "/role-permissions", // New route for role permissions management
-          element: <RolePermissionsPage />,
-          handle: { title: "Droits d'Accès des Rôles" },
         },
         {
           path: "/vehicles",
