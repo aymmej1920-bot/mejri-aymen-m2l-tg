@@ -3,13 +3,14 @@
 import React, { useEffect, useRef } from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { showError } from "@/utils/toast"; // Garder showError pour les messages d'erreur généraux si besoin
+import { showError } from "@/utils/toast";
 import { AlertRule } from "@/types/alertRule";
 import { MaintenancePlan } from "@/types/maintenancePlan";
 import { Document } from "@/types/document";
 import { Assignment } from "@/types/assignment";
 import { Driver } from "@/types/driver";
-import { Alert } from "@/types/alert"; // Importez le nouveau type Alert
+import { Alert } from "@/types/alert";
+import { supabase } from '@/integrations/supabase/client'; // Import Supabase client
 
 interface UseAlertCheckerProps {
   alertRules: AlertRule[];
@@ -17,8 +18,8 @@ interface UseAlertCheckerProps {
   documents: Document[];
   assignments: Assignment[];
   drivers: Driver[];
-  setAlertRules: React.Dispatch<React.SetStateAction<AlertRule[]>>;
-  addActiveAlert: (alert: Omit<Alert, 'id' | 'createdAt' | 'isRead'>) => void; // Nouveau : fonction pour ajouter une alerte active
+  setAlertRules: React.Dispatch<React.SetStateAction<AlertRule[]>>; // This will still be used for local state update
+  addActiveAlert: (alert: Omit<Alert, 'id' | 'createdAt' | 'isRead'>) => Promise<void>;
 }
 
 export function useAlertChecker({
@@ -32,15 +33,15 @@ export function useAlertChecker({
 }: UseAlertCheckerProps) {
   const triggeredAlertsRef = useRef<Set<string>>(new Set());
 
-  const checkAlerts = React.useCallback(() => {
+  const checkAlerts = React.useCallback(async () => { // Made async
     const now = new Date();
-    alertRules.filter(rule => rule.status === "Active").forEach(rule => {
+    for (const rule of alertRules.filter(rule => rule.status === "Active")) { // Use for...of for async operations
       let shouldTrigger = false;
       let alertMessage = rule.message;
-      const alertKey = `${rule.id}-${format(now, 'yyyy-MM-dd')}`; // Unique key for daily alerts per rule
+      const alertKey = `${rule.id}-${format(now, 'yyyy-MM-dd')}`;
 
       if (triggeredAlertsRef.current.has(alertKey)) {
-        return; // Already triggered this specific alert today
+        continue;
       }
 
       switch (rule.type) {
@@ -58,7 +59,6 @@ export function useAlertChecker({
               shouldTrigger = true;
               alertMessage = `Maintenance "${plan.description}" pour le véhicule ${plan.vehicleLicensePlate} est due dans ${daysUntilDue} jours.`;
             }
-            // TODO: Add mileage-based checks if odometer readings are available
           });
           break;
 
@@ -115,17 +115,29 @@ export function useAlertChecker({
       }
 
       if (shouldTrigger) {
-        addActiveAlert({
+        await addActiveAlert({ // Await the async function
           ruleId: rule.id,
           message: alertMessage,
           type: rule.type,
         });
         triggeredAlertsRef.current.add(alertKey);
-        setAlertRules(prevRules =>
-          prevRules.map(r => r.id === rule.id ? { ...r, lastTriggered: format(now, 'yyyy-MM-dd') } : r)
-        );
+
+        // Update the lastTriggered date in Supabase
+        const { error } = await supabase.from('alert_rules')
+          .update({ last_triggered: format(now, 'yyyy-MM-dd') })
+          .eq('id', rule.id);
+
+        if (error) {
+          console.error("Error updating alert rule last_triggered:", error);
+          showError("Échec de la mise à jour de la règle d'alerte : " + error.message);
+        } else {
+          // Update local state after successful Supabase update
+          setAlertRules(prevRules =>
+            prevRules.map(r => r.id === rule.id ? { ...r, lastTriggered: format(now, 'yyyy-MM-dd') } : r)
+          );
+        }
       }
-    });
+    }
   }, [alertRules, maintenancePlans, documents, assignments, drivers, setAlertRules, addActiveAlert]);
 
   useEffect(() => {
