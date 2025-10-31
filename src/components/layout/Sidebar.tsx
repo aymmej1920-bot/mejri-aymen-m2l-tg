@@ -9,7 +9,7 @@ import { showError } from "@/utils/toast";
 
 const Sidebar = () => {
   const navLinkClasses = "flex items-center px-3 py-2 rounded-md transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
-  const activeNavLinkClasses = "bg-sidebar-primary text-sidebar-primary-foreground";
+  const activeNavLinkClasses = "gradient-brand text-white"; // Changed to use gradient-brand and white text
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
