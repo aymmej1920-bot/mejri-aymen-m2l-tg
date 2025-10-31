@@ -109,6 +109,10 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-3px)" },
         },
+        "page-fade-in": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -117,6 +121,7 @@ export default {
         slideUp: "slideUp 0.5s ease-out forwards",
         scaleIn: "scaleIn 0.5s ease-out forwards",
         "hover-lift": "hoverLift 0.3s ease-in-out forwards",
+        "page-fade-in": "page-fade-in 0.4s ease-out forwards",
       },
     },
   },

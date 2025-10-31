@@ -28,9 +28,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useFleet } from "@/context/FleetContext";
 import { Vehicle } from "@/types/vehicle";
+import DataTableSkeleton from "@/components/ui/DataTableSkeleton"; // Import DataTableSkeleton
 
 const VehiclesPage = () => {
-  const { vehicles, deleteVehicle } = useFleet();
+  const { vehicles, deleteVehicle, isLoadingFleetData } = useFleet(); // Get isLoadingFleetData
   const [searchTerm, setSearchTerm] = React.useState("");
   const [deletingVehicleId, setDeletingVehicleId] = React.useState<string | null>(null); // Add deleting state
 
@@ -71,12 +72,13 @@ const VehiclesPage = () => {
               className="max-w-sm"
             />
           </div>
-          {filteredVehicles.length === 0 && vehicles.length > 0 && (
+          {isLoadingFleetData ? ( // Show skeleton loader when data is loading
+            <DataTableSkeleton columns={5} />
+          ) : filteredVehicles.length === 0 && vehicles.length > 0 ? (
             <p className="text-muted-foreground">
               Aucun véhicule ne correspond à votre recherche.
             </p>
-          )}
-          {vehicles.length === 0 ? (
+          ) : vehicles.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
               <Car className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">

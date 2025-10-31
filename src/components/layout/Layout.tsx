@@ -31,7 +31,7 @@ const Layout = () => {
           <Sidebar />
         </div>
       )}
-      <main className="flex-1 p-6 lg:p-8 overflow-auto animate-fadeIn">
+      <main className="flex-1 p-6 lg:p-8 overflow-auto animate-page-fade-in"> {/* Applique la nouvelle animation */}
         <Header /> {/* Affichez l'en-tête ici */}
         <Outlet />
       </main>
