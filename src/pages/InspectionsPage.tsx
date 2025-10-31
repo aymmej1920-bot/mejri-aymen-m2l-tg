@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, ClipboardCheck, Eye, Loader2 } from "lucide-react"; // Import Loader2
+import { Trash2, ClipboardCheck, Eye, Loader2 } from "lucide-react"; // Import ClipboardCheck icon
 import {
   AlertDialog,
   AlertDialogAction,
@@ -115,9 +115,12 @@ const InspectionsPage = () => {
             </p>
           )}
           {inspections.length === 0 ? (
-            <p className="text-muted-foreground">
-              Aucune inspection enregistrée pour le moment. Cliquez sur "Ajouter une inspection" pour commencer.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <ClipboardCheck className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                Aucune inspection enregistrée pour le moment. Cliquez sur "Ajouter une inspection" pour commencer.
+              </p>
+            </div>
           ) : (
             <Table>
               <TableHeader>

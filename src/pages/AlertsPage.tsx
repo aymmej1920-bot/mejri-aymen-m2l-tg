@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, BellRing, Loader2 } from "lucide-react"; // Import Loader2
+import { Trash2, BellRing, Loader2 } from "lucide-react"; // Import BellRing icon
 import {
   AlertDialog,
   AlertDialogAction,
@@ -113,9 +113,12 @@ const AlertsPage = () => {
             </p>
           )}
           {alertRules.length === 0 ? (
-            <p className="text-muted-foreground">
-              Aucune règle d'alerte enregistrée pour le moment. Cliquez sur "Ajouter une règle d'alerte" pour commencer.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <BellRing className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                Aucune règle d'alerte enregistrée pour le moment. Cliquez sur "Ajouter une règle d'alerte" pour commencer.
+              </p>
+            </div>
           ) : (
             <Table>
               <TableHeader>

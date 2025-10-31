@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Loader2 } from "lucide-react"; // Import Loader2
+import { Trash2, Loader2, Car } from "lucide-react"; // Import Car icon
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,9 +77,12 @@ const VehiclesPage = () => {
             </p>
           )}
           {vehicles.length === 0 ? (
-            <p className="text-muted-foreground">
-              Aucun véhicule enregistré pour le moment. Cliquez sur "Ajouter un véhicule" pour commencer.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <Car className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                Aucun véhicule enregistré pour le moment. Cliquez sur "Ajouter un véhicule" pour commencer.
+              </p>
+            </div>
           ) : (
             <Table>
               <TableHeader>

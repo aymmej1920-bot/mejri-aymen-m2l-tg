@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, PlayCircle, Loader2 } from "lucide-react"; // Import Loader2
+import { Trash2, PlayCircle, Loader2, CalendarCheck } from "lucide-react"; // Import CalendarCheck icon
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,9 +97,12 @@ const MaintenancePlansPage = () => {
             </p>
           )}
           {maintenancePlans.length === 0 ? (
-            <p className="text-muted-foreground">
-              Aucun plan de maintenance enregistré pour le moment. Cliquez sur "Ajouter un plan de maintenance" pour commencer.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <CalendarCheck className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                Aucun plan de maintenance enregistré pour le moment. Cliquez sur "Ajouter un plan de maintenance" pour commencer.
+              </p>
+            </div>
           ) : (
             <Table>
               <TableHeader>

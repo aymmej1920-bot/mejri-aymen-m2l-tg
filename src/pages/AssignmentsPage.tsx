@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Users, Loader2 } from "lucide-react"; // Import Loader2
+import { Trash2, Users, Loader2, Link } from "lucide-react"; // Import Link icon
 import {
   AlertDialog,
   AlertDialogAction,
@@ -91,9 +91,12 @@ const AssignmentsPage = () => {
             </p>
           )}
           {assignments.length === 0 ? (
-            <p className="text-muted-foreground">
-              Aucune affectation enregistrée pour le moment. Cliquez sur "Ajouter une affectation" pour commencer.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <Link className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                Aucune affectation enregistrée pour le moment. Cliquez sur "Ajouter une affectation" pour commencer.
+              </p>
+            </div>
           ) : (
             <Table>
               <TableHeader>

@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Loader2 } from "lucide-react"; // Import Loader2
+import { Trash2, Loader2, Users } from "lucide-react"; // Import Users icon
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,9 +76,12 @@ const DriversPage = () => {
               Aucun conducteur ne correspond à votre recherche.
             </p>
           ) : drivers.length === 0 ? (
-            <p className="text-muted-foreground">
-              Aucun conducteur enregistré pour le moment. Cliquez sur "Ajouter un conducteur" pour commencer.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <Users className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                Aucun conducteur enregistré pour le moment. Cliquez sur "Ajouter un conducteur" pour commencer.
+              </p>
+            </div>
           ) : (
             <Table>
               <TableHeader>

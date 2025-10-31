@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, FileText, Loader2 } from "lucide-react"; // Import Loader2
+import { Trash2, FileText, Loader2 } from "lucide-react"; // Import FileText icon
 import {
   AlertDialog,
   AlertDialogAction,
@@ -93,9 +93,12 @@ const DocumentsPage = () => {
             </p>
           )}
           {documents.length === 0 ? (
-            <p className="text-muted-foreground">
-              Aucun document enregistré pour le moment. Cliquez sur "Ajouter un document" pour commencer.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                Aucun document enregistré pour le moment. Cliquez sur "Ajouter un document" pour commencer.
+              </p>
+            </div>
           ) : (
             <Table>
               <TableHeader>

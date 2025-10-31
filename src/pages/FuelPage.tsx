@@ -118,9 +118,12 @@ const FuelPage = () => {
             </p>
           )}
           {fuelEntries.length === 0 ? (
-            <p className="text-muted-foreground">
-              Aucun ravitaillement enregistré pour le moment. Cliquez sur "Ajouter un ravitaillement" pour commencer.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8">
+              <FuelIcon className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                Aucun ravitaillement enregistré pour le moment. Cliquez sur "Ajouter un ravitaillement" pour commencer.
+              </p>
+            </div>
           ) : (
             <Table>
               <TableHeader>
