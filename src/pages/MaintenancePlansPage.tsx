@@ -115,6 +115,7 @@ const MaintenancePlansPage = () => {
                   <TableHead>Fournisseur</TableHead>
                   <TableHead>Dernière Génération</TableHead>
                   <TableHead>Prochaine Échéance</TableHead>
+                  <TableHead>Prochain Km</TableHead> {/* New column */}
                   <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -133,6 +134,9 @@ const MaintenancePlansPage = () => {
                     </TableCell>
                     <TableCell>
                       {plan.nextDueDate ? format(new Date(plan.nextDueDate), "PPP", { locale: fr }) : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {plan.nextDueOdometer !== null ? `${plan.nextDueOdometer} Km` : "N/A"}
                     </TableCell>
                     <TableCell>{plan.status}</TableCell>
                     <TableCell className="text-right">

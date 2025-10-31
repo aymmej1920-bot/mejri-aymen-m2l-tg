@@ -61,6 +61,7 @@ const formSchema = z.object({
   }),
   lastGeneratedDate: z.string().nullable(),
   nextDueDate: z.string().nullable(),
+  nextDueOdometer: z.number().nullable(), // New field
 });
 
 interface EditMaintenancePlanDialogProps {

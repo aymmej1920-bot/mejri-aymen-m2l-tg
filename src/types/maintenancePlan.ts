@@ -7,6 +7,7 @@ export interface MaintenancePlan {
   intervalValue: number; // Valeur de l'intervalle (ex: 10000 km ou 6 mois)
   lastGeneratedDate: string | null; // Date de la dernière maintenance générée (format ISO string)
   nextDueDate: string | null; // Date d'échéance calculée (format ISO string)
+  nextDueOdometer: number | null; // Kilométrage d'échéance calculé
   status: "Actif" | "Inactif";
   estimatedCost: number; // Coût estimé pour la maintenance du plan
   provider: string; // Fournisseur habituel pour ce type de maintenance

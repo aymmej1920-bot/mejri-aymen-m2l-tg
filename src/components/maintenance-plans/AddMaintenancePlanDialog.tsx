@@ -81,7 +81,7 @@ const AddMaintenancePlanDialog: React.FC = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => { // Make onSubmit async
     setIsSubmitting(true); // Set loading to true
     try {
-      await addMaintenancePlan(values as Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>); // Await the async operation
+      await addMaintenancePlan(values as Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate' | 'nextDueOdometer'>); // Await the async operation
       form.reset();
       setIsOpen(false);
     } catch (error) {

@@ -14,7 +14,7 @@ import { AlertRule } from "@/types/alertRule";
 import { Alert } from "@/types/alert";
 import { showSuccess, showError } from "@/utils/toast";
 import { v4 as uuidv4 } from "uuid";
-import { addMonths, format } from "date-fns";
+import { addMonths, format, parseISO, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useAlertChecker } from "@/hooks/use-alert-checker";
 import { supabase } from '@/integrations/supabase/client';
@@ -42,7 +42,7 @@ interface FleetContextType {
   editAssignment: (originalAssignment: Assignment, updatedAssignment: Assignment) => Promise<void>;
   deleteAssignment: (assignmentToDelete: Assignment) => Promise<void>;
   maintenancePlans: MaintenancePlan[];
-  addMaintenancePlan: (plan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>) => Promise<void>;
+  addMaintenancePlan: (plan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate' | 'nextDueOdometer'>) => Promise<void>;
   editMaintenancePlan: (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => Promise<void>;
   deleteMaintenancePlan: (planToDelete: MaintenancePlan) => Promise<void>;
   generateMaintenanceFromPlan: (plan: MaintenancePlan) => Promise<void>;
@@ -123,6 +123,14 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
     return newObj;
   };
+
+  const getLatestOdometerReading = React.useCallback((licensePlate: string): number | null => {
+    const vehicleFuelEntries = fuelEntries
+      .filter(entry => entry.vehicleLicensePlate === licensePlate)
+      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+
+    return vehicleFuelEntries.length > 0 ? vehicleFuelEntries[0].odometerReading : null;
+  }, [fuelEntries]);
 
   const fetchFleetData = React.useCallback(async () => {
     if (!user) {
@@ -462,15 +470,23 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   // --- Maintenance Plans ---
-  const addMaintenancePlan = async (newPlan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate'>) => {
+  const addMaintenancePlan = async (newPlan: Omit<MaintenancePlan, 'id' | 'lastGeneratedDate' | 'nextDueDate' | 'nextDueOdometer'>) => {
     if (!user) { showError("Vous devez être connecté pour ajouter un plan de maintenance."); return; }
     try {
       const today = format(new Date(), "yyyy-MM-dd");
       let nextDueDate: string | null = null;
+      let nextDueOdometer: number | null = null;
 
       if (newPlan.intervalType === "Temps") {
         const futureDate = addMonths(new Date(), newPlan.intervalValue);
         nextDueDate = format(futureDate, "yyyy-MM-dd");
+      } else if (newPlan.intervalType === "Kilométrage") {
+        const latestOdometer = getLatestOdometerReading(newPlan.vehicleLicensePlate);
+        if (latestOdometer !== null) {
+          nextDueOdometer = latestOdometer + newPlan.intervalValue;
+        } else {
+          showError("Impossible de calculer le prochain kilométrage d'échéance : aucun relevé kilométrique trouvé pour ce véhicule.");
+        }
       }
 
       const planToInsert = {
@@ -478,6 +494,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         user_id: user.id,
         last_generated_date: null,
         next_due_date: nextDueDate,
+        next_due_odometer: nextDueOdometer,
       };
 
       const { data, error } = await supabase.from('maintenance_plans').insert(planToInsert).select();
@@ -493,7 +510,34 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const editMaintenancePlan = async (originalPlan: MaintenancePlan, updatedPlan: MaintenancePlan) => {
     if (!user) { showError("Vous devez être connecté pour modifier un plan de maintenance."); return; }
     try {
-      const { data, error } = await supabase.from('maintenance_plans').update(mapToSnakeCase(updatedPlan)).eq('id', originalPlan.id).select();
+      let nextDueDate: string | null = updatedPlan.nextDueDate;
+      let nextDueOdometer: number | null = updatedPlan.nextDueOdometer;
+
+      // Recalculate if interval type or value changed, or if it's a new plan being activated
+      if (originalPlan.intervalType !== updatedPlan.intervalType || originalPlan.intervalValue !== updatedPlan.intervalValue || (originalPlan.status === "Inactif" && updatedPlan.status === "Actif")) {
+        if (updatedPlan.intervalType === "Temps") {
+          const futureDate = addMonths(new Date(), updatedPlan.intervalValue);
+          nextDueDate = format(futureDate, "yyyy-MM-dd");
+          nextDueOdometer = null; // Reset odometer if changing to time-based
+        } else if (updatedPlan.intervalType === "Kilométrage") {
+          const latestOdometer = getLatestOdometerReading(updatedPlan.vehicleLicensePlate);
+          if (latestOdometer !== null) {
+            nextDueOdometer = latestOdometer + updatedPlan.intervalValue;
+            nextDueDate = null; // Reset date if changing to mileage-based
+          } else {
+            showError("Impossible de calculer le prochain kilométrage d'échéance : aucun relevé kilométrique trouvé pour ce véhicule.");
+            nextDueOdometer = null;
+          }
+        }
+      }
+
+      const planToUpdate = {
+        ...mapToSnakeCase(updatedPlan),
+        next_due_date: nextDueDate,
+        next_due_odometer: nextDueOdometer,
+      };
+
+      const { data, error } = await supabase.from('maintenance_plans').update(planToUpdate).eq('id', originalPlan.id).select();
       if (error) throw error;
       setMaintenancePlans((prev) => prev.map((item) => (item.id === originalPlan.id ? mapToCamelCase(data[0]) : item)));
       showSuccess("Plan de maintenance modifié avec succès !");
@@ -534,16 +578,26 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       await addMaintenance(newMaintenance); // Use the Supabase-enabled addMaintenance
 
       let nextDueDate: string | null = null;
+      let nextDueOdometer: number | null = null;
+
       if (plan.intervalType === "Temps") {
         const lastDate = new Date(today);
         const futureDate = addMonths(lastDate, plan.intervalValue);
         nextDueDate = format(futureDate, "yyyy-MM-dd");
+      } else if (plan.intervalType === "Kilométrage") {
+        const latestOdometer = getLatestOdometerReading(plan.vehicleLicensePlate);
+        if (latestOdometer !== null) {
+          nextDueOdometer = latestOdometer + plan.intervalValue;
+        } else {
+          showError("Impossible de calculer le prochain kilométrage d'échéance : aucun relevé kilométrique trouvé pour ce véhicule.");
+        }
       }
 
       const updatedPlan: MaintenancePlan = {
         ...plan,
         lastGeneratedDate: today,
         nextDueDate: nextDueDate,
+        nextDueOdometer: nextDueOdometer,
         status: "Actif",
       };
       await editMaintenancePlan(plan, updatedPlan); // Use the Supabase-enabled editMaintenancePlan
