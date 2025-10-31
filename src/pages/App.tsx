@@ -19,6 +19,7 @@ import AlertsPage from "./pages/AlertsPage";
 import LoginPage from "./pages/LoginPage";
 import ReportsPage from "./pages/ReportsPage";
 import ProfilePage from "./pages/ProfilePage";
+// Removed UsersPage import
 import { FleetProvider, useFleet } from "@/context/FleetContext";
 import { SessionContextProvider, useSession } from "@/context/SessionContext";
 
@@ -77,6 +78,7 @@ const AppRoutes = () => {
           element: <ProfilePage />,
           handle: { title: "Mon Profil" },
         },
+        // Removed /users route
         {
           path: "/vehicles",
           element: <VehiclesPage />,

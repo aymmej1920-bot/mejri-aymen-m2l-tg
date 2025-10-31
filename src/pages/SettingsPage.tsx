@@ -31,20 +31,19 @@ const SettingsPage = () => {
   const { clearAllData, profile } = useFleet(); // Added profile to check role
   const [isClearingData, setIsClearingData] = React.useState(false); // Add loading state for clearing data
 
-  const isAdmin = profile?.role?.name === 'Admin'; // Check if user is Admin
+  // The clearAllData function in FleetContext already checks for Admin role,
+  // so we can remove the local isAdmin check here for simplicity.
+  // const isAdmin = profile?.role?.name === 'Admin';
 
   const handleClearAllData = async () => { // Make async
-    if (!isAdmin) { // Check permission before clearing data
-      console.error("Permission denied: Only Admin users can clear all data.");
-      return;
-    }
+    // The permission check is now handled within clearAllData in FleetContext
     setIsClearingData(true); // Set loading to true
     try {
       await clearAllData(); // Await the async operation
     } catch (error) {
       console.error("Failed to clear all data:", error);
     } finally {
-      setIsClearingData(false); // Set loading to false
+      setIsClearingData(false); // Reset loading to false
     }
   };
 
@@ -80,7 +79,7 @@ const SettingsPage = () => {
             </p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="hover:animate-hover-lift" disabled={isClearingData || !isAdmin}>
+                <Button variant="destructive" className="hover:animate-hover-lift" disabled={isClearingData || profile?.role?.name !== 'Admin'}>
                   {isClearingData ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -99,7 +98,7 @@ const SettingsPage = () => {
                   <AlertDialogCancel>Annuler</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleClearAllData}
-                    disabled={isClearingData || !isAdmin}
+                    disabled={isClearingData || profile?.role?.name !== 'Admin'}
                   >
                     {isClearingData ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

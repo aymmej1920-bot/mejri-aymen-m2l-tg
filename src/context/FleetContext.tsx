@@ -73,12 +73,9 @@ interface FleetContextType {
   profile: Profile | null;
   updateProfile: (updatedProfile: Omit<Profile, 'id' | 'updatedAt' | 'roleId' | 'role'>) => Promise<void>;
   roles: Role[];
-  users: (Profile & { email: string; is_suspended: boolean })[];
+  // Removed users state
   can: (permission: string) => boolean;
-  inviteUser: (email: string, roleName: string, firstName?: string, lastName?: string) => Promise<void>;
-  createUser: (email: string, password: string, roleName: string, firstName?: string, lastName?: string) => Promise<void>;
-  updateUserRole: (userId: string, roleName: string) => Promise<void>;
-  updateUserStatus: (userId: string, suspend: boolean) => Promise<void>;
+  // Removed user management functions
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
@@ -98,7 +95,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [activeAlerts, setActiveAlerts] = useState<Alert[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [users, setUsers] = useState<(Profile & { email: string; is_suspended: boolean })[]>([]);
+  // Removed users state
   const [isLoadingFleetData, setIsLoadingFleetData] = useState(true);
 
   // Memoized maps for quick lookups
@@ -159,7 +156,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setActiveAlerts([]);
       setProfile(null);
       setRoles([]);
-      setUsers([]);
+      // Removed setUsers([]);
       setVehicleMap({});
       setDriverMap({});
       setIsLoadingFleetData(false);
@@ -256,31 +253,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }, {} as Record<string, Driver>);
       setDriverMap(newDriverMap);
 
-      // Fetch all users for Admin if current user is Admin
-      const currentUserProfile = profileData ? (mapToCamelCase(profileData) as Profile) : null;
-      if (currentUserProfile?.roleId) {
-        const adminRole = camelCaseRoles.find(r => r.id === currentUserProfile.roleId && r.name === 'Admin');
-        if (adminRole) {
-          const { data: edgeFunctionUsersData, error: edgeFunctionUsersError } = await supabase.functions.invoke('admin-user-management', {
-              body: { action: 'listUsers' },
-              headers: {
-                'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`,
-                'Content-Type': 'application/json',
-              },
-            });
-
-            if (edgeFunctionUsersError) throw edgeFunctionUsersError;
-            if (edgeFunctionUsersData?.error) throw new Error(edgeFunctionUsersData.error);
-
-            // Manually attach role objects to users fetched from Edge Function
-            const usersWithAttachedRoles = edgeFunctionUsersData.users.map((u: any) => ({
-              ...u,
-              role: camelCaseRoles.find(r => r.id === u.roleId) || null,
-            }));
-            setUsers(usersWithAttachedRoles);
-        }
-      }
-
+      // Removed fetching all users for Admin
 
     } catch (error: any) {
       showError("Erreur lors du chargement des données de la flotte : " + error.message);
@@ -322,25 +295,10 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   }, [user]);
 
-  // Simplified Permissions logic: only check if user is Admin for admin-level actions
-  const can = React.useCallback((permissionKey: string): boolean => {
-    // For now, only 'Admin' role has special permissions for user management and settings.
-    // Other permissions are implicitly granted by being logged in and having RLS set up.
-    const isAdmin = profile?.role?.name === 'Admin';
-
-    switch (permissionKey) {
-      case 'users.view':
-      case 'users.invite':
-      case 'users.create':
-      case 'users.edit_role':
-      case 'users.toggle_status':
-      case 'settings.clear_data':
-        return isAdmin;
-      // All other permissions are implicitly true for authenticated users based on RLS
-      default:
-        return !!user;
-    }
-  }, [profile, user]);
+  // Simplified Permissions logic: all authenticated users have access to their own data
+  const can = React.useCallback((_permissionKey: string): boolean => {
+    return !!user; // All authenticated users can perform actions on their own data (controlled by RLS)
+  }, [user]);
 
 
   // Optimized getter functions
@@ -363,79 +321,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  // --- User Management (Admin only, via Edge Functions for security) ---
-  const invokeAdminFunction = async (functionName: string, payload: any) => {
-    if (!user) {
-      showError("Vous devez être connecté pour effectuer cette action.");
-      throw new Error("Unauthorized");
-    }
-    // Simplified permission check: only Admin can invoke admin functions
-    if (!can('users.view')) { // Using a generic admin permission check
-      showError("Vous n'avez pas la permission d'effectuer cette action.");
-      throw new Error("Permission denied");
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body: payload,
-        headers: {
-          'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      showSuccess(data.message || "Action d'administration réussie !");
-      fetchFleetData(); // Re-fetch all data to update user list and roles
-    } catch (error: any) {
-      showError("Échec de l'action d'administration : " + error.message);
-      console.error(`Error invoking ${functionName} function:`, error);
-      throw error;
-    }
-  };
-
-  const inviteUser = async (email: string, roleName: string, firstName?: string, lastName?: string) => {
-    if (!can('users.invite')) { showError("Vous n'avez pas la permission d'inviter des utilisateurs."); return; }
-    await invokeAdminFunction('admin-user-management', {
-      action: 'inviteUser',
-      email,
-      roleName,
-      firstName,
-      lastName,
-    });
-  };
-
-  const createUser = async (email: string, password: string, roleName: string, firstName?: string, lastName?: string) => {
-    if (!can('users.create')) { showError("Vous n'avez pas la permission de créer des utilisateurs."); return; }
-    await invokeAdminFunction('admin-user-management', {
-      action: 'createUser',
-      email,
-      password,
-      roleName,
-      firstName,
-      lastName,
-    });
-  };
-
-  const updateUserRole = async (userId: string, roleName: string) => {
-    if (!can('users.edit_role')) { showError("Vous n'avez pas la permission de modifier les rôles des utilisateurs."); return; }
-    await invokeAdminFunction('admin-user-management', {
-      action: 'updateUserRole',
-      userId,
-      roleName,
-    });
-  };
-
-  const updateUserStatus = async (userId: string, suspend: boolean) => {
-    if (!can('users.toggle_status')) { showError("Vous n'avez pas la permission de suspendre/activer des comptes utilisateurs."); return; }
-    await invokeAdminFunction('admin-user-management', {
-      action: 'updateUserStatus',
-      userId,
-      suspend,
-    });
-  };
+  // Removed user management functions (inviteUser, createUser, updateUserRole, updateUserStatus)
 
   // --- Vehicles ---
   const addVehicle = async (newVehicle: Omit<Vehicle, 'id'>) => {
@@ -1099,7 +985,7 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setActiveAlerts([]);
       setProfile(null);
       setRoles([]);
-      setUsers([]);
+      // Removed setUsers([]);
       setVehicleMap({});
       setDriverMap({});
       showSuccess("Toutes les données de la flotte ont été effacées !");
@@ -1175,12 +1061,8 @@ export const FleetProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         profile,
         updateProfile,
         roles,
-        users,
+        // Removed users, inviteUser, createUser, updateUserRole, updateUserStatus
         can,
-        inviteUser,
-        createUser,
-        updateUserRole,
-        updateUserStatus,
       }}
     >
       {children}
